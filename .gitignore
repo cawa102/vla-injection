@@ -1,0 +1,36 @@
+# --- Research data & artefacts (provenance recorded in docs/, never committed) ---
+data/
+artifacts/
+
+# Model weights / checkpoints (record provenance in docs/, never commit binaries)
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.bin
+*.gguf
+*.onnx
+
+# --- Secrets / environment ---
+.env
+.env.*
+*.key
+*.pem
+
+# --- Claude Code local (personal) settings ---
+.claude/settings.local.json
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+.ipynb_checkpoints/
+
+# --- OS / editor junk ---
+.DS_Store
+*.swp
+.idea/
+.vscode/
