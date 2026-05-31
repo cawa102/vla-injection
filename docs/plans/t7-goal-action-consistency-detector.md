@@ -135,7 +135,10 @@ calibration as the headline result.
   (security + FP-calibration) must be sharp and explicit, and we should move at reasonable pace.
 - **Verify before claiming novelty [unverified]:** the LLM-agent **task-drift detection** /
   **instruction-hierarchy / privileged-instruction** literature is the same trusted-intent-vs-behavior idea —
-  a likely landmine *beyond* Wu et al. Survey for framing: **VLA Safety** (`2604.23775`, *unverified*).
+  a likely landmine *beyond* Wu et al. **Verification queue (flagged by Codex review 2026-05-31; fetch & read
+  before citing — do not assert content):** Task Drift (`2406.00799`), Instruction Hierarchy (`2404.13208`),
+  AlignSentinel (`2602.13597`), SABER (`2603.24935` — a natural-language VLA injection attack, candidate
+  *secondary* arm). Survey for framing: **VLA Safety** (`2604.23775`). All *unverified*.
 
 ---
 
@@ -209,7 +212,11 @@ benign-vs-attacked separation in the consistency score on a handful of tasks (se
 
 1. **RoboGCG — "Adversarial Attacks on Robotic Vision Language Action Models"** — `arXiv:2506.03350`
    (Jones, Robey, Zou, Ravichandran, Pappas, Hassani, Fredrikson, Kolter; Gray Swan AI + CMU + UPenn).
-   *The attack we reproduce.*
+   *The attack we reproduce.* **Full text saved locally: `docs/references/2506.03350-robogcg-adversarial-attacks-vla.pdf`
+   (facts + SHA-256 in `docs/references/README.md`).** **§5 defenses verified 2026-05-31:** borrowed
+   text-only PF and smoothing zero the ASR but are author-declared infeasible (PF threshold unknowable a
+   priori; smoothing → 0% benign success); multimodal PF is useless; authors call for "VLA refusal" → the
+   defense problem is **open**, motivating T7's FP-calibrated behavioral detector (see §5/§6 baselines).
 2. **"Do What You Say: …Runtime Reasoning-Action Alignment Verification"** — `arXiv:2510.16281`
    (Wu, Li, Hermans, Ramos, Bajcsy, Pérez-D'Arpino; CMU + NVIDIA; code `NVlabs/actalign`).
    *Consistency-verification prior art = the novelty constraint.*
