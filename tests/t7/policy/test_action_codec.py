@@ -116,7 +116,10 @@ def test_decode_bin_round_trip_recovers_normalized_within_one_bin_halfwidth():
     # mask False on the only dim -> un-normalise is identity, so decode returns the
     # (normalized) bin centre; this isolates the token<->bin core.
     codec = ActionCodec(q01=(0.0,), q99=(2.0,), mask=(False,), vocab_size=VOCAB, n_bins=N_BINS)
-    for v in np.linspace(-0.99, 0.99, 97):
+    # Include the exact ±1.0 endpoints, where digitize/clip saturates to the
+    # first/last bin — they must still recover within one bin half-width.
+    grid = np.concatenate([[-1.0, 1.0], np.linspace(-0.99, 0.99, 97)])
+    for v in grid:
         token = int(_tokenize_norm(v))
         recovered = float(codec.decode([token])[0])
         assert abs(recovered - v) <= HALF_BIN + 1e-9

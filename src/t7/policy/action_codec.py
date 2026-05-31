@@ -142,6 +142,13 @@ class ActionCodec:
 
         Implements the verified offset + documented off-by-one clip:
         ``idx = clip((vocab_size - token_id) - 1, 0, len(bin_centers)-1)``.
+
+        Source-faithful saturation: a token id outside the action-token range
+        ``[vocab_size - n_bins, vocab_size - 1]`` is *not* rejected — it clips to
+        the first/last bin exactly as OpenVLA's ``decode_token_ids_to_actions``
+        does (invariant #8 favours faithful reproduction over a stricter guard).
+        Callers must pass genuine action tokens; RoboGCG targets and OpenVLA
+        generations always are, so this is not a trusted-boundary input.
         """
         discretized = self.vocab_size - int(token_id)
         return int(np.clip(discretized - 1, 0, self.bin_centers.shape[0] - 1))
