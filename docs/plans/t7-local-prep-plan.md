@@ -36,7 +36,7 @@ env management, `numpy` `scipy` `scikit-learn` `pyyaml` `pydantic`, `pytest` + `
 | 0 Dev env + scaffold | ✅ | `69ad856` |
 | 1 Reproducibility infra | ✅ | `9aa898f` |
 | 2 Data records | ✅ | `50336f6` |
-| 3 Action codec | ⬜ **needs OpenVLA primary-source verification** of the de-tokenise/un-normalise formula | — |
+| 3 Action codec | ✅ formula **verified from OpenVLA source** (`c8f03f48`; provenance in `docs/references/README.md`) | `e69f1b0`, `e4fd1fd` |
 | 4 Privileged-state adapter | ✅ | `ad62616` |
 | 5 Metric (A) schema freeze | ⬜ **LOAD-BEARING — author design review before coding** | — |
 | 6 FP-calibrated detector | ✅ | `7f2be7c` |
@@ -46,7 +46,7 @@ env management, `numpy` `scipy` `scikit-learn` `pyyaml` `pydantic`, `pytest` + `
 | 10 LIBERO state-only smoke | ⬜ time-boxed | — |
 | 11 GB10 runbook | ⬜ | — |
 
-**147 tests green; full `src/t7` is type-clean under `uvx pyright`.** Infra notes: pytest resolves `t7` via `pythonpath=["src"]` (uv's editable `.pth` is
+**162 tests green; full `src/t7` is type-clean under `uvx pyright`.** Infra notes: pytest resolves `t7` via `pythonpath=["src"]` (uv's editable `.pth` is
 unreliable on this host — corrupted on each `uv run`); pyright via `pyrightconfig.json` (`uvx pyright` is the
 authoritative type-check — the harness LSP's `reportMissingImports` for `t7.*` are cosmetic artifacts of the
 broken editable install).
