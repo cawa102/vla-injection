@@ -53,10 +53,10 @@ dissertation even if the deployable arm underperforms.
 ## 1. You Are Here  ← update this block every session
 
 - **Last updated:** 2026-05-31
-- **Phase:** **Design → M0 (near exit)**. Implementation plan drafted **+ revised per Codex review**; coding gate lifts for **M1–M2** on author OK (CLAUDE.md).
+- **Phase:** **Design → M0 (exiting)**. Coding gate **lifted for M1–M2 (author OK, 2026-05-31)**; **pre-GB10 local build underway** — model-free M1–M2 components on M1/8 GB (`docs/plans/t7-local-prep-plan.md`). OpenVLA/GCG/LIBERO *runs* await GB10.
 - **Last completed:** Theme = T7; understanding doc; **RoboGCG defence verified** (`docs/references/`); **D1–D7 resolved** (§6/§10; D4/D7 OPEN → M1); **Phase-3 implementation plan drafted**; **Codex third-party review incorporated** (causal prefix-window + detection latency; per-rollout FPR + CIs; metric(A) schema frozen; fair-calibrated baselines; M5→stretch — see §10).
-- **Currently:** M0 — design + plan refined; ready for M1 on author go-ahead.
-- **▶ NEXT ACTION:** **M1**: stand up OpenVLA-7B (4-bit) on LIBERO; reproduce benign baseline + RoboGCG *targeted* redirect; run the **GCG micro-benchmark** (fixes D4/D7); check metric (A) signal **incl. a coarse-goal separation check** → **GO/NO-GO gate**.
+- **Currently:** Executing the **pre-GB10 local-prep plan** (`docs/plans/t7-local-prep-plan.md`) on M1/8 GB — model-free M1–M2 engineering (repro infra, metric-(A) **schema freeze**, calibration, eval stats, action codec, baselines, configs/figures) via TDD + a time-boxed state-only LIBERO smoke test + GB10 runbook.
+- **▶ NEXT ACTION:** **Local (now):** implement local-prep Tasks 0–11. **On GB10 (M1 milestone):** stand up OpenVLA-7B (4-bit) on LIBERO; reproduce benign baseline + RoboGCG *targeted* redirect; run the **GCG micro-benchmark** (fixes D4/D7); check metric (A) signal **incl. a coarse-goal separation check** → **GO/NO-GO gate**.
 - **Blockers:** none.
 - **Open decisions outstanding:** **D4, D7 only** (OPEN → M1 micro-benchmark). D1/D2/D3/D5/D6 DECIDED.
 - **Floor secured?** ❌ not yet (target: end of **M2**, ~Jul 12).
@@ -185,7 +185,7 @@ gates *adapt scope* (drop M5, trim M3) but never abandon **M4**.
 ### M0 — Design lock
 - ✅ Resolve D1–D7 with author sign-off → recorded §6/§10 (2026-05-31; D4/D7 OPEN → M1).
 - ✅ Write Phase-3 implementation plan (`docs/plans/t7-phase3-implementation-plan.md`) **+ revise per Codex review**. `verify:` author OKs before coding.
-- ⬜ Define repo layout for code/configs/results (specified in the implementation plan §3; create dirs only when first needed; CLAUDE.md).
+- 🔄 Define repo layout for code/configs/results — **pre-GB10 local-prep plan written** (`t7-local-prep-plan.md`); model-free scaffolding via TDD underway (Task 0+).
 
 ### M1 — Environment + viability gate
 - ⬜ Stand up OpenVLA-7B (4-bit) on GB10; record exact env + provenance (checkpoint source/hash/date/licence) in `docs/references/`.
@@ -279,6 +279,7 @@ one_variable:  <what single variable changed vs the previous run>
 | 2026-05-31 | **M5 (adaptive) → stretch**; M4 deployable detector = committed primary novelty | Codex review: both-committed = over-scope for solo MSc; author chose M5-stretch | §0,§2 tiers, §3 H5, §7 |
 | 2026-05-31 | **Codex review incorporated** | third-party review verified vs RoboGCG/actalign primary sources | causal prefix-window + latency; per-rollout FPR + CIs; metric(A) schema frozen; fair-calibrated baselines + mandatory anomaly; "target-action-blocked"; M1 coarse-goal check; precise "adversarial textual suffix" framing — §0,§1,§2,§3,§5,§6,§7 + impl plan |
 | 2026-05-31 | **Adjacent prior work verified** (4 arXiv IDs all correct): Task Drift, Instruction Hierarchy, AlignSentinel (text-LLM), SABER (VLA attack) | none scoop the embodied/action-level contribution | **novelty narrowed to the VLA action-level instantiation**; SABER = candidate secondary attack arm (understanding-doc §6) |
+| 2026-05-31 | **Author OK → start M1–M2 scaffolding code** (model-free, M1/8 GB); pre-GB10 local-prep plan written | gate-lift precondition met (plan agreed in `docs/plans/` + author OK); OpenVLA inference infeasible locally (8 GB RAM) → build+test only model-free components; experimental *runs* await GB10 | `docs/plans/t7-local-prep-plan.md`; coding begins |
 
 ---
 
