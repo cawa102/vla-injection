@@ -42,11 +42,11 @@ env management, `numpy` `scipy` `scikit-learn` `pyyaml` `pydantic`, `pytest` + `
 | 6 FP-calibrated detector | ✅ | `7f2be7c` |
 | 7 Eval harness + stats | ✅ | `2ab71aa` |
 | 8 Baselines | ✅ goal-agnostic anomaly (χ² OOD) + perplexity filter (mock + GB10 stub), shared `calibrate` | `3287c5c` |
-| 9 Config + scripts + figures | ⬜ delegable (+ `src`-bootstrap so scripts import `t7`) | — |
+| 9 Config + scripts + figures | ✅ frozen pydantic `Config` + `one_variable_diff`; shared GB10 guard; `make_figures` script-regenerable from logged `results.json` (`results_table_to_dict` = eval→figures contract); 6 scripts + `_bootstrap` | `60b0462` |
 | 10 LIBERO state-only smoke | ⬜ time-boxed | — |
 | 11 GB10 runbook | ⬜ | — |
 
-**213 tests green; full `src/t7` is type-clean under `uvx pyright`.** Infra notes: pytest resolves `t7` via `pythonpath=["src"]` (uv's editable `.pth` is
+**231 tests green; full `src/t7` is type-clean under `uvx pyright`** (3 pre-existing pyright errors + 1 ruff B905 remain in *test* files `test_state.py`/`test_records.py`/`test_consistency_a.py` — untouched by Task 9, not yet cleaned). Infra notes: pytest resolves `t7` via `pythonpath=["src"]` (uv's editable `.pth` is
 unreliable on this host — corrupted on each `uv run`); pyright via `pyrightconfig.json` (`uvx pyright` is the
 authoritative type-check — the harness LSP's `reportMissingImports` for `t7.*` are cosmetic artifacts of the
 broken editable install).
