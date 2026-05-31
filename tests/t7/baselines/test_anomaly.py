@@ -143,7 +143,8 @@ def test_degenerate_benign_with_no_variation_abstains_with_zero_scores():
     constant = [rollout_from_actions(np.zeros((10, 7))) for _ in range(5)]
     stats = BenignActionStats.from_rollouts(constant)
     assert all(s == 0.0 for s in stats.std)
-    scores = goal_agnostic_anomaly_score(rollout_from_actions(np.full((4, 7), 9.0)), benign_stats=stats)
+    ood = rollout_from_actions(np.full((4, 7), 9.0))
+    scores = goal_agnostic_anomaly_score(ood, benign_stats=stats)
     assert [s.value for s in scores] == [0.0, 0.0, 0.0, 0.0]
 
 
