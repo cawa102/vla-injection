@@ -40,13 +40,13 @@ env management, `numpy` `scipy` `scikit-learn` `pyyaml` `pydantic`, `pytest` + `
 | 4 Privileged-state adapter | ✅ | `ad62616` |
 | 5 Metric (A) schema freeze | ⬜ **LOAD-BEARING — author design review before coding** | — |
 | 6 FP-calibrated detector | ✅ | `7f2be7c` |
-| 7 Eval harness + stats | ⬜ delegable | — |
+| 7 Eval harness + stats | ✅ | `2ab71aa` |
 | 8 Baselines | ⬜ delegable | — |
 | 9 Config + scripts + figures | ⬜ delegable (+ `src`-bootstrap so scripts import `t7`) | — |
 | 10 LIBERO state-only smoke | ⬜ time-boxed | — |
 | 11 GB10 runbook | ⬜ | — |
 
-**103 tests green.** Infra notes: pytest resolves `t7` via `pythonpath=["src"]` (uv's editable `.pth` is
+**147 tests green; full `src/t7` is type-clean under `uvx pyright`.** Infra notes: pytest resolves `t7` via `pythonpath=["src"]` (uv's editable `.pth` is
 unreliable on this host — corrupted on each `uv run`); pyright via `pyrightconfig.json` (`uvx pyright` is the
 authoritative type-check — the harness LSP's `reportMissingImports` for `t7.*` are cosmetic artifacts of the
 broken editable install).
