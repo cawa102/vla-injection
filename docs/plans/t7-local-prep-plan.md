@@ -46,7 +46,7 @@ env management, `numpy` `scipy` `scikit-learn` `pyyaml` `pydantic`, `pytest` + `
 | 10 LIBERO state-only smoke | ⬜ time-boxed | — |
 | 11 GB10 runbook | ⬜ | — |
 
-**187 tests green; full `src/t7` is type-clean under `uvx pyright`.** Infra notes: pytest resolves `t7` via `pythonpath=["src"]` (uv's editable `.pth` is
+**189 tests green; full `src/t7` is type-clean under `uvx pyright`.** Infra notes: pytest resolves `t7` via `pythonpath=["src"]` (uv's editable `.pth` is
 unreliable on this host — corrupted on each `uv run`); pyright via `pyrightconfig.json` (`uvx pyright` is the
 authoritative type-check — the harness LSP's `reportMissingImports` for `t7.*` are cosmetic artifacts of the
 broken editable install).
