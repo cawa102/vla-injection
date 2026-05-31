@@ -147,12 +147,19 @@ combination ∈ `{max, noisy_or, weighted_mean}`. None is chosen by maximising T
 
 - **Causal scorer** — `score`/`score_rollout` use only `Rollout.prefix_window(t, k)` (indices `t−k+1..t`,
   clamped at 0). The score at `t` is identical whether or not future steps exist (unit-tested).
-- **Monitoring ceiling** — `score_rollout_monitoring_ceiling` uses a **centered, non-causal** window
-  (`t−k+1 .. t+k−1`, clamped) that may see future steps. It is reported **separately and labelled
-  non-causal** (an upper-bound-of-the-upper-bound), never used for online holds.
+- **Monitoring ceiling** — `score_rollout_monitoring_ceiling` takes, for each step `t`, the **max causal
+  score** over a centered `t−k+1 .. t+k−1` neighbourhood (clamped). It is **non-causal** (it consults future
+  neighbours) and a **true upper bound** on the causal score (`≥ score(t)` by construction; each neighbour
+  keeps its own causal anchor, so there is no future-anchor leak). Reported **separately and labelled
+  non-causal**, never used for online holds. *(Refined 2026-05-31, same day as the freeze, for correctness —
+  an earlier centered-window variant could score below the causal score; this is a pre-attack correctness fix,
+  not an attack-derived change.)*
 - **Limitations (v1, honest):** single-anchor goals only (reach/pick-style); placement-*region* anchors that
   aren't objects, and pure-orientation deviations, are **not** covered (see stretch S1/S2). `ee_pos` has no
   orientation in the current `PrivilegedState` contract.
+- **P3 grasp events at the very first window step are unscored** (a transition needs the prior step, which for
+  the first in-window step lies outside the window). For small `k` a grasp straddling the window start can be
+  missed; widening `k` mitigates it.
 - **P1 is endpoint-based** (net window displacement `ee(end) − ee(start)`), so a non-monotone path — a detour,
   an overshoot, or a trajectory whose *endpoints* align with the goal direction while the middle does not —
   reads as consistent on P1. This is a deliberate v1 simplicity choice (no per-step path integral); the

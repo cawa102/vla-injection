@@ -108,21 +108,26 @@ class SyntheticStateAdapter:
     its input.
     """
 
-    def to_privileged_state(self, raw: dict) -> PrivilegedState:
+    def to_privileged_state(self, raw: object) -> PrivilegedState:
         """Map a fixture dict to a :class:`PrivilegedState`.
 
         Args:
             raw: A mapping with keys ``ee_pos``, ``gripper_open``,
-                ``object_poses`` and ``target_region``.
+                ``object_poses`` and ``target_region``. Typed ``object`` to
+                conform to the :class:`StateAdapter` protocol; validated below.
 
         Returns:
             A validated :class:`PrivilegedState`.
 
         Raises:
+            TypeError: If ``raw`` is not a dict.
             KeyError: If a required key is missing.
             ValueError: If a position has the wrong shape (via
                 :class:`PrivilegedState` validation).
         """
+        if not isinstance(raw, dict):
+            raise TypeError(f"raw must be a dict, got {type(raw).__name__}")
+
         missing = [key for key in _REQUIRED_KEYS if key not in raw]
         if missing:
             raise KeyError(f"missing required key(s): {', '.join(missing)}")

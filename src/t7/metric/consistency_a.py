@@ -138,7 +138,7 @@ class ConsistencyMetricA:
 
     # -- public API ---------------------------------------------------------- #
 
-    def score(self, step_index: int, rollout: Rollout, trusted_goal: str) -> Score:
+    def score(self, step_index: int, rollout: Rollout, trusted_goal: str = "") -> Score:
         """Causal consistency score for ``step_index`` over ``a_{t-k+1:t}``."""
         prefix = rollout.prefix_window(step_index, self.k)
         states = self._states(prefix)
@@ -153,25 +153,23 @@ class ConsistencyMetricA:
     def score_rollout_monitoring_ceiling(
         self, rollout: Rollout, trusted_goal: str = ""
     ) -> list[Score]:
-        """NON-CAUSAL monitoring ceiling: a centred window ``t-k+1 .. t+k-1``.
+        """NON-CAUSAL monitoring ceiling — a true upper bound on the causal score.
 
-        Reported separately and labelled non-causal (an upper-bound of the
-        upper bound); never used for online holds. Note the window's *last* step
-        (which may be in the future, ``t+k-1``) is used as the end step for
-        P2/P3 and for anchor resolution — so this is a different evaluation
-        point than the causal score at ``t``, not merely "the causal score with
-        future awareness".
+        For each step ``t`` this is the **max causal score** over a centred
+        ``t-k+1 .. t+k-1`` neighbourhood (clamped). It is **non-causal** (it
+        consults future neighbours) and an **upper bound by construction**
+        (``>= score(t)``, since ``t`` lies in its own neighbourhood); each
+        neighbour keeps its *own* causal anchor (no future-anchor leak).
+        Reported separately and labelled non-causal; never used for online holds.
         """
-        n = len(rollout)
+        causal = self.score_rollout(rollout, trusted_goal)
+        n = len(causal)
         out: list[Score] = []
         for t in range(n):
             lo = max(0, t - self.k + 1)
             hi = min(n - 1, t + self.k - 1)
-            window = rollout.steps[lo : hi + 1]
-            states = self._states(window)
-            anchor = self.resolver.resolve(window[-1], states[-1])
-            sem = self._semantics(states, anchor)
-            out.append(Score(value=self._combine(sem), window_end=t))
+            best = max(causal[i].value for i in range(lo, hi + 1))
+            out.append(Score(value=best, window_end=t))
         return out
 
     def extract_semantics(

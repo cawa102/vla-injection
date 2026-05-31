@@ -34,7 +34,7 @@ R = 0.05  # engagement_radius default
 RG = 0.10  # grasp_radius default
 
 
-def _priv(ee_pos, *, gripper_open=True, target_region=GOAL, objects=None):
+def _priv(ee_pos, *, gripper_open=True, target_region: str | None = GOAL, objects=None):
     """A privileged_state dict in the normalised PrivilegedState schema."""
     return {
         "ee_pos": ee_pos,
@@ -44,7 +44,7 @@ def _priv(ee_pos, *, gripper_open=True, target_region=GOAL, objects=None):
     }
 
 
-def _step(ee_pos, *, step, gripper_open=True, target_region=GOAL, objects=None):
+def _step(ee_pos, *, step, gripper_open=True, target_region: str | None = GOAL, objects=None):
     return RolloutStep(
         run_id="t",
         seed=0,
@@ -343,7 +343,21 @@ def test_k_controls_how_many_past_steps_inform_the_score():
     roll = _rollout(steps)
     s_k2 = ConsistencyMetricA(SchemaA(), k=2).score(6, roll, "g")
     s_k7 = ConsistencyMetricA(SchemaA(), k=7).score(6, roll, "g")
-    assert s_k2.value != pytest.approx(s_k7.value)
+    # Small k sees only the final away-step pair (progress high); large k lets the
+    # long approach dampen the net displacement → strictly lower.
+    assert s_k2.value > s_k7.value
+
+
+def test_score_uses_exactly_the_causal_window_steps():
+    # Pins window membership for score(t=4, k=3): exactly steps[2:5], not [1:5]/[3:5].
+    steps = [_step((0.20 + 0.05 * i, 0.10, 0.30), step=i) for i in range(6)]
+    roll = _rollout(steps)
+    m = _metric(k=3)
+    sem = m.extract_semantics(roll.steps[2:5], _anchor())
+    expected = max(
+        sem.progress, sem.distractor_engagement, sem.grasp_appropriateness
+    )
+    assert m.score(4, roll, "g").value == pytest.approx(expected)
 
 
 # ============================================================================ #
@@ -355,6 +369,23 @@ def test_monitoring_ceiling_returns_one_score_per_step():
     steps = [_step((0.20 + 0.05 * i, 0.10, 0.30), step=i) for i in range(5)]
     scores = _metric().score_rollout_monitoring_ceiling(_rollout(steps))
     assert [s.window_end for s in scores] == list(range(5))
+
+
+def test_monitoring_ceiling_is_a_true_upper_bound_on_causal():
+    # By construction the ceiling at t is the max causal score over a centred
+    # neighbourhood, so ceiling[t] >= causal[t] for every t.
+    steps = [
+        _step((0.30, 0.10, 0.30), step=0),
+        _step((0.40, 0.10, 0.25), step=1),
+        _step((0.45, 0.10, 0.20), step=2),
+        _step((0.50, -0.20, 0.10), step=3),
+        _step((0.50, -0.30, 0.07), step=4),
+    ]
+    roll = _rollout(steps)
+    m = _metric(k=3)
+    causal = m.score_rollout(roll)
+    ceiling = m.score_rollout_monitoring_ceiling(roll)
+    assert all(c.value >= s.value for c, s in zip(ceiling, causal))
 
 
 def test_monitoring_ceiling_can_see_future_deviation_that_causal_misses():
