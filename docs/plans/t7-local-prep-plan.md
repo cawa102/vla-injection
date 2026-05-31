@@ -29,6 +29,30 @@ env management, `numpy` `scipy` `scikit-learn` `pyyaml` `pydantic`, `pytest` + `
 
 ---
 
+## Status (live — 2026-05-31)
+
+| Task | Status | Commit |
+|------|--------|--------|
+| 0 Dev env + scaffold | ✅ | `69ad856` |
+| 1 Reproducibility infra | ✅ | `9aa898f` |
+| 2 Data records | ✅ | `50336f6` |
+| 3 Action codec | ⬜ **needs OpenVLA primary-source verification** of the de-tokenise/un-normalise formula | — |
+| 4 Privileged-state adapter | ✅ | `ad62616` |
+| 5 Metric (A) schema freeze | ⬜ **LOAD-BEARING — author design review before coding** | — |
+| 6 FP-calibrated detector | ✅ | `7f2be7c` |
+| 7 Eval harness + stats | ⬜ delegable | — |
+| 8 Baselines | ⬜ delegable | — |
+| 9 Config + scripts + figures | ⬜ delegable (+ `src`-bootstrap so scripts import `t7`) | — |
+| 10 LIBERO state-only smoke | ⬜ time-boxed | — |
+| 11 GB10 runbook | ⬜ | — |
+
+**103 tests green.** Infra notes: pytest resolves `t7` via `pythonpath=["src"]` (uv's editable `.pth` is
+unreliable on this host — corrupted on each `uv run`); pyright via `pyrightconfig.json` (`uvx pyright` is the
+authoritative type-check — the harness LSP's `reportMissingImports` for `t7.*` are cosmetic artifacts of the
+broken editable install).
+
+---
+
 ## Guiding invariants (every task must honour these — they are the WHAT, not optional polish)
 
 1. **Causal detection** — metric/detector see only the prefix window `a_{t-k+1:t}` (past + candidate `a_t`),
