@@ -42,6 +42,27 @@ target actions. ASR (%):
 - Authors' conclusion: "This points to the need for notions of **VLA refusal** when attempts to subvert
   control are detected." → the defense problem is treated as **open**.
 
+## OpenVLA action codec — verified formula provenance (2026-05-31)
+
+The `t7.policy.action_codec` de-tokenise/un-normalise formula was read from the **OpenVLA source**
+(not memory — invariant #8). Source: `github.com/openvla/openvla` @ commit
+`c8f03f48af692657d3060c19588038c7220e9af9` (shallow-cloned 2026-05-31; MIT licence per the repo `LICENSE`).
+
+| Piece | File @ commit | Lines | Verified expression |
+|---|---|---|---|
+| bins / centers | `prismatic/vla/action_tokenizer.py` | 31-32 | `bins = np.linspace(-1, 1, n_bins)`; `bin_centers = (bins[:-1]+bins[1:])/2` (→ `n_bins-1` centres) |
+| de-tokenise | `prismatic/vla/action_tokenizer.py` | 65-68 | `discretized = vocab_size - token_id`; `idx = clip(discretized-1, 0, len(bin_centers)-1)`; `norm = bin_centers[idx]` |
+| decode + un-normalise | `prismatic/extern/hf/modeling_prismatic.py` | 522-534 | identical decode, then `np.where(mask, 0.5*(norm+1)*(q99-q01)+q01, norm)` |
+| vocab size | `prismatic/extern/hf/modeling_prismatic.py` | 504 | `vocab_size = config.text_config.vocab_size - config.pad_to_multiple_of` (codec takes this as an arg; the real value is recorded on checkpoint download, never hardcoded) |
+
+Two faithfulness points captured in the codec tests: (1) decode depends on `vocab_size`; (2) un-normalisation is
+**mask-driven** — `mask=False` dims pass through unchanged (LIBERO sets only the final/gripper dim to `False`);
+there is **no** hardcoded "gripper-dim" rule.
+
+**Pending download (on GB10 / online):** each LIBERO fine-tune's `dataset_statistics.json` (the q01/q99/mask
+values) via `scripts/fetch_openvla_stats.py` → gitignored `data/openvla/`; its provenance row
+(`openvla-stats:<repo>`, source/hash/date/licence) is written to `data/openvla/provenance.json` at download time.
+
 **Why this matters for T7.** RoboGCG shows the borrowed *input-side* defenses have **no usable operating
 point** (PF threshold unknowable a priori; smoothing destroys benign; multimodal PF fails outright). T7's
 FP-calibrated, benign-cost-measured *behavioral* (goal-action consistency) detector targets exactly that gap.
