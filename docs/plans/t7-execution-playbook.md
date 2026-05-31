@@ -278,6 +278,7 @@ one_variable:  <what single variable changed vs the previous run>
 | 2026-05-31 | Phase-3 implementation plan drafted | M0 deliverable; lifts coding gate for M1–M2 | `docs/plans/t7-phase3-implementation-plan.md` |
 | 2026-05-31 | **M5 (adaptive) → stretch**; M4 deployable detector = committed primary novelty | Codex review: both-committed = over-scope for solo MSc; author chose M5-stretch | §0,§2 tiers, §3 H5, §7 |
 | 2026-05-31 | **Codex review incorporated** | third-party review verified vs RoboGCG/actalign primary sources | causal prefix-window + latency; per-rollout FPR + CIs; metric(A) schema frozen; fair-calibrated baselines + mandatory anomaly; "target-action-blocked"; M1 coarse-goal check; precise "adversarial textual suffix" framing — §0,§1,§2,§3,§5,§6,§7 + impl plan |
+| 2026-05-31 | **Adjacent prior work verified** (4 arXiv IDs all correct): Task Drift, Instruction Hierarchy, AlignSentinel (text-LLM), SABER (VLA attack) | none scoop the embodied/action-level contribution | **novelty narrowed to the VLA action-level instantiation**; SABER = candidate secondary attack arm (understanding-doc §6) |
 
 ---
 
@@ -313,6 +314,11 @@ one_variable:  <what single variable changed vs the previous run>
 - **Nearest prior art (novelty constraint):** Wu et al. `actalign` (`arXiv:2510.16281`) — reasoning↔action
   consistency, but **benign/OOD only, no attacker, no FP calibration, needs CoT+VLM**. T7 differs by:
   attacker-aware + FP-calibrated + lightweight non-CoT.
+- **Adjacent text-LLM prior (verified 2026-05-31 — see understanding-doc §6):** Task Drift `2406.00799`,
+  Instruction Hierarchy `2404.13208`, AlignSentinel `2602.13597` (closest; FP-aware injection detector, **text
+  LLM**). ⇒ **novelty = the *embodied / VLA action-level* instantiation only** (do not claim FP-aware injection
+  detection as new in general). **SABER `2603.24935`** = a real NL injection **attack** on VLA/LIBERO →
+  candidate secondary attack arm (perplexity-baseline-defeating).
 - **Hardware:** single GB10 (~128 GB unified); OpenVLA-7B 4-bit fits. H100 timing numbers may not transfer.
 - **Key paths:** understanding doc `docs/plans/t7-goal-action-consistency-detector.md`; landscape
   `docs/lit-review/`; references + verified facts `docs/references/`; results (write-once) `results/`;

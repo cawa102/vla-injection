@@ -133,12 +133,30 @@ calibration as the headline result.
   the GCG inventors (Kolter/Zou/Fredrikson, Gray Swan + CMU + UPenn) and the nearest defense (`actalign`) is
   **NVIDIA + CMU with released code**. → credibility-rich foundation but **high scoop risk**; differentiation
   (security + FP-calibration) must be sharp and explicit, and we should move at reasonable pace.
-- **Verify before claiming novelty [unverified]:** the LLM-agent **task-drift detection** /
-  **instruction-hierarchy / privileged-instruction** literature is the same trusted-intent-vs-behavior idea —
-  a likely landmine *beyond* Wu et al. **Verification queue (flagged by Codex review 2026-05-31; fetch & read
-  before citing — do not assert content):** Task Drift (`2406.00799`), Instruction Hierarchy (`2404.13208`),
-  AlignSentinel (`2602.13597`), SABER (`2603.24935` — a natural-language VLA injection attack, candidate
-  *secondary* arm). Survey for framing: **VLA Safety** (`2604.23775`). All *unverified*.
+- **Adjacent prior work [verified 2026-05-31 via arXiv abstracts; all 4 Codex-flagged IDs resolved
+  correctly].** None scoop T7's *embodied, action-level* contribution, but they **narrow the novelty claim**:
+  FP-aware / trusted-intent injection detection is **not new in the text-LLM world** — only its VLA/action
+  instantiation is. Must cite + differentiate explicitly:
+  - **Task Drift — "Get my drift? Catching LLM Task Drift with Activation Deltas"** (`2406.00799`, Abdelnabi
+    et al., MSR, 2024): detects LLM prompt-injection/task-drift via **activation deltas** (linear probe),
+    attacker-aware, **text LLM only**. *T7 differs:* embodied VLA, **behavioural goal↔action-window** signal
+    (not internal activations), per-rollout physical-abort FP cost.
+  - **Instruction Hierarchy** (`2404.13208`, Wallace et al., **OpenAI**, 2024): a **training method** to
+    prioritise privileged over injected instructions, **text LLM only**. *T7 differs:* a **runtime detector**
+    (no retraining), embodied; this is the *origin of the trusted-vs-untrusted instruction framing* we adopt.
+  - **AlignSentinel** (`2602.13597`, Jia, Wang, Wang, Xiang, **Gong**, 2026): **closest prior work** — a
+    detector classifying misaligned / aligned / non-instruction inputs via **attention-map** features that
+    **explicitly reduces false positives** on benign instruction-bearing inputs — but **text LLM**,
+    instruction-classification level. *T7 differs:* VLA **action-level** goal-consistency, RoboGCG
+    adversarial-suffix threat, per-rollout abort calibration. ⇒ **Do NOT claim FP-aware injection detection as
+    new in general — only its embodied/action instantiation.** (Gong's group is active here → scoop-risk.)
+  - **SABER** (`2603.24935`, Wu et al., UMD/Manocha, 2026): a **natural-language** instruction-edit **attack**
+    on **VLAs, evaluated on LIBERO across 6 VLA models** (black-box, GRPO ReAct, bounded edit budget). *Attack,
+    not detector → does not scoop T7.* **Opportunity:** a ready-made **fluent / low-perplexity** VLA injection
+    — the concrete case where the **perplexity baseline fails** but goal-action consistency may still fire →
+    **candidate secondary attack arm** (confirm it includes OpenVLA; black-box + agentic → reproduction cost;
+    treat as optional, like RoboGCG-primary).
+  - **VLA Safety survey** (`2604.23775`) — still *unverified*; fetch when writing the framing section.
 
 ---
 

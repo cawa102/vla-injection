@@ -93,8 +93,10 @@ authorised, defensive** evaluation. Quarantine poisoned data / trojaned checkpoi
 
 **Repo conventions.** `docs/` · `src/` · `configs/` · `data/` (gitignored) · `results/` (write-once) ·
 `scripts/` · `artifacts/` (gitignored) — create a directory only when there's something to put in it. Never
-commit datasets, checkpoints, secrets, or PII. **Git not yet initialised — confirm before `git init` or any
-first commit.**
+commit datasets, checkpoints, secrets, PII, or third-party binaries (paper PDFs are gitignored — provenance
+in `docs/references/`). **Git initialised; remote `origin` = `github.com/cawa102/vla-injection` (private).
+Commit at each meaningful change unit (`<type>: <description>`, no co-author trailer) and push to
+`origin/main`; confirm before history-rewriting or destructive git operations.**
 
 **VLA vocabulary.** VLA = vision + language instruction → robot **actions**; a wrong output is a wrong
 *physical action*. Integrity threat channels in scope: visual adversarial perturbation, prompt/instruction
