@@ -48,11 +48,6 @@ src = ["src", "tests"]
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
 
-[tool.pyright]
-# Point the type-checker at the uv venv (editable `t7`) and the src layout, and pin
-# the interpreter so `X | None` unions and `t7.*` imports resolve correctly.
-venvPath = "."
-venv = ".venv"
-pythonVersion = "3.11"
-extraPaths = ["src"]
-include = ["src", "tests"]
+# Pyright is configured in `pyrightconfig.json` (canonical, higher precedence than
+# this table) — pinned to py3.11 + the src layout so `X | None`, `zip(strict=)`, and
+# `t7.*` imports resolve. Keep config in one place (DRY).
