@@ -217,3 +217,13 @@ class Decision:
 
     hold: bool
     step: int
+
+
+# A consistency score value (float in [0, 1]) or a Score whose .value we read.
+# Lives here, with Score, so detector + eval share one Score→float helper (DRY).
+ScoreLike = float | Score
+
+
+def score_value(score: ScoreLike) -> float:
+    """Extract a float from a raw score value or a :class:`Score`."""
+    return score.value if isinstance(score, Score) else float(score)

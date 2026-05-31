@@ -25,12 +25,10 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from t7.records import Score
+from t7.records import ScoreLike, score_value
 
 _AGGREGATES = ("per_rollout", "per_window")
 
-# A score value (float in [0, 1]) or a Score object whose .value we read.
-ScoreLike = float | Score
 RolloutScores = Sequence[ScoreLike]
 
 
@@ -50,15 +48,10 @@ class Threshold:
     target_fpr: float
 
 
-def _value(score: ScoreLike) -> float:
-    """Extract a float value from a raw float or a Score object."""
-    return score.value if isinstance(score, Score) else float(score)
-
-
 def _rollout_maxima(benign_scores_calib: Sequence[RolloutScores]) -> np.ndarray:
     """One value per rollout: its maximum per-step score."""
     return np.array(
-        [max(_value(s) for s in rollout) for rollout in benign_scores_calib],
+        [max(score_value(s) for s in rollout) for rollout in benign_scores_calib],
         dtype=float,
     )
 
@@ -66,7 +59,7 @@ def _rollout_maxima(benign_scores_calib: Sequence[RolloutScores]) -> np.ndarray:
 def _pooled_steps(benign_scores_calib: Sequence[RolloutScores]) -> np.ndarray:
     """All per-step scores pooled across rollouts (per-window unit)."""
     return np.array(
-        [_value(s) for rollout in benign_scores_calib for s in rollout],
+        [score_value(s) for rollout in benign_scores_calib for s in rollout],
         dtype=float,
     )
 

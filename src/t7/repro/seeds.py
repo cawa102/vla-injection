@@ -32,7 +32,7 @@ def seed_everything(seed: int) -> dict:
 
     try:
         # Optional/soft import by design: torch is absent on the local M1 machine.
-        import torch
+        import torch  # type: ignore[import-not-found]
     except ImportError:
         torch = None
     if torch is not None:
