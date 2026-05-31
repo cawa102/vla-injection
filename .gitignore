@@ -11,6 +11,9 @@ artifacts/
 *.gguf
 *.onnx
 
+# Third-party paper PDFs (provenance + SHA-256 recorded in docs/references/README.md; re-fetchable)
+docs/references/*.pdf
+
 # --- Secrets / environment ---
 .env
 .env.*

@@ -305,11 +305,22 @@ independently verified on arXiv:
 - The detector likely needs **some reference of trusted intent** (sanitized goal or a small reference
   policy) to avoid the attacker simply making the action consistent with their injected text — keep
   this in scope and report it as a measurement, not a solved system.
-- **[unverified]** The external review's specific claims about RoboGCG's evaluated defenses
-  (perplexity filter + smoothing borrowed from LLM-jailbreak work; smoothing → ASR 0% but benign 0%;
-  perplexity threshold "not settable a priori"; authors call for VLA "refusal") could **not** be
-  confirmed from the abstract/HTML this session — verify against the RoboGCG full-text §defenses
-  before citing. A ~38% figure for OpenVLA most plausibly describes a *naive* suffix, not RoboGCG.
+- **[verified 2026-05-31 — RoboGCG full text §5 + Table 3; PDF saved `docs/references/2506.03350-...pdf`,
+  facts in `docs/references/README.md`]** The earlier claims about RoboGCG's evaluated defenses are
+  **confirmed, and they *motivate* T7 rather than pre-empt it.** Defense eval = 120 random one-hot target
+  actions. Table 3 ASR (%): No Defense 63.3 / 100 / 96.7 / 100 (Libero-10/Goal/Object/Spatial);
+  **Multimodal PF = identical to No Defense (useless** — image embeddings dominate the loss, so multimodal
+  perplexity never sees the suffix); **LLM-Only PF → 0.0 everywhere; Smoothing → 0.0 everywhere.**
+  *But the authors call both viable-looking defenses infeasible:* the PF threshold "depends entirely on the
+  maximum perplexity of instructions seen on a held-out set, which **cannot be known beforehand** in
+  open-world robotics applications"; smoothing "results in a 0% success rate, **but also corrupts the
+  instructions, resulting in a 0% success rate on non-attacked tasks**." Their conclusion: "This points to
+  the need for notions of **VLA refusal** when attempts to subvert control are detected" — i.e. they treat
+  the defense problem as **open**. → T7's FP-calibrated *behavioral* detector targets exactly the
+  no-usable-operating-point gap RoboGCG leaves; the perplexity / text-only filter is a *baseline to beat*
+  (beatable: multimodal PF fails, text PF has no a-priori threshold, both blind to fluent/visual/adaptive
+  injection). *(Supersedes the prior "~38%" guess: 38.0 is the SIMPLER real-world-image transfer overall
+  ASR, Table 2 — not a defense number.)*
 - **Compute caveat:** a full RoboGCG sweep is ~90–300 GPU-h/model (33–110 GCG steps, ~185–604 s per
   target × ~1792 targets). **Subsample targets**, run a GCG micro-benchmark on the GB10 first, and
   put effort into the detector rather than a large attack re-run.
