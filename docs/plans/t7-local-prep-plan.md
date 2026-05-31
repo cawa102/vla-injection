@@ -41,12 +41,12 @@ env management, `numpy` `scipy` `scikit-learn` `pyyaml` `pydantic`, `pytest` + `
 | 5 Metric (A) schema freeze | ✅ schema **FROZEN 2026-05-31** (`docs/plans/metric-a-annotation-schema.md`) + causal scorer; author design delegated & recorded | `2c2f163` |
 | 6 FP-calibrated detector | ✅ | `7f2be7c` |
 | 7 Eval harness + stats | ✅ | `2ab71aa` |
-| 8 Baselines | ⬜ delegable | — |
+| 8 Baselines | ✅ goal-agnostic anomaly (χ² OOD) + perplexity filter (mock + GB10 stub), shared `calibrate` | `3287c5c` |
 | 9 Config + scripts + figures | ⬜ delegable (+ `src`-bootstrap so scripts import `t7`) | — |
 | 10 LIBERO state-only smoke | ⬜ time-boxed | — |
 | 11 GB10 runbook | ⬜ | — |
 
-**189 tests green; full `src/t7` is type-clean under `uvx pyright`.** Infra notes: pytest resolves `t7` via `pythonpath=["src"]` (uv's editable `.pth` is
+**213 tests green; full `src/t7` is type-clean under `uvx pyright`.** Infra notes: pytest resolves `t7` via `pythonpath=["src"]` (uv's editable `.pth` is
 unreliable on this host — corrupted on each `uv run`); pyright via `pyrightconfig.json` (`uvx pyright` is the
 authoritative type-check — the harness LSP's `reportMissingImports` for `t7.*` are cosmetic artifacts of the
 broken editable install).
