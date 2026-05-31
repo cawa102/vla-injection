@@ -1,0 +1,43 @@
+# Example M2 run config (Task 9). Illustrative defaults for the floor detector —
+# the final eval matrix (D4) and compute budget (D7) are sized at M1 on GB10, so
+# the task/target counts here are placeholders, not committed numbers.
+#
+# Every run logs a snapshot of its resolved config (RunLogger), and successive
+# runs should differ by exactly one variable (see `one_variable_diff`).
+
+seed: 42
+
+model:
+  name: openvla-7b
+  unnorm_key: libero_spatial_no_noops
+  checkpoint: openvla/openvla-7b-finetuned-libero-spatial
+  quantization: 4bit
+
+env:
+  suite: libero_spatial
+  tasks: [task_0, task_1, task_2]
+  max_steps: 200
+
+attack:
+  name: robogcg
+  targets_per_task: 20
+  persistence_steps: 5
+
+metric:
+  k: 5  # causal prefix-window length a_{t-k+1:t}
+
+detector:
+  fpr_targets: [0.01, 0.05]  # per-rollout benign false-abort budgets
+
+eval:
+  matrix: [clean_ceiling, coarse_goal]  # trusted-reference rungs (M2 subset)
+  splits:
+    # Calibration and test must be disjoint on every axis (assert_disjoint).
+    calib:
+      tasks: [task_0]
+      scenes: [scene_0]
+      seeds: [42]
+    test:
+      tasks: [task_1, task_2]
+      scenes: [scene_1, scene_2]
+      seeds: [43, 44]

@@ -11,10 +11,14 @@ per-rollout score arrays:
 * :func:`run_condition_matrix` / :class:`ResultsTable` in
   :mod:`t7.eval.harness` — orchestrate per-condition evaluation and retain the
   raw arrays ``make_figures`` consumes.
+* :func:`make_figures` / :func:`results_table_to_dict` in
+  :mod:`t7.eval.figures` — regenerate every figure purely from the logged
+  ``results.json`` (an M2 deliverable: figures are always script-regenerable).
 """
 
 from __future__ import annotations
 
+from t7.eval.figures import make_figures, results_table_to_dict
 from t7.eval.harness import ConditionRow, ResultsTable, run_condition_matrix
 from t7.eval.metrics import (
     OperatingPoint,
@@ -35,7 +39,9 @@ __all__ = [
     "assert_disjoint",
     "benign_degradation",
     "detection_latency_summary",
+    "make_figures",
     "proportion_ci",
+    "results_table_to_dict",
     "roc_auc",
     "run_condition_matrix",
     "tpr_at_fpr",
