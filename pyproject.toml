@@ -47,3 +47,12 @@ src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
+
+[tool.pyright]
+# Point the type-checker at the uv venv (editable `t7`) and the src layout, and pin
+# the interpreter so `X | None` unions and `t7.*` imports resolve correctly.
+venvPath = "."
+venv = ".venv"
+pythonVersion = "3.11"
+extraPaths = ["src"]
+include = ["src", "tests"]
