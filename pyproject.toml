@@ -36,6 +36,10 @@ packages = ["src/t7"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# Make `src` importable independently of the editable install (uv's editable .pth
+# is regenerated on every `uv run` and is unreliable on this machine); `t7` then
+# resolves from the source tree regardless.
+pythonpath = ["src"]
 # importlib mode + no __init__.py in tests/ avoids the test tree shadowing the real `t7` package.
 addopts = "-q --import-mode=importlib"
 
