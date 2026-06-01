@@ -1,5 +1,14 @@
 # T7 — Goal-Action Consistency Detection for Instruction-Injected VLA Policies
 
+> **⮕ REFRAMED 2026-06-01 — read the playbook first.** The research **headline** is now *The Embodiment Evasion
+> Tax: Measuring Adaptive Evasion Costs of Runtime Defences for Vision-Language-Action Models* — a
+> **measurement** of per-layer (**L0** input / **L1** internal-probe / **L2** behavioural) adaptive-evasion
+> cost, **not** a goal-action *defence* claim. The goal-action consistency detector described below is now the
+> **L2 behavioural layer + its privileged oracle (metric A)**; everything here remains valid as the L2 /
+> threat-model foundation. Operational source of truth = [`t7-execution-playbook.md`](./t7-execution-playbook.md)
+> — **§3a (reframe), §2 (tiered roadmap), §4b (what to implement), H6 (hypothesis)**. (Internal codename stays
+> **T7**; *Embodiment Evasion Tax* is the dissertation title.)
+
 > **Status:** Theme **agreed 2026-05-30**. Phase: Scope → **Design** (CLAUDE.md §3).
 > **This document** consolidates the T7-specific reasoning from the theme-scoping session into one
 > self-contained place, to drive the next decisions about T7's direction. Broader landscape, gap map,

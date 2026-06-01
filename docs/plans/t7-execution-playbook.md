@@ -33,6 +33,11 @@ arm (author decision + Codex review, 2026-05-31), pursued only if M4 finishes wi
 claim (a) and **do not** claim adaptive robustness. The privileged-state floor (below) guarantees a defensible
 dissertation even if the deployable arm underperforms.
 
+**Compute & tiers (2026-06-01).** Baseline = single GB10 (**Tier-F**, guaranteed). An **A100/H100 cluster is
+requested** (D8, pending) → **Tier-N** (deployable B/C, realistic adaptive GCG, full reference ladder) becomes
+committed at the **M1 compute-confirmation checkpoint**; fallback to Tier-F if it slips. Headline reframe =
+**§3a / H6**; the **tiered roadmap = §2**; **what to implement = §4b**.
+
 **Five non-negotiables (CLAUDE.md):**
 1. **Reproducibility** — pin & record seeds; capture exact env; provenance for every checkpoint/dataset
    (source, hash, date, licence); log each run to a timestamped **write-once** `results/`; change **one
@@ -53,41 +58,55 @@ dissertation even if the deployable arm underperforms.
 ## 1. You Are Here  ← update this block every session
 
 - **Last updated:** 2026-06-01
-- **Phase:** **Design → M0 (exiting)**. Coding gate **lifted for M1–M2 (author OK, 2026-05-31)**; **pre-GB10 local build underway** — model-free M1–M2 components on M1/8 GB (`docs/plans/t7-local-prep-plan.md`). OpenVLA/GCG/LIBERO *runs* await GB10.
+- **Phase:** **Design → M0 (exiting)**. Coding gate **lifted for M1–M2 (author OK, 2026-05-31)**; **pre-GB10 local build underway** — model-free M1–M2 components on M1/8 GB (`docs/plans/t7-local-prep-plan.md`). OpenVLA/GCG/LIBERO *runs* await the granted GPU. **Headline reframed → Embodiment Evasion Tax (§3a, H6); milestones re-mapped (§2); what-to-implement = §4b; compute may upgrade GB10→A100/H100 cluster (D8, pending).**
 - **Last completed:** Theme = T7; understanding doc; **RoboGCG defence verified** (`docs/references/`); **D1–D7 resolved** (§6/§10; D4/D7 OPEN → M1); **Phase-3 implementation plan drafted**; **Codex third-party review incorporated** (causal prefix-window + detection latency; per-rollout FPR + CIs; metric(A) schema frozen; fair-calibrated baselines; M5→stretch — see §10).
 - **Currently:** Executing the **pre-GB10 local-prep plan** (`docs/plans/t7-local-prep-plan.md`) on M1/8 GB via TDD. **Done 2026-05-31: Tasks 0,1,2,3,4,5,6,7,8,9** — env scaffold, repro infra, data records, **action codec (OpenVLA formula verified from source `c8f03f48`; provenance recorded)**, privileged-state adapter, **metric (A) — annotation schema FROZEN (`docs/plans/metric-a-annotation-schema.md`, `2c2f163`) + causal scorer (P1 progress / P2 distractor / P3 grasp; combine=max; privileged anchor via resolver seam; non-causal monitoring-ceiling variant)**, FP-calibrated detector, eval harness (ROC/AUC, TPR@FPR + Wilson/CP CIs, latency, split-disjointness), **M2 baselines (`3287c5c`): goal-agnostic χ²-OOD action anomaly + perplexity/text-only filter (mock + GB10 stub), both through the *same* `calibrate`**, **config/scripts/figures (`60b0462`): frozen pydantic `Config` + `one_variable_diff`; shared GB10 guard (no-CUDA → exit non-zero, no silent no-op); `make_figures` regenerates ROC/score-hist/TPR@FPR-CI per condition purely from a logged `results.json`; 6 runnable scripts** — **231 tests green, full `src/t7` type-clean** (see plan Status table). **Remaining delegable:** Task 11 runbook. **Needs author/me first:** Task 10 LIBERO smoke (time-boxed, optional). *Note: 3 pre-existing pyright errors + 1 ruff B905 sit in untouched test files (`test_state.py`/`test_records.py`/`test_consistency_a.py`) — pre-Task-9, not yet cleaned.*
-- **▶ NEXT ACTION:** **Local (now):** implement local-prep Tasks 0–11. **On GB10 (M1 milestone):** stand up OpenVLA-7B (4-bit) on LIBERO; reproduce benign baseline + RoboGCG *targeted* redirect; run the **GCG micro-benchmark** (fixes D4/D7); check metric (A) signal **incl. a coarse-goal separation check** → **GO/NO-GO gate**.
+- **▶ NEXT ACTION:** **Local (now):** finish local-prep Tasks 10–11 **+ build the model-free §4b interfaces** (L1 `InternalProbe`/`ActivationExtractor`, idealized action-space attacker, cross-layer eval + tax metrics) with synthetic-fixture tests. **On the granted GPU (M1):** stand up OpenVLA-7B on the *actual* HW; benign baseline + RoboGCG *targeted* redirect; **GCG micro-bench on that HW (fixes D4/D7)**; metric-(A) signal incl. coarse-goal check; **CONFIRM cluster access → lock Tier-N scope (D8)** → **GO/NO-GO gate (H1)**.
 - **Blockers:** none.
-- **Open decisions outstanding:** **D4, D7 only** (OPEN → M1 micro-benchmark). D1/D2/D3/D5/D6 DECIDED.
+- **Open decisions outstanding:** **D4, D7** (OPEN → M1 GCG micro-bench on the granted HW) **＋ D8 compute tier** (A100/H100 cluster requested 2026-06-01, pending → confirm at M1; sets Tier-N committed scope). D1/D2/D5/D6 DECIDED; **D3 re-tiered** by the reframe (operator-goal rung committed, task-ID → Tier-N, see §2 M5).
 - **Floor secured?** ❌ not yet (target: end of **M2**, ~Jul 12).
-- **Novelty status:** **M4 deployable detector = committed** (primary novelty); **M5 adaptive = stretch** (only if M4 done with slack).
+- **Novelty status:** headline = **Embodiment Evasion Tax (H6)**. **M3 idealized intrinsic-tax frontier = committed (Tier-F, GB10-guaranteed)**; **M4 deployable B/C + realistic adaptive = committed-if-cluster (Tier-N, D8)**; **M5 reference-ladder + SABER = secondary/stretch**.
 - **Direction (DECISION, author-converged 2026-06-01 — flag for supervisor sign-off):** research **core reframed** to the *Embodiment Evasion Tax* measurement (see §3 **H6** + **§3a**). The behavioural detector is recast as an **instrument** measuring per-layer adaptive-evasion cost (**L0** input < **L1** internal-probe < **L2** action-monitor), **not** a claimed defence/"firewall". Scope held to the **instruction channel** (RoboGCG primary, SABER secondary); physical/CoT injection (TRAP) = future arm, out of committed scope. Floor (M2 + cheap idealized action-space frontier) unchanged → deliverable still guaranteed. *Citation pass DONE 2026-06-01:* all 5 flagged items resolved + **16 cited PDFs downloaded, gitignored, SHA-256-pinned** with provenance (`docs/references/README.md`). Net: **nothing scoops the runtime/FP-calibrated/adaptive lane** (VLA defences found are training-time EDPA/STRONG-VLA; actalign benign-only; AttackVLA attack-only). Title **LOCKED** (§3a, pending supervisor).
 
 ---
 
 ## 2. Milestone roadmap (W1 = week of 2026-06-01; submit early Sep 2026)
 
-**Tiers.** **F = Floor** (guaranteed deliverable; must finish). **N = Novelty** (the real goal; committed,
-protected by gates — gates decide *how to adapt*, never *whether to drop*).
+**Tiers.** **F = Floor** (guaranteed; **compute-agnostic — runs on a single GB10**). **N = Novelty** (the real
+goal; **committed once the A100/H100 cluster is confirmed**, gated — gates decide *how to adapt*, never
+*whether to drop*).
 
-| ID | Tier | Milestone | Target weeks (dates) | Exit gate (verifiable) |
-|----|------|-----------|----------------------|------------------------|
-| **M0** | F | **Design lock** — resolve D1–D7 (§6), write Phase-3 implementation plan, freeze metric/reference/eval/baseline/metrics | W1–W2 (Jun 1–14) | Implementation plan agreed in `docs/plans/`; D1–D7 logged as DECIDED/OPEN-with-owner; **then** code allowed |
-| **M1** | F | **Environment + viability gate** — stand up OpenVLA-7B (4-bit) on LIBERO; benign baseline; reproduce RoboGCG; GCG micro-benchmark on GB10; signal sanity-check with metric (A) | W2–W4 (Jun 8–28) | **GO/NO-GO:** benign baseline reproduced **＋** RoboGCG **targeted** redirect confirmed (not denial-only) **＋** visible benign-vs-attacked separation in (A) **that survives at the coarse operator-goal reference, not the clean-instruction ceiling alone** (seeds pinned). *If denial-only → reframe per understanding-doc §9; if separation only at the clean-instruction ceiling → detection necessity is weak, flag before deep work.* |
-| **M2** | F | **Floor detector** — consistency metric (A) over action windows + **FP-calibrated** detector; clean-instruction (ceiling) + coarse operator-goal rung; perplexity baseline | W4–W6 (Jun 22–Jul 12) | **FLOOR SECURED:** reported TPR@fixed benign FPR (1%,5%) on a **held-out** split + ROC/AUC + benign task-success degradation; beats/▵ vs perplexity baseline characterised |
-| **M3** | N | **Trusted-reference ladder** — measure detection+FPR across rungs (clean → coarse operator goal → task-ID→goal) | W6–W8 (Jul 6–26) | Ladder table: TPR@FPR per rung; "necessity" critique addressed (which rungs survive "why not just use it") |
-| **M4** | **N — committed** | **Deployable detector (B and/or C)** — learned action-semantics map (B) and/or reference-policy divergence (C); no privileged info; **specify supervision labels, negative-pair construction, train/test task-disjoint (no task-prior leakage)**; calibrate+evaluate vs the (A) ceiling | W7–W10 (Jul 13–Aug 9) | Deployable **per-rollout** TPR@FPR (+CIs) reported **with honest gap to the (A) upper bound** |
-| **M5** | **N — stretch** | **Adaptive attack (scoped)** — attack the **deployable B/C detector only** (fixed white/black-box choice **＋ query/compute budget ＋ #attempts cap**); measure robustness. *Run only if M4 completes with slack.* | W10–W11 (Aug 3–16) **if reached** | Adaptive per-rollout detection + **quantified attacker cost trade-off**; honest "holds vs breaks". *If not reached: claim (a) attacker-aware evaluation only, not adaptive robustness.* |
-| **M6** | F | **Consolidation + ablations** — one-variable-at-a-time ablations; freeze all operating points; figures script-regenerable | W11–W12 (Aug 10–23) | **RESULTS FREEZE** in write-once `results/`; every figure regenerable from logged data by a script |
-| **M7** | F | **Analysis + claims ledger** — map every claim→evidence; report negatives | W12–W13 (Aug 17–30) | §9 claims ledger complete; every claim traceable to a result file |
-| **M8** | F | **Write-up** — dissertation draft (overlaps M7); author rewrites generated prose; verify all citations | W12–W14 (Aug 17–Sep 6) | Complete draft; **zero** `[CITATION NEEDED]` remaining |
-| **M9** | F | **Polish + submit** — final review, reproducibility appendix, submission | W14–W15 (Aug 31–Sep 11) | Submitted early Sep 2026 |
+**Compute posture (2026-06-01, D8 — pending).** Single GB10 is the guaranteed baseline; an **A100/H100 cluster
+has been requested** from the institution and is **expected but unconfirmed**. The roadmap is therefore
+**compute-tiered**: Tier-F secures the dissertation on GB10 alone; Tier-N (deployable B/C, realistic adaptive
+GCG, full reference ladder, larger matrix) is **promoted to committed at the M1 compute-confirmation
+checkpoint**, with graceful fallback to Tier-F if access slips. **Reproducibility rule: log the exact hardware
+per run; never compare results across different hardware within a single claim.**
 
-**Critical path & protection of the novelty:** M0→M1→M2 secure the floor by ~Jul 12, leaving **~4 weeks
-(W7–W10)** for the **committed** novelty (**M4** deployable detector) before the W11–W12 results freeze.
-Protect M4: if M2 slips, compress M3 (run fewer rungs) **before** touching M4. **M5 (adaptive) is stretch** —
-attempt only with genuine slack after M4. The only **hard kill** is the M1 GO/NO-GO (no signal at all). Later
-gates *adapt scope* (drop M5, trim M3) but never abandon **M4**.
+**Milestone contents re-mapped 2026-06-01** for the Evasion-Tax reframe (§3a): the new headline (cross-layer
+comparison + **idealized evasion-tax frontier**) is now **M3**; the old trusted-reference ladder moves to
+**M5**. The Phase-3 plan's M3–M5 *sketch* is superseded by the table below (its **M1–M2 component contracts
+remain valid**).
+
+| ID | Tier | Milestone | Target weeks | Exit gate (verifiable) |
+|----|------|-----------|--------------|------------------------|
+| **M0** | F | **Design lock** — D1–D7 (§6) + the **Evasion-Tax reframe (H6/§3a)** + this guidebook | W1–W2 | done; reframe author-converged (**supervisor sign-off pending**); coding allowed |
+| **M1** | F | **Environment + viability gate + COMPUTE CONFIRMATION** — OpenVLA-7B on the granted HW; benign baseline; RoboGCG *targeted* redirect; **GCG micro-bench on the *actual* HW (resolves D4/D7)**; metric-(A) signal; **confirm cluster → lock Tier-N scope (D8)** | W2–W4 | **GO/NO-GO (H1):** benign reproduced **＋** RoboGCG *targeted* redirect (not denial) **＋** benign-vs-attacked separation **surviving at the coarse operator-goal reference** **＋ compute tier locked**. *Denial-only → reframe to task-deviation (understanding-doc §9); separation only at the clean-instruction ceiling → necessity weak, flag.* |
+| **M2** | F | **Floor detection layer** — **L0** (perplexity) + **L2-oracle** (metric A) FP-calibrated; **build the L1 internal-probe arm** (activation-delta primary; attention ablation) | W4–W6 | **non-adaptive cross-layer TPR@{1%,5%} per-rollout FPR** (L0/L1/L2) on a **held-out** split + ROC/AUC + CIs + benign degradation (**H2**) |
+| **M3** | **F** | **Idealized Evasion-Tax frontier (M-b) — THE committed headline** — idealized action-space attacker vs the L2-oracle → (ASR, evasion) Pareto; adaptive GCG vs L1 (standard white-box); compute the **intrinsic tax** + the L0/L1/L2 evasion-cost ordering | W6–W9 | **H6 core:** idealized (ASR, evasion) frontier + tax scalar(s) with CIs; **all four H6 outcomes reportable** |
+| **M4** | **N — committed-if-cluster** | **Deployable L2 (B/C) + realistic adaptive comparison** — build deployable behavioural detector (B/C, **train/test task-disjoint**); **realistic adaptive GCG-through-policy** vs L1 and L2 at matched budget → fair *deployable-vs-deployable* tax | W8–W11 | deployable per-rollout TPR@FPR +CIs **and** realistic adaptive tax with **honest gap to the M3 oracle** (**H4 + H6-realistic**). *Fallback if no cluster: report M3 + oracle-gap; mark realistic-adaptive **not run**.* |
+| **M5** | **N — secondary/stretch** | **Reference-coarsening ladder + threat-generalization** — operator-goal rung (committed-secondary, Tier-F-cheap) ＋ task-ID rung (Tier-N) ＋ **SABER** fluent attack (where L0 dies) ＋ physical/CoT note (discussion only) | W9–W12 | ladder TPR@FPR per rung (**H3**); SABER arm = input-level dies but behavioural fires |
+| **M6** | F | **Consolidation + ablations** — one-variable ablations (k, probe type, combine rule); freeze operating points; figures script-regenerable | W11–W12 | **RESULTS FREEZE** in write-once `results/`; every figure script-regenerable |
+| **M7** | F | **Analysis + claims ledger** — every claim→evidence; report negatives | W12–W13 | §9 ledger complete; every claim → a result file |
+| **M8** | F | **Write-up** — draft (overlaps M7); author rewrites generated prose; verify citations | W12–W14 | complete draft; **zero** `[CITATION NEEDED]` |
+| **M9** | F | **Polish + submit** — reproducibility appendix; submission | W14–W15 | submitted early Sep 2026 |
+
+**Critical path & protection.** M0→M1→M2→**M3** secure the **floor + the headline intrinsic-tax result on GB10
+alone** — the dissertation is safe regardless of the cluster. **M4 (Tier-N)** turns the headline into the fair
+*deployable-vs-deployable* result the moment the cluster is confirmed; if it slips, M3 + the honest oracle-gap
+still stand. **M5 is secondary/stretch** (lead the necessity argument with the operator-goal rung). The only
+**hard kill** is the M1 GO/NO-GO (no signal at all); later gates *adapt scope* (trim M5, defer M4 realistic-arm)
+but **never abandon M3** (the committed headline).
 
 ---
 
@@ -100,10 +119,10 @@ gates *adapt scope* (drop M5, trim M3) but never abandon **M4**.
 |----|-----------|------------|--------------------|-----------|----------------|--------|
 | **H1** | M1 | RoboGCG-injected rollouts yield action windows **measurably inconsistent** with the trusted goal, separable from benign by metric (A). | benign-vs-attacked score distributions separable (AUC ≫ 0.5). | AUC ≈ 0.5 (overlap). | High AUC → proceed to M2. Low → rethink metric / reframe to "task-abandonment detection" before investing. | ⬜ untested |
 | **H2** | M2 | A threshold τ set on a **calibration split** gives **high TPR at a low *per-rollout* benign false-abort rate** *without* destroying benign task success — the **usable operating point RoboGCG's borrowed defences lacked**. | per-rollout TPR@{1%,5%} false-abort (with CIs) ≫ **fair-calibrated** perplexity baseline; benign task-success drop small; bounded detection latency. | No τ separates without large benign cost. | Usable point → floor secured, push novelty. None → **negative result** (behavioural detection also lacks a usable point under these conditions) — still publishable; report cleanly. | ⬜ untested |
-| **H3** | M3 | Detection degrades **gracefully** as the trusted reference coarsens; still useful at deployment-realistic rungs. | ~monotone TPR@FPR decline; coarse-goal rung still > baseline. | Detection collapses to baseline once the reference is coarser than the operational instruction. | Survives → lead the deployment argument with coarse rungs. Collapses → report where/why the "necessity" critique bites (thesis backbone either way). | ⬜ untested |
+| **H3** | M5 | Detection degrades **gracefully** as the trusted reference coarsens; still useful at deployment-realistic rungs. | ~monotone TPR@FPR decline; coarse-goal rung still > baseline. | Detection collapses to baseline once the reference is coarser than the operational instruction. | Survives → lead the deployment argument with coarse rungs. Collapses → report where/why the "necessity" critique bites (thesis backbone either way). | ⬜ untested |
 | **H4** | M4 | A **deployable** metric (B/C, no privileged state) recovers a **substantial fraction** of the (A) ceiling's detection power. | deployable TPR@FPR within a modest gap of (A). | Large gap → deployable detection infeasible at this budget. | Small gap → headline deployable result. Large gap → report (A) as upper-bound-only + the gap as a finding. | ⬜ untested |
-| **H5** *(stretch)* | M5 | An attacker aware of the **deployable B/C** detector can reduce detection **but at a measurable cost** (lower ASR / higher perplexity / restricted targets) — the detector **raises the attacker's bar** even if not unbreakable. | adaptive attack (fixed query/compute budget) lowers detection *and* lowers ASR / raises cost — a quantified trade-off. | Adaptive attacker evades at **no** cost. | Trade-off exists → bonus security contribution. No cost → important **negative**. *Only if M4 done with slack; else not claimed.* | ⬜ untested (stretch) |
-| **H6** *(reframe core)* | M4–M5 | Across defence layers (**L0** input-filter < **L1** internal-representation probe < **L2** behavioural action-monitor), **L2 imposes a higher adaptive-evasion cost** than L1/L0 at matched benign FPR — and this *embodiment evasion tax* is **intrinsic** (persists under an *idealized action-space* attacker, **mechanism M-b**), not merely an artifact of GCG failing to differentiate through the closed-loop rollout (**M-a**). | At matched FPR, suppressing L2's TPR to L1's evaded level forces measurable ASR forfeit / more queries; the **idealized action-space Pareto frontier** for L2 dominates (is worse-for-attacker than) L1's; tax > 0 with CIs. | L2 evaded at **≤** L1's cost (tax ≤ 0), **or** the tax vanishes under the idealized attacker (it was only M-a). | **4 outcomes, all reportable:** (i) L2>L1 & M-b → *embodiment creates an evasion tax → place the boundary at the action layer* (headline). (ii) L2 also falls → *embodiment alone does not save VLA defences*. (iii) L1 strong → *VLA internal reps carry security-relevant injection signal*. (iv) both weak → *adaptive evaluation is mandatory for VLA defences*. | ⬜ untested |
+| **H5** *(Tier-N; realistic-adaptive arm of H6)* | M4 | An attacker aware of the **deployable B/C** detector can reduce detection **but at a measurable cost** (lower ASR / higher perplexity / restricted targets) — the detector **raises the attacker's bar** even if not unbreakable. | adaptive attack (fixed query/compute budget) lowers detection *and* lowers ASR / raises cost — a quantified trade-off. | Adaptive attacker evades at **no** cost. | Trade-off exists → bonus security contribution. No cost → important **negative**. *Only if M4 done with slack; else not claimed.* | ⬜ untested (stretch) |
+| **H6** *(reframe core)* | M3–M4 | Across defence layers (**L0** input-filter < **L1** internal-representation probe < **L2** behavioural action-monitor), **L2 imposes a higher adaptive-evasion cost** than L1/L0 at matched benign FPR — and this *embodiment evasion tax* is **intrinsic** (persists under an *idealized action-space* attacker, **mechanism M-b**), not merely an artifact of GCG failing to differentiate through the closed-loop rollout (**M-a**). | At matched FPR, suppressing L2's TPR to L1's evaded level forces measurable ASR forfeit / more queries; the **idealized action-space Pareto frontier** for L2 dominates (is worse-for-attacker than) L1's; tax > 0 with CIs. | L2 evaded at **≤** L1's cost (tax ≤ 0), **or** the tax vanishes under the idealized attacker (it was only M-a). | **4 outcomes, all reportable:** (i) L2>L1 & M-b → *embodiment creates an evasion tax → place the boundary at the action layer* (headline). (ii) L2 also falls → *embodiment alone does not save VLA defences*. (iii) L1 strong → *VLA internal reps carry security-relevant injection signal*. (iv) both weak → *adaptive evaluation is mandatory for VLA defences*. | ⬜ untested |
 
 ### 3a. Direction lock — the *Embodiment Evasion Tax* measurement frame (DECISION 2026-06-01)
 
@@ -165,11 +184,57 @@ attack-only). "firewall" may appear in the **intro framing only**, never the mai
   *Cheap, clean → **upper bound**, NOT deployable. Label as such everywhere; the non-causal full-window
   variant is a post-hoc **monitoring ceiling** only.* → **M1/M2 (floor).**
 - **(B) Learned action-semantics map** — small model: (observation, action_window) → goal embedding /
-  descriptor; compare to trusted-goal embedding. *Deployable.* → **M4 (primary novelty).**
+  descriptor; compare to trusted-goal embedding. *Deployable.* → **M4 (deployable L2; Tier-N).**
 - **(C) Reference-policy divergence** — a small benign policy predicts expected action distribution for the
-  trusted goal; flag divergence. *Deployable; needs a second policy.* → **M4 (primary novelty), alt/compl.**
+  trusted goal; flag divergence. *Deployable; needs a second policy.* → **M4 (deployable L2; Tier-N), alt/compl.**
 - **(D) VLM/LLM judge** — **avoid** (too close to Wu et al. `actalign`; heavy; undermines the
   lightweight/non-CoT differentiation). Only if B and C both fail and time remains.
+
+---
+
+## 4b. What to implement — the Evasion-Tax instruments (the new builds beyond the floor)
+
+> The floor code (metric A, calibration, eval stats, baselines — local-prep Tasks 0–9) is **done and reused
+> as-is**: metric A = the **L2 oracle**, perplexity = **L0**, the eval harness = the shared calibrated
+> comparator. This section specifies the **three new instruments** the reframe needs. Interfaces +
+> synthetic-fixture tests are buildable **now** (model-free, TDD per local-prep conventions); the parts needing
+> OpenVLA activations or LIBERO rollouts are deferred behind thin interfaces to the granted GPU.
+
+**(I) L1 internal-representation probe** — `src/t7/metric/probe_internal.py` (+ an `ActivationExtractor` seam).
+- **Contract:** `InternalProbe.score(features) -> Score` (higher = more injected), calibrated through the
+  **same `calibrate`** (invariant #4) at the matched per-rollout FPR.
+- **Primary = activation-delta linear probe** (Task-Drift lineage, `2406.00799`): features = hidden-state delta
+  across the injection point in OpenVLA's transformer trunk; a logistic-regression / linear probe trained on
+  **benign-vs-injected** rollouts, **train/test task-disjoint** (report whether it merely memorises a task prior).
+- **Ablation = attention-map MLP** (AlignSentinel lineage, `2602.13597`): attention-pattern features → small MLP.
+  Pre-registered ablation; AlignSentinel is the **scoop-risk closest prior** → cite + differentiate (text-LLM vs
+  our VLA/action setting); do **not** depend on exact reproduction.
+- **`ActivationExtractor`** = thin seam over an OpenVLA forward pass returning hidden states / attention at the
+  decision step; **synthetic fixtures** for local tests, real impl on the GPU.
+
+**(II) Idealized action-space attacker (M-b — the intrinsic-tax instrument)** — `src/t7/attack/idealized_frontier.py`.
+- **Contract:** given `(task, TargetActionSpec (D2), metric-A oracle scorer)`, search over **executable action
+  sequences** (respecting reachability + the persistence window) to **maximise target-reach while minimising the
+  metric-A consistency score** → trace the **(ASR, evasion = 1−detection) Pareto frontier**.
+- **Detector-agnostic by design:** it attacks the *goal-consistency concept* via the privileged oracle → a
+  **lower bound on attacker cost against any goal-consistency behavioural detector**. This is what isolates
+  **M-b (intrinsic)** from **M-a** (the "GCG can't differentiate through the rollout" artifact).
+- The **optimiser + frontier logic are model-free** (locally testable on synthetic dynamics); evaluating
+  reachability / privileged-state on real scenes is the GPU/LIBERO part.
+
+**(III) Cross-layer evaluation + the "tax" metrics** — extend `src/t7/eval/`.
+- Run **L0 / L1 / L2** through the **same calibration** and the **same attacks**; emit the comparative table +
+  the Pareto-frontier overlay.
+- **Operational tax metrics (define once, report with CIs):** (a) **ASR forfeited** to bring a layer's TPR down
+  to a fixed evaded level; (b) **attacker queries/compute** to reach a fixed evasion; (c) **area between Pareto
+  frontiers** (L2 vs L1). These double as the **reusable VLA defence-evaluation protocol** (the free secondary
+  contribution; AttackVLA is attack-only).
+- **Roles fixed:** L2-oracle = metric A (privileged; M-b + non-adaptive ceiling). L2-deployable = metric B/C
+  (M4, Tier-N). L1 = internal probe. L0 = perplexity. **Never present the oracle as deployable.**
+
+**Build order:** L1 interface + idealized-attacker optimiser + cross-layer eval (all model-free, **now**) →
+real `ActivationExtractor` + LIBERO reachability (M1/M2 on GPU) → idealized frontier (**M3**) → deployable B/C +
+realistic adaptive (**M4**, Tier-N).
 
 ---
 
@@ -197,6 +262,10 @@ attack-only). "firewall" may appear in the **intro framing only**, never the mai
   it; "threshold unknowable a priori" is a separate *deployment* argument, stated as such, not an in-experiment
   excuse); **goal-agnostic action-anomaly baseline (mandatory** — shows goal-conditioning beats mere OOD
   detection); position conceptually vs `actalign`.
+- **Hardware provenance (2026-06-01):** record the **exact hardware** (GB10 / A100 / H100) in every run log;
+  **never compare results across different hardware within a single claim** (HW is a variable — re-run the
+  comparator on the same HW). All L0/L1/L2 cross-layer comparisons and adaptive-cost frontiers must be produced
+  on one hardware class.
 
 ---
 
@@ -213,7 +282,8 @@ attack-only). "firewall" may appear in the **intro framing only**, never the mai
 | **D4** | Eval scale | Suites: LIBERO-Spatial/-Object/-Goal core (-10 optional). Provisional: ~5–10 tasks/suite, ~20–50 targets/task (subsampled from RoboGCG's 1792), ≥3 pinned seeds; calibration/test split disjoint by task/scene/seed. **Final matrix fixed at M1** from micro-benchmark s/target. | **OPEN** → M1 |
 | **D5** | Baselines | benign success; RoboGCG published numbers (attack sanity); **perplexity/text-only filter** (detector to beat, **given the same calibration protocol** — fair); **goal-agnostic action-anomaly baseline (mandatory)**; conceptual positioning vs `actalign`. | **DECIDED** |
 | **D6** | Metrics | per §5 (causal prefix-window detection; **per-rollout** TPR@{1%,5%} false-abort **+ CIs** held-out; **detection latency**; benign degradation; detection & **target-action-blocked** rate; M5(stretch) detection-vs-adaptive-ASR). No "recovered task-success" unless replan built. | **DECIDED** |
-| **D7** | Compute budget | GCG micro-benchmark on GB10 first (H100's ~185–604 s/target may not hold at 4-bit); bound attack compute, concentrate on detector; **subsample to fit at M1**. Record actual s/target. | **OPEN** → M1 |
+| **D7** | Compute budget | GCG micro-benchmark on the granted HW first (H100's ~185–604 s/target may not hold at 4-bit on GB10); bound attack compute, concentrate on detector; **subsample to fit at M1**. Record actual s/target. | **OPEN** → M1 |
+| **D8** | Compute tier | Baseline single GB10 = **Tier-F** (guaranteed). **A100/H100 cluster requested 2026-06-01** → if confirmed at M1, **Tier-N** (deployable B/C, realistic adaptive GCG, full reference ladder, larger matrix) becomes committed; else graceful fallback to Tier-F. **Log HW per run; no cross-HW comparison within a claim.** | **OPEN** → M1 confirmation |
 
 > **Post-review refinements (2026-05-31, Codex third-party review):** (1) detection is **causal** (prefix
 > window + **detection-latency** metric); full-window = monitoring ceiling. (2) primary FPR = **per-rollout**
@@ -248,18 +318,19 @@ attack-only). "firewall" may appear in the **intro framing only**, never the mai
 - ⬜ Build calibrated detector: τ on calibration split → target **per-rollout** false-abort; fire → hold before executing `a_t`.
 - ⬜ Evaluate: ROC/AUC, **per-rollout** TPR@{1%,5%} false-abort (**+CIs**) on held-out split, benign degradation, **detection latency**. → **H2**, **FLOOR SECURED**.
 - ✅ Baselines under the **same calibration** (model-free, `3287c5c`): **mandatory goal-agnostic anomaly** (χ²-OOD on the action stream, goal-blind + causal) **+ perplexity/text-only filter** (`MockPerplexityScorer` + GB10 stub `RealPerplexityScorer`; monotone ppl→score keeps calibration order-equivalent to raw-perplexity thresholding). *(Real LM-perplexity backend + actual benign-vs-attacked numbers remain GB10.)*
+- ⬜ **(NEW, model-free — build now, §4b)** Interfaces + synthetic-fixture tests for the **L1 internal probe** (`InternalProbe` + `ActivationExtractor`), the **idealized action-space attacker**, and the **cross-layer eval + tax metrics** — so GPU day-1 is "plug in activations + rollouts". `verify:` all calibrate through the *same* `calibrate`; activation/LIBERO impls stubbed for GB10.
 
-### M3 — Trusted-reference ladder  *(N)*
-- ⬜ Construct coarse operator-goal + task-ID→goal references in LIBERO.
-- ⬜ Sweep detection+FPR across rungs → ladder table. → **H3**.
+### M3 — Idealized Evasion-Tax frontier  *(F — committed headline)*
+- ⬜ **On GPU:** extract OpenVLA activations during benign+attacked rollouts; train + calibrate the **L1 probe** (activation-delta primary; attention-map ablation), **task-disjoint**. → completes **H2** cross-layer + feeds **H6**.
+- ⬜ Run the **idealized action-space attacker** vs the metric-A oracle → **(ASR, evasion) Pareto frontier**; compute the **tax scalar(s)** + the L0/L1/L2 evasion-cost ordering, +CIs. → **H6 core** (all four outcomes reportable).
 
-### M4 — Deployable detector (B/C)  *(N, committed — primary novelty)*
-- ⬜ Build metric (B) learned action-semantics map (and/or (C) reference-policy); **specify supervision labels, negative-pair construction, train/test task-disjoint** (no task-prior leakage).
-- ⬜ Calibrate + evaluate deployable detector (per-rollout, +CIs); compare to (A) ceiling. → **H4**.
+### M4 — Deployable L2 (B/C) + realistic adaptive  *(N — committed-if-cluster)*
+- ⬜ Build deployable behavioural detector **(B)** learned action-semantics map and/or **(C)** reference-policy; **specify supervision labels, negative-pair construction, train/test task-disjoint** (no task-prior leakage). → **H4** (gap to the A oracle).
+- ⬜ **Realistic adaptive GCG-through-policy** vs **L1 and L2** at a matched query/compute budget → fair *deployable-vs-deployable* tax. → **H6-realistic**. *Fallback if no cluster: skip; report M3 + oracle-gap, mark **not run**.*
 
-### M5 — Adaptive attack  *(N, stretch — only if M4 done with slack)*
-- ⬜ Implement adaptive attack against the **deployable B/C detector only** (fixed white/black-box + query/compute budget + #attempts cap).
-- ⬜ Measure detection vs adaptive ASR + attacker cost. → **H5**.
+### M5 — Reference ladder + threat-generalization  *(N — secondary/stretch)*
+- ⬜ Operator-goal rung (committed-secondary, Tier-F) + task-ID rung (Tier-N); sweep detection+FPR across rungs → ladder table. → **H3**.
+- ⬜ (stretch) **SABER** fluent-injection arm — **confirm OpenVLA inclusion first** (`docs/references/README.md`); show L0 (perplexity) dies but L2 fires. (Physical/CoT generalization = discussion only.)
 
 ### M6–M9 — Consolidate / analyse / write / submit
 - ⬜ One-variable ablations; freeze results; figure-regen scripts (**RESULTS FREEZE**).
@@ -274,7 +345,7 @@ attack-only). "firewall" may appear in the **intro framing only**, never the mai
 ```
 run_id:        <UTC timestamp>-<short-slug>
 git_commit:    <hash>
-hardware:      GB10 (record CUDA / driver / torch versions)
+hardware:      <GB10 | A100 | H100-cluster> — record exact HW + CUDA/driver/torch (NEVER compare across HW within one claim)
 config:        <path to pinned config>
 seed(s):       <pinned, recorded>
 hypothesis:    <H#>
@@ -330,6 +401,9 @@ one_variable:  <what single variable changed vs the previous run>
 | 2026-05-31 | **Adjacent prior work verified** (4 arXiv IDs all correct): Task Drift, Instruction Hierarchy, AlignSentinel (text-LLM), SABER (VLA attack) | none scoop the embodied/action-level contribution | **novelty narrowed to the VLA action-level instantiation**; SABER = candidate secondary attack arm (understanding-doc §6) |
 | 2026-05-31 | **Author OK → start M1–M2 scaffolding code** (model-free, M1/8 GB); pre-GB10 local-prep plan written | gate-lift precondition met (plan agreed in `docs/plans/` + author OK); OpenVLA inference infeasible locally (8 GB RAM) → build+test only model-free components; experimental *runs* await GB10 | `docs/plans/t7-local-prep-plan.md`; coding begins |
 | 2026-05-31 | **Metric (A) annotation schema FROZEN** (load-bearing Task 5); design **delegated by author to Claude** with "adopt the realistic option; pre-register value-adding variants as stretch" | freeze must precede any attack output (circularity guard, invariant #2); decisions: privileged `target_region` anchor via resolver seam; primitives P1 progress / P2 distractor / P3 grasp; combine=`max` (zero params, robust to inter-primitive correlation); `{noisy_or, weighted_mean}` + `k`/`r` sweeps = pre-registered ablations; stretch S1 orientation, S2 multi-phase sub-goal = definitions frozen now, implemented later | `docs/plans/metric-a-annotation-schema.md`, commit `2c2f163`; §7 M2 first item ✅ |
+| 2026-06-01 | **Headline reframed → Embodiment Evasion Tax** (H6/§3a); monitor = *instrument* measuring per-layer adaptive-evasion cost (L0/L1/L2), **not** a 'firewall'/defence claim; **milestone contents re-mapped** (idealized frontier → M3, ladder → M5); title **LOCKED** (pending supervisor) | 3 independent passes converged (deep-research + author + Codex); measurement framing survives the likely bad outcome (Attacker-Moves-Second `2510.09023`: efficacy claims die to adaptive attackers) | §0,§2,§3,§3a,§4b,§7,§12 |
+| 2026-06-01 | **Citation pass DONE** — 5 flagged items resolved + **16 cited PDFs** downloaded/SHA-pinned/provenance | reframe must rest on a verified landscape (integrity rule); net: **nothing scoops** the runtime/FP-calibrated/adaptive lane (VLA defences found = training-time; actalign benign-only; AttackVLA attack-only) | `docs/references/README.md` |
+| 2026-06-01 | **D8 compute tier OPEN** — A100/H100 cluster requested (pending); roadmap **compute-tiered** (Tier-F GB10-guaranteed / Tier-N committed-if-cluster) | author: cluster access likely → de-risks deployable B/C + realistic adaptive + full ladder; unconfirmed → floor stays compute-agnostic | §0,§2,§6 (D8),§8,§12; M1 compute-confirmation checkpoint |
 
 ---
 
@@ -370,7 +444,9 @@ one_variable:  <what single variable changed vs the previous run>
   LLM**). ⇒ **novelty = the *embodied / VLA action-level* instantiation only** (do not claim FP-aware injection
   detection as new in general). **SABER `2603.24935`** = a real NL injection **attack** on VLA/LIBERO →
   candidate secondary attack arm (perplexity-baseline-defeating).
-- **Hardware:** single GB10 (~128 GB unified); OpenVLA-7B 4-bit fits. H100 timing numbers may not transfer.
+- **Hardware:** baseline **single GB10** (~128 GB unified; OpenVLA-7B 4-bit fits; H100 timings may not
+  transfer). **A100/H100 cluster requested 2026-06-01 (D8, pending)** → if confirmed, Tier-N committed + GCG
+  timing approaches the paper's. **Log exact HW per run; never compare across HW within one claim.**
 - **Key paths:** understanding doc `docs/plans/t7-goal-action-consistency-detector.md`; landscape
   `docs/lit-review/`; references + verified facts `docs/references/`; results (write-once) `results/`;
   untrusted artefacts `artifacts/untrusted/`.
