@@ -52,7 +52,7 @@ dissertation even if the deployable arm underperforms.
 
 ## 1. You Are Here  ← update this block every session
 
-- **Last updated:** 2026-05-31
+- **Last updated:** 2026-06-01
 - **Phase:** **Design → M0 (exiting)**. Coding gate **lifted for M1–M2 (author OK, 2026-05-31)**; **pre-GB10 local build underway** — model-free M1–M2 components on M1/8 GB (`docs/plans/t7-local-prep-plan.md`). OpenVLA/GCG/LIBERO *runs* await GB10.
 - **Last completed:** Theme = T7; understanding doc; **RoboGCG defence verified** (`docs/references/`); **D1–D7 resolved** (§6/§10; D4/D7 OPEN → M1); **Phase-3 implementation plan drafted**; **Codex third-party review incorporated** (causal prefix-window + detection latency; per-rollout FPR + CIs; metric(A) schema frozen; fair-calibrated baselines; M5→stretch — see §10).
 - **Currently:** Executing the **pre-GB10 local-prep plan** (`docs/plans/t7-local-prep-plan.md`) on M1/8 GB via TDD. **Done 2026-05-31: Tasks 0,1,2,3,4,5,6,7,8,9** — env scaffold, repro infra, data records, **action codec (OpenVLA formula verified from source `c8f03f48`; provenance recorded)**, privileged-state adapter, **metric (A) — annotation schema FROZEN (`docs/plans/metric-a-annotation-schema.md`, `2c2f163`) + causal scorer (P1 progress / P2 distractor / P3 grasp; combine=max; privileged anchor via resolver seam; non-causal monitoring-ceiling variant)**, FP-calibrated detector, eval harness (ROC/AUC, TPR@FPR + Wilson/CP CIs, latency, split-disjointness), **M2 baselines (`3287c5c`): goal-agnostic χ²-OOD action anomaly + perplexity/text-only filter (mock + GB10 stub), both through the *same* `calibrate`**, **config/scripts/figures (`60b0462`): frozen pydantic `Config` + `one_variable_diff`; shared GB10 guard (no-CUDA → exit non-zero, no silent no-op); `make_figures` regenerates ROC/score-hist/TPR@FPR-CI per condition purely from a logged `results.json`; 6 runnable scripts** — **231 tests green, full `src/t7` type-clean** (see plan Status table). **Remaining delegable:** Task 11 runbook. **Needs author/me first:** Task 10 LIBERO smoke (time-boxed, optional). *Note: 3 pre-existing pyright errors + 1 ruff B905 sit in untouched test files (`test_state.py`/`test_records.py`/`test_consistency_a.py`) — pre-Task-9, not yet cleaned.*
@@ -61,6 +61,7 @@ dissertation even if the deployable arm underperforms.
 - **Open decisions outstanding:** **D4, D7 only** (OPEN → M1 micro-benchmark). D1/D2/D3/D5/D6 DECIDED.
 - **Floor secured?** ❌ not yet (target: end of **M2**, ~Jul 12).
 - **Novelty status:** **M4 deployable detector = committed** (primary novelty); **M5 adaptive = stretch** (only if M4 done with slack).
+- **Direction (DECISION, author-converged 2026-06-01 — flag for supervisor sign-off):** research **core reframed** to the *Embodiment Evasion Tax* measurement (see §3 **H6** + **§3a**). The behavioural detector is recast as an **instrument** measuring per-layer adaptive-evasion cost (**L0** input < **L1** internal-probe < **L2** action-monitor), **not** a claimed defence/"firewall". Scope held to the **instruction channel** (RoboGCG primary, SABER secondary); physical/CoT injection (TRAP) = future arm, out of committed scope. Floor (M2 + cheap idealized action-space frontier) unchanged → deliverable still guaranteed. *Citation pass DONE 2026-06-01:* all 5 flagged items resolved + **16 cited PDFs downloaded, gitignored, SHA-256-pinned** with provenance (`docs/references/README.md`). Net: **nothing scoops the runtime/FP-calibrated/adaptive lane** (VLA defences found are training-time EDPA/STRONG-VLA; actalign benign-only; AttackVLA attack-only). Title **LOCKED** (§3a, pending supervisor).
 
 ---
 
@@ -102,6 +103,54 @@ gates *adapt scope* (drop M5, trim M3) but never abandon **M4**.
 | **H3** | M3 | Detection degrades **gracefully** as the trusted reference coarsens; still useful at deployment-realistic rungs. | ~monotone TPR@FPR decline; coarse-goal rung still > baseline. | Detection collapses to baseline once the reference is coarser than the operational instruction. | Survives → lead the deployment argument with coarse rungs. Collapses → report where/why the "necessity" critique bites (thesis backbone either way). | ⬜ untested |
 | **H4** | M4 | A **deployable** metric (B/C, no privileged state) recovers a **substantial fraction** of the (A) ceiling's detection power. | deployable TPR@FPR within a modest gap of (A). | Large gap → deployable detection infeasible at this budget. | Small gap → headline deployable result. Large gap → report (A) as upper-bound-only + the gap as a finding. | ⬜ untested |
 | **H5** *(stretch)* | M5 | An attacker aware of the **deployable B/C** detector can reduce detection **but at a measurable cost** (lower ASR / higher perplexity / restricted targets) — the detector **raises the attacker's bar** even if not unbreakable. | adaptive attack (fixed query/compute budget) lowers detection *and* lowers ASR / raises cost — a quantified trade-off. | Adaptive attacker evades at **no** cost. | Trade-off exists → bonus security contribution. No cost → important **negative**. *Only if M4 done with slack; else not claimed.* | ⬜ untested (stretch) |
+| **H6** *(reframe core)* | M4–M5 | Across defence layers (**L0** input-filter < **L1** internal-representation probe < **L2** behavioural action-monitor), **L2 imposes a higher adaptive-evasion cost** than L1/L0 at matched benign FPR — and this *embodiment evasion tax* is **intrinsic** (persists under an *idealized action-space* attacker, **mechanism M-b**), not merely an artifact of GCG failing to differentiate through the closed-loop rollout (**M-a**). | At matched FPR, suppressing L2's TPR to L1's evaded level forces measurable ASR forfeit / more queries; the **idealized action-space Pareto frontier** for L2 dominates (is worse-for-attacker than) L1's; tax > 0 with CIs. | L2 evaded at **≤** L1's cost (tax ≤ 0), **or** the tax vanishes under the idealized attacker (it was only M-a). | **4 outcomes, all reportable:** (i) L2>L1 & M-b → *embodiment creates an evasion tax → place the boundary at the action layer* (headline). (ii) L2 also falls → *embodiment alone does not save VLA defences*. (iii) L1 strong → *VLA internal reps carry security-relevant injection signal*. (iv) both weak → *adaptive evaluation is mandatory for VLA defences*. | ⬜ untested |
+
+### 3a. Direction lock — the *Embodiment Evasion Tax* measurement frame (DECISION 2026-06-01)
+
+> **Three independent passes converged** (deep-research synthesis + author refinement + Codex review).
+> Recorded here as the operational decision; **flag for supervisor sign-off** before it becomes the
+> dissertation headline. Replaces nothing in M0–M3; it is the **unifying measurement framing** over H4/H5.
+
+**The reframe.** The research core is a **measurement**: *do behavioural action-layer monitors cost more to
+adaptively bypass than internal-representation probes on instruction-injected VLA policies?* The monitor is an
+**instrument** for measuring per-layer adaptive-evasion cost — **not** a claimed robust defence / "firewall".
+This is the *claim-type* choice that survives the most likely bad outcome: a defence-efficacy headline dies to
+an adaptive attacker (cf. "Attacker Moves Second" — 12 LLM defences bypassed >90% `[CITATION NEEDED]`); a
+measurement headline is **true whichever way the result falls** (see H6's four outcomes).
+
+**Working title (LOCKED 2026-06-01 — pending supervisor sign-off).** *The Embodiment Evasion Tax: Measuring
+Adaptive Evasion Costs of Runtime Defences for Vision-Language-Action Models.* Chosen over the question-form
+variant for dissertation register; the subtitle ("Measuring … Costs") is **outcome-neutral** — "tax" is a
+**coined framing term to be *measured***, and may be ≈0 (see H6's four outcomes), so the title presupposes no
+result. One-line swap if preferred: *… Do Behavioural Monitors Cost More to Bypass than Internal Probes in VLA
+Policies?*
+
+**The instrument — three defence layers, compared at matched benign FPR:**
+- **L0 input** — perplexity / text-only filter (**already built**; expected to die on fluent SABER-style injection).
+- **L1 internal** — activation/attention probe ported to OpenVLA (Task-Drift / AlignSentinel lineage). **New
+  first-class experimental arm** — more build than a single-detector study; budget for it. Must be a *fair,
+  strong* baseline (proper calibration + proper adaptive attack), not a strawman.
+- **L2 behavioural** — the existing goal-action-consistency detector (metric A ceiling + deployable B/C).
+
+**Mechanism separation (NON-NEGOTIABLE rigor — the point Codex's 4-outcome list under-specifies).** Report the
+tax as **two measurements**, never one:
+- **M-b (intrinsic, cheap, carries the core claim):** an *idealized action-space* attacker directly optimises an
+  action sequence to maximise attack-target reach while minimising L2's score → the (ASR, evasion) Pareto
+  frontier. No GCG needed → GB10-cheap. Isolates the embodiment-intrinsic tax from attack-access.
+- **M-a + M-b (realistic, expensive, subsample):** adaptive GCG-through-policy. Confirmatory; **stretch** — if
+  budget-cut, M-b + floor still stand. *Without M-b the result is trivial ("GCG can't backprop through
+  physics") and dies in review.*
+
+**Scope discipline (floor protection).** Committed: **instruction channel only** — RoboGCG (primary,
+high-perplexity adversarial string) + SABER (secondary, fluent/low-perplexity, where L0 fails). **Out of
+committed scope:** physical/visual prompt injection (TRAP — *verified* visual-patch/CoT attack, needs a CoT-VLA
+≠ OpenVLA-7B) → *threat-generalization / future arm only*. Supply-chain/backdoor (BadVLA) = the declined T9
+lane → **rejected**.
+
+**Free secondary contribution.** The existing eval harness already emits the operational defence metrics no VLA
+benchmark reports (per-rollout FPR + CIs, false-abort cost, detection latency, task-success degradation,
+adaptive budget) → **package as a reusable VLA defence-evaluation protocol** (AttackVLA is *verified*
+attack-only). "firewall" may appear in the **intro framing only**, never the main claim.
 
 ---
 
