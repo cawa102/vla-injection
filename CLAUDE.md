@@ -69,11 +69,21 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 (does the perception→reasoning→action pipeline produce correct, untampered actions; how is it subverted or
 defended). A graded, single-author dissertation: reproducibility and defensible claims matter more than speed.
 
-**Current theme — agreed 2026-05-30, now in *Design*.** **T7 — *Goal-action consistency detection for
-instruction-injected VLA policies under calibrated false-positive constraints.*** A *measurement* study of an
-attacker-aware, FP-calibrated detector — **not** a new universal defense. Base model **OpenVLA-7B**,
-**simulation only (LIBERO)**. Working notes: `docs/plans/t7-goal-action-consistency-detector.md`; landscape:
-`docs/lit-review/`. **Don't write experiment code until a plan is agreed in `docs/plans/`.**
+**Current theme — T7 (codename), reframed 2026-06-01 (author-converged; *supervisor sign-off pending*).**
+Headline = ***The Embodiment Evasion Tax*** — a *measurement* of per-layer adaptive-evasion cost (**L0** input /
+**L1** internal-probe / **L2** behavioural action-monitor) on instruction-injected VLA policies; the
+FP-calibrated goal-action detector is the **L2** *instrument*, **not** a claimed universal defence. Base
+**OpenVLA-7B**, **simulation only (LIBERO)**, **instruction channel** (RoboGCG primary). **Claim boundary — don't
+over-claim (Codex review #2, 2026-06-02):** the GB10 floor (**M3 / Tier-F**) delivers only the **oracle** intrinsic
+action-space frontier (**H6-A**); the cross-layer *tax* headline (**H6-D**) is **deployable-vs-deployable** and
+needs the requested cluster (**M4 / Tier-N**) — if it slips, fall back to the oracle-frontier title. Novelty is
+**narrowed** to *adaptive evasion-cost measurement for the instruction channel, FP-calibrated, + action-space
+intrinsic frontier* (a 2026 runtime VLA-safety cluster exists — don't claim the lane is empty).
+**Operational source of truth = `docs/plans/t7-execution-playbook.md`** (status / tasks / decisions / how-to);
+what & why = `docs/plans/t7-goal-action-consistency-detector.md`; verified facts = `docs/references/`; landscape =
+`docs/lit-review/`. **Phase: Design → M0 exiting; coding gate LIFTED for M1–M2 *model-free* work (author OK
+2026-05-31) — OpenVLA / GCG / LIBERO *runs* await the granted GPU.** Don't write experiment code beyond what the
+agreed `docs/plans/` plan covers.
 
 **Phases — know which one a task belongs to; don't skip ahead.**
 Scope → Literature review → Design → Implement → Run & analyse → Write up.
