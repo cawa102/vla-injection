@@ -63,7 +63,11 @@ For multi-step tasks, state a brief plan:
 
 Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
 
-## Customization (this project)
+## docs directory
+
+Before you start working, have a look @./docs/ to understand your what to do. The documents in this repo must be updated.
+
+## This project
 
 **Project.** MSc Cyber Security & AI individual research project on **VLA-model security — integrity focus**
 (does the perception→reasoning→action pipeline produce correct, untampered actions; how is it subverted or
@@ -111,8 +115,7 @@ in `docs/references/`). **Git initialised; remote `origin` = `github.com/cawa102
 Commit at each meaningful change unit (`<type>: <description>`, no co-author trailer) and push to
 `origin/main`; confirm before history-rewriting or destructive git operations.**
 
-**VLA vocabulary.** VLA = vision + language instruction → robot **actions**; a wrong output is a wrong
-*physical action*. Integrity threat channels in scope: visual adversarial perturbation, prompt/instruction
+Integrity threat channels in scope: visual adversarial perturbation, prompt/instruction
 injection, data/backdoor poisoning & trojaned weights, action-space manipulation, supply-chain tampering.
 Confidentiality (extraction) and availability (DoS) are secondary unless they serve the integrity story.
 
