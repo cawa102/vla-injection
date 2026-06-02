@@ -137,7 +137,33 @@ LVLM — threat-generalization / future arm only (**out** of committed scope) ·
   for observable/determinate/time-sensitive controls. **Domain-general (not VLA-specific)** — our embodied
   application is a faithful extension, not a paper claim.
 
-**Net effect on the H6 reframe.** Nothing scoops the runtime, FP-calibrated, adaptive-evaluated lane: the two
-VLA *defence* papers found are **training-time** (EDPA fine-tune, STRONG-VLA robustness learning); the nearest
-runtime alignment work (actalign) is **benign-only**; AttackVLA is **attack-only**. The crowding is on the
-**attack** side and on the **visual/physical** channel — both of which we keep out of committed scope.
+### 2026 runtime / inference-time VLA-safety cluster — Codex review #2, verified on arXiv 2026-06-02 (NOT yet downloaded)
+
+These four were flagged by the Codex review as "omitted adjacent work" and **independently re-verified on the
+arXiv abstract pages 2026-06-02** (title/authors/abstract confirmed) before acting on them. They are **not yet
+downloaded / SHA-pinned**, so they are **not in the local-copies manifest above** — `[TODO download + SHA-pin]`
+before any of them is cited in the dissertation.
+
+- **Pre-VLA** `2605.22446` `[FRAME]` (Sun, Guo, Sun, Wang, Lu, Ji, Ji, Xiong, Meng) — **runtime** preemptive
+  action-validity verification before execution (dual-branch safety/advantage; LIBERO 30.8→37.6%). Runtime, but
+  **not attacker-aware, no FP calibration, no injection** → occupies "VLA runtime verification" space only.
+- **HazardArena** `2604.12447` `[FRAME]` (Chen, Gao, Wang, Zhao, Liu, Li, Zheng, Wu, Wang, Ma, Jiang) —
+  benchmark + **training-free Safety Option Layer** (semantic-attribute / VLM-judge action constraint). Threat =
+  **semantic hazard from correct execution**, not instruction injection.
+- **Concept-Based Dictionary Learning** `2602.01834` `[CORE-adjacent → L1]` (Wen, Yang, Fu, Zhang, Hu, Wang) —
+  **inference-time, activation-level** VLA safety (sparse concept dictionaries attenuate harmful directions;
+  jailbreak ASR −70%). **Closest to the L1 arm** — differentiate: mitigation vs measurement; jailbreak/OOD vs
+  adaptive injection; no per-rollout FP calibration / adaptive evasion-cost.
+- **IGAR** `2603.06001` `[CORE-adjacent → L1]` (Zhang, Zhu, Zhou, Chen) — **train-free attention recalibration**
+  restoring language-action coupling + ICBench (LIBERO benign instruction-contradiction diagnostic). Adjacent to
+  the L1 attention angle **and** our goal-action framing — differentiate: **benign** contradiction vs **adversarial**
+  injection; mitigation vs measurement; no FP calibration / adaptive attacker.
+
+**Net effect on the H6 reframe (revised, Codex review #2).** The earlier "nothing scoops the runtime lane"
+claim is **withdrawn as too strong**: a **2026 runtime / inference-time VLA-safety cluster now exists** (the four
+above). The defensible, **narrowed** novelty is *adaptive evasion-cost **measurement** for the **instruction
+channel**, with **per-rollout FP calibration** and an **action-space intrinsic frontier*** — **none** of the
+cluster measures adaptive evasion cost or FP-calibrates against an adaptive injection attacker (all are
+mitigations or benign-OOD diagnostics). The two VLA *defence* papers in the manifest remain **training-time**
+(EDPA, STRONG-VLA); actalign is **benign-only**; AttackVLA is **attack-only**. `2602.01834` / `2603.06001`
+specifically bound the **L1-arm** novelty → cite + differentiate there (playbook §4b-I).

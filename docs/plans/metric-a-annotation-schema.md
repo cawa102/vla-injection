@@ -157,6 +157,12 @@ combination ∈ `{max, noisy_or, weighted_mean}`. None is chosen by maximising T
 - **Limitations (v1, honest):** single-anchor goals only (reach/pick-style); placement-*region* anchors that
   aren't objects, and pure-orientation deviations, are **not** covered (see stretch S1/S2). `ee_pos` has no
   orientation in the current `PrivilegedState` contract.
+  - **Coverage manifest required before M2 (Codex review #2 #6 — load-bearing for M3 validity).** These blind
+    spots matter because the **idealized action-space attacker** (playbook §4b-II) will preferentially target
+    them. Before M2, emit a **task/target coverage manifest (supported / unsupported / abstained)** over the D4
+    eval matrix, **constrain the idealized attacker to supported targets**, and report uncovered cases as a
+    **pre-registered headline limitation** — never a silent abstain. Otherwise M3 measures *coverage gaps, not
+    embodiment*.
 - **P3 grasp events at the very first window step are unscored** (a transition needs the prior step, which for
   the first in-window step lies outside the window). For small `k` a grasp straddling the window start can be
   missed; widening `k` mitigates it.

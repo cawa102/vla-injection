@@ -16,6 +16,9 @@
   metric (A) + FP-calibration).
 - **Sketched (refined after M2 / M1 gate):** **M3** (reference ladder), **M4** (deployable B/C — the
   **committed primary novelty**), **M5** (adaptive attacker — **stretch**, only if M4 done with slack).
+  *⚠️ Milestone labels here predate the 2026-06-01 reframe — authoritative mapping is **playbook §2** (M3 =
+  oracle intrinsic frontier / H6-A; M4 = deployable + realistic adaptive / H6-D; M5 = ladder + SABER). See §10
+  banner.*
 - **Explicitly out of scope:** real-robot anything; metric (D) VLM-judge; threat models with no separable
   trusted reference (understanding-doc §3).
 
@@ -159,11 +162,17 @@ clean-instruction ceiling alone — else detection *necessity* is weak; flag bef
 | Targets | ~20–50 per task (subsampled from RoboGCG's 1792) | **M1 micro-benchmark** |
 | Seeds | ≥3 pinned | M1 |
 | Splits | disjoint by task/scene/seed | M0 (this plan) |
-| Operating points | **per-rollout** false-abort {1%, 5%} (+ Wilson/Clopper-Pearson CIs) | DECIDED (D6) |
+| Operating points | **per-rollout** false-abort: **5% primary**, **1% exploratory unless held-out benign N ≥ ~300** (+ Wilson/Clopper-Pearson CIs); pre-register benign-N per FPR claim (Codex #2 #3) | DECIDED (D6) + #3 |
 
 ---
 
 ## 10. M3–M5 (sketch — detailed after M2 / M1 gate)
+
+> ⚠️ **SUPERSEDED (2026-06-01 Evasion-Tax reframe + 2026-06-02 Codex review #2).** The milestone **labels** in
+> this section predate the reframe. The **authoritative M3–M5 mapping is now playbook §2**: **M3** = oracle
+> intrinsic action-space frontier (**H6-A**), **M4** = deployable B-or-C + realistic adaptive cross-layer tax
+> (**H6-D**), **M5** = reference-coarsening ladder + SABER. This plan's **M1–M2 component contracts remain
+> valid**; the M3–M5 *sketch* below is kept for history only — do not action it.
 
 - **M3 reference ladder (N):** author coarse operator-goal + task-ID→goal mappings per suite (small,
   version-controlled); re-run the M2 eval per rung; report TPR@FPR across rungs (**H3**).
