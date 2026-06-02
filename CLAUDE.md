@@ -65,7 +65,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ## docs directory
 
-Before you start working, have a look @./docs/ to understand your what to do. The documents in this repo must be updated.
+Before you start working, have a look @./docs/ to understand what to do. The documents in this repo must be updated.
 
 ## This project
 
