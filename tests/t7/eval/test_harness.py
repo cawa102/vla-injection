@@ -1,7 +1,7 @@
 """Tests for the eval orchestration harness (Task 7).
 
 ``run_condition_matrix`` consumes per-condition score splits (rollout generation
-is GB10), calibrates on ``benign_calib`` ONLY, then evaluates ROC/AUC and
+is on the GPU node), calibrates on ``benign_calib`` ONLY, then evaluates ROC/AUC and
 TPR@FPR on the disjoint ``*_test`` splits, assembling a ``ResultsTable``. The
 no-leakage guarantee is structural: calibration never sees a ``*_test`` array.
 """

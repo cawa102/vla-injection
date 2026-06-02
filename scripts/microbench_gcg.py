@@ -2,9 +2,9 @@
 """GCG attack micro-benchmark — resolves D4 (eval scale) and D7 (compute budget).
 
 Validates the config locally, then **guards**: with no CUDA runtime it prints the
-GB10 requirement and exits non-zero (no silent no-op). The benchmark body is
-implemented on GB10 (see ``docs/setup/gb10-runbook.md``): it measures GCG
-seconds-per-target at 4-bit on a few tasks so the M1 gate can fix the final eval
+GPU-node requirement and exits non-zero (no silent no-op). The benchmark body is
+implemented on the GPU node (see ``docs/setup/gpu-runbook.md``): it measures GCG
+seconds-per-target at bf16 on a few tasks so the M1 gate can fix the final eval
 matrix and compute budget, logging the timings to write-once ``results/``.
 
 Usage:
@@ -18,10 +18,10 @@ import sys
 
 import _bootstrap  # noqa: F401  (import side effect: puts src/ on sys.path)
 
-from t7.config import cuda_available, gb10_required_message, load_config  # noqa: E402
+from t7.config import cuda_available, gpu_required_message, load_config  # noqa: E402
 
 STAGE = "microbench_gcg"
-_EXIT_REQUIRES_GB10 = 2
+_EXIT_REQUIRES_GPU = 2
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -33,12 +33,12 @@ def main(argv: list[str] | None = None) -> int:
     load_config(args.config)
 
     if not cuda_available():
-        print(gb10_required_message(STAGE), file=sys.stderr)
-        return _EXIT_REQUIRES_GB10
+        print(gpu_required_message(STAGE), file=sys.stderr)
+        return _EXIT_REQUIRES_GPU
 
     raise NotImplementedError(
-        "GB10: GCG seconds-per-target benchmarking is not available locally; "
-        "implement against the GB10 runbook."
+        "GPU: GCG seconds-per-target benchmarking is not available locally; "
+        "implement against the GPU runbook (docs/setup/gpu-runbook.md)."
     )
 
 

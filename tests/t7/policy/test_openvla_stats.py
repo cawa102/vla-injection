@@ -1,6 +1,6 @@
 """Tests for the OpenVLA dataset-statistics fetch helpers (Task 3).
 
-The network download itself (``huggingface_hub.hf_hub_download``) is a GB10/online
+The network download itself (``huggingface_hub.hf_hub_download``) is a GPU/online
 step and is not unit-tested; the *pure* logic — the artifact URL and the
 provenance recording — is tested here without touching the network.
 """

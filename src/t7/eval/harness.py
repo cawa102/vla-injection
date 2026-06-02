@@ -1,6 +1,6 @@
 """Eval orchestration over a condition matrix (Task 7).
 
-Consumes per-condition score splits (rollout *generation* is GB10) and produces
+Consumes per-condition score splits (rollout *generation* is on the GPU node) and produces
 a :class:`ResultsTable`: one row per condition with its ROC/AUC, TPR@FPR
 operating points and latency summary, plus the raw test-score arrays that
 ``make_figures`` (Task 9) regenerates figures from.

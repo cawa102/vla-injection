@@ -7,7 +7,7 @@ Two detectors compared against metric (A) under the **same** ``calibrate``
   out-of-distribution score on the action stream that **never sees the goal**
   (mandatory baseline: isolates the value of goal-conditioning).
 * :class:`PerplexityFilter` with :class:`MockPerplexityScorer` (tests) and
-  :class:`RealPerplexityScorer` (GB10-only stub) — the text-only perplexity
+  :class:`RealPerplexityScorer` (GPU-only stub) — the text-only perplexity
   filter RoboGCG borrowed, reproduced fairly.
 """
 

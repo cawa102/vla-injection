@@ -6,7 +6,8 @@ metric (A), the FP-calibrated detector, evaluation statistics, the OpenVLA actio
 and baselines.
 
 Model/GPU-dependent pieces (OpenVLA-7B inference, GCG optimisation, LIBERO *rollouts*) are
-deferred to the GB10 node and sit behind thin interfaces with synthetic fixtures for tests.
+deferred to the GPU node (A100/H100) and sit behind thin interfaces with synthetic fixtures
+for tests.
 
 See ``docs/plans/t7-local-prep-plan.md`` for the task breakdown.
 """

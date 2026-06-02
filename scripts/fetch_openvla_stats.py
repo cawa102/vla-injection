@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Download an OpenVLA checkpoint's ``dataset_statistics.json`` + record provenance.
 
-Online / GB10 step (needs ``huggingface_hub`` + network). The action codec's
+Online / GPU step (needs ``huggingface_hub`` + network). The action codec's
 quantiles come from this file; it lands under the gitignored ``data/`` tree and
 its provenance (source, hash, date, licence) is recorded per invariant #8.
 

@@ -4,7 +4,7 @@ The action codec needs the per-dataset ``q01``/``q99``/``mask`` statistics that
 OpenVLA ships in ``dataset_statistics.json`` on each fine-tuned checkpoint repo.
 This module holds the *pure*, network-free logic (artifact URL + provenance
 recording); the actual download lives in ``scripts/fetch_openvla_stats.py`` and
-runs online / on GB10. Statistics land under the gitignored ``data/`` tree;
+runs online / on the GPU node. Statistics land under the gitignored ``data/`` tree;
 their provenance (source, hash, date, licence) is recorded per invariant #8.
 """
 

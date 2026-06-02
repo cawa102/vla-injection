@@ -4,7 +4,7 @@ The published RoboGCG defences include a text-only perplexity filter; we
 reproduce it as a *fair* baseline (plan invariant #4): it goes through the
 **same** ``calibrate`` as every other detector. These tests pin the interface
 and the calibration path, using a deterministic ``MockPerplexityScorer`` (no LM
-on the 8 GB host); the real LM backend is a GB10-only stub.
+on the 8 GB host); the real LM backend is a GPU-only stub.
 
 Design contract:
 
@@ -137,15 +137,15 @@ def test_mock_heuristic_empty_instruction_is_minimal_perplexity():
 
 
 # --------------------------------------------------------------------------- #
-# Real backend is a GB10-only stub                                            #
+# Real backend is a GPU-only stub                                             #
 # --------------------------------------------------------------------------- #
 
 
-def test_real_backend_is_gb10_stub():
+def test_real_backend_is_gpu_stub():
     scorer = RealPerplexityScorer()
     with pytest.raises(NotImplementedError) as exc:
         scorer.score_perplexity("anything")
-    assert "GB10" in str(exc.value)
+    assert "GPU" in str(exc.value)
 
 
 def test_real_backend_plugs_into_filter_but_errors_when_used():

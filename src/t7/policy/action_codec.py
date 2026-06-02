@@ -1,7 +1,7 @@
 """OpenVLA action codec: discrete action token ids -> continuous 7-DoF (Task 3).
 
 This is the one offline-buildable "policy" piece: de-tokenise OpenVLA's discrete
-action tokens and un-normalise them to continuous actions. On GB10 the model's
+action tokens and un-normalise them to continuous actions. On the GPU node the model's
 own ``predict_action`` performs this; we re-implement the *decode* direction so
 that RoboGCG target *tokens* can be mapped to a continuous action region
 (``TargetActionSpec``, decision D2) without loading the 7B model.

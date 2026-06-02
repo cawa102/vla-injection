@@ -3,7 +3,7 @@
 Records platform, Python version, an installed-dependency snapshot, the git
 commit, and torch/CUDA/driver versions when present. Every field degrades
 gracefully (to ``None``) rather than raising, so the same call works on the
-local M1 machine (no torch, no CUDA) and on the GB10 node.
+local M1 machine (no torch, no CUDA) and on the GPU node (A100/H100).
 """
 
 from __future__ import annotations

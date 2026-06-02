@@ -11,7 +11,7 @@ Structure (Dependency Inversion, mirroring the metric's resolver seam):
 * :class:`PerplexityScorer` — the swappable perplexity backend.
 * :class:`MockPerplexityScorer` — deterministic, no LM (8 GB host); a table for
   exact tests plus a crude symbol-density surrogate so it is self-contained.
-* :class:`RealPerplexityScorer` — the LM-perplexity backend, a GB10-only stub.
+* :class:`RealPerplexityScorer` — the LM-perplexity backend, a GPU-only stub.
 * :class:`PerplexityFilter` — emits one ``Score`` per rollout from the rollout's
   **operational instruction** (the channel the attacker tampers).
 
@@ -42,7 +42,7 @@ def _heuristic_perplexity(instruction: str) -> float:
 
     A test stand-in only: correlates "looks like a GCG adversarial suffix"
     (high symbol density) with high perplexity, so the mock is usable without a
-    lookup table. The real LM backend replaces it on GB10.
+    lookup table. The real LM backend replaces it on the GPU node (A100/H100).
     """
     if not instruction:
         return 1.0
@@ -68,11 +68,11 @@ class MockPerplexityScorer:
 
 
 class RealPerplexityScorer:
-    """The real LM-perplexity backend — deferred to GB10 (raises if used here)."""
+    """The real LM-perplexity backend — deferred to the GPU node (raises if used here)."""
 
     def score_perplexity(self, instruction: str) -> float:
         raise NotImplementedError(
-            "GB10: the real LM-perplexity backend requires the model and is not "
+            "GPU: the real LM-perplexity backend requires the model and is not "
             "available on the local 8 GB host; use MockPerplexityScorer for tests."
         )
 
@@ -86,7 +86,7 @@ class PerplexityFilter:
     """Text-only detector: scores a rollout by its instruction's perplexity.
 
     Args:
-        scorer: The perplexity backend (mock for tests, real on GB10).
+        scorer: The perplexity backend (mock for tests, real on the GPU node).
     """
 
     def __init__(self, scorer: PerplexityScorer) -> None:

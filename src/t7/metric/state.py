@@ -91,7 +91,7 @@ class PrivilegedState:
 class StateAdapter(Protocol):
     """Seam between a raw env snapshot and the normalised :class:`PrivilegedState`.
 
-    A concrete LIBERO adapter (deferred to a later task / GB10) implements this;
+    A concrete LIBERO adapter (deferred to a later task / the GPU node) implements this;
     the metric depends only on this abstraction, never on a concrete env API.
     """
 

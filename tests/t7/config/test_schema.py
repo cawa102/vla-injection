@@ -25,7 +25,7 @@ def _valid_dict() -> dict:
             "name": "openvla-7b",
             "checkpoint": "openvla/openvla-7b-finetuned-libero-spatial",
             "unnorm_key": "libero_spatial_no_noops",
-            "quantization": "4bit",
+            "quantization": "bf16",
         },
         "env": {"suite": "libero_spatial", "tasks": ["task_0", "task_1"], "max_steps": 200},
         "attack": {"name": "robogcg", "targets_per_task": 20, "persistence_steps": 5},

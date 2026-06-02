@@ -1,5 +1,5 @@
 # Example M2 run config (Task 9). Illustrative defaults for the floor detector —
-# the final eval matrix (D4) and compute budget (D7) are sized at M1 on GB10, so
+# the final eval matrix (D4) and compute budget (D7) are sized at M1 on the granted GPU (A100/H100), so
 # the task/target counts here are placeholders, not committed numbers.
 #
 # Every run logs a snapshot of its resolved config (RunLogger), and successive
@@ -11,7 +11,7 @@ model:
   name: openvla-7b
   unnorm_key: libero_spatial_no_noops
   checkpoint: openvla/openvla-7b-finetuned-libero-spatial
-  quantization: 4bit
+  quantization: bf16
 
 env:
   suite: libero_spatial
