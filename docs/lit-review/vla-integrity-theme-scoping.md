@@ -10,6 +10,12 @@
 > many-seed full fine-tunes infeasible, no real robot); **simulation-only** evaluation
 > (LIBERO / SimplerEnv); ~3–4 month single-author MSc; stance open (attack/defense/benchmark).
 >
+> **⚠️ Compute superseded 2026-06-02 (historical doc — body left intact for provenance):** the single-GB10
+> assumption above no longer holds — the project now runs on **A100/H100** (bf16; OpenVLA-7B at full precision).
+> This only *relaxes* the feasibility envelope below (the "if real compute/time differs, re-weight" note further
+> down has fired **favourably**); the theme-ranking conclusions are unaffected. Forward-looking compute decisions
+> live in `docs/plans/t7-execution-playbook.md` §2 (*Compute branches*) / D8.
+>
 > **⚠️ This is an AI-generated research scaffold for the author to review and rewrite
 > (CLAUDE.md §5).** Citations marked **[verified]** were independently re-fetched from
 > arXiv on 2026-05-30 (title confirmed). Citations marked **[unverified]** were surfaced

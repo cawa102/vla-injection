@@ -75,7 +75,7 @@ Two faithfulness points captured in the codec tests: (1) decode depends on `voca
 **mask-driven** — `mask=False` dims pass through unchanged (LIBERO sets only the final/gripper dim to `False`);
 there is **no** hardcoded "gripper-dim" rule.
 
-**Pending download (on GB10 / online):** each LIBERO fine-tune's `dataset_statistics.json` (the q01/q99/mask
+**Pending download (on the GPU node / online):** each LIBERO fine-tune's `dataset_statistics.json` (the q01/q99/mask
 values) via `scripts/fetch_openvla_stats.py` → gitignored `data/openvla/`; its provenance row
 (`openvla-stats:<repo>`, source/hash/date/licence) is written to `data/openvla/provenance.json` at download time.
 

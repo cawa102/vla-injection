@@ -52,7 +52,7 @@ LIBERO scene ─► OpenVLA-7B policy ─► prefix window a_{t-k+1:t} ─► me
 ```
 src/t7/
   envs/      LIBERO setup + deterministic rollout runner
-  policy/    OpenVLA-7B load (4-bit), action decode, un-normalization
+  policy/    OpenVLA-7B load (bf16 — A100/H100-80GB fit OpenVLA-7B at full precision; 4-bit no longer required), action decode, un-normalization
   attack/    RoboGCG reproduction (target defn, GCG optimize) → suffixes quarantined
   metric/    consistency metric (A) privileged-state; (B)/(C) added at M4
   detector/  calibration (τ @ target FPR), decision + fallback
@@ -72,7 +72,7 @@ Files small and feature-organized (coding-style: 200–400 lines typical). Run r
 
 - **Rollout record** (core logged object, one per step): `{run_id, seed, git_commit, suite, task_id, step,
   observation_ref, action[7], privileged_state, instruction, trusted_goal, attacked:bool, suffix_ref}`.
-- **Policy runner** — load OpenVLA-7B 4-bit; `(observation, instruction) → action`; record the normalization
+- **Policy runner** — load OpenVLA-7B bf16; `(observation, instruction) → action`; record the normalization
   stats used; deterministic given seed.
 - **Attack (RoboGCG)** — `(task, target_action_spec) → suffix`; record steps, wall-time, success(=reached
   target). Reuse the authors' released method (`github.com/eliotjones1/robogcg`) where feasible; **attribute**;
@@ -100,7 +100,7 @@ Files small and feature-organized (coding-style: 200–400 lines typical). Run r
 
 - **LIBERO suites:** Spatial, Object, Goal (core); -10 optional. (Data gitignored.)
 - **OpenVLA-7B LIBERO-finetuned checkpoints:** record source, **hash**, date, licence (like the RoboGCG
-  entry) **before** use; record the 4-bit quantization config.
+  entry) **before** use; record the precision (bf16) config.
 - **Splits:** define disjoint calibration vs test by held-out **tasks / scenes / seeds**; commit the split
   manifest. The harness asserts disjointness at runtime (no calibration↔test leakage).
 
@@ -108,13 +108,13 @@ Files small and feature-organized (coding-style: 200–400 lines typical). Run r
 
 ## 6. M1 — environment + viability gate (build this first)
 
-1. Stand up OpenVLA-7B (4-bit) on GB10; load a LIBERO checkpoint; record env + provenance.
+1. Stand up OpenVLA-7B (bf16) on the A100/H100; load a LIBERO checkpoint; record env + provenance.
 2. **Benign baseline:** N benign rollouts per suite (pinned seeds); record task-success; sanity-check vs
    OpenVLA/LIBERO published numbers.
 3. **RoboGCG reproduction:** on a few tasks, optimize a suffix for a chosen target action; run the attacked
    rollout; record whether the policy **reaches the target action region** and the **persistence** (#steps).
-4. **GCG micro-benchmark:** measure s/target and #steps on GB10 at 4-bit → **resolves D4 (eval matrix) and
-   D7 (budget)**. Record actuals.
+4. **GCG micro-benchmark:** measure s/target and #steps on the granted A100/H100 at bf16 → **resolves D4 (eval
+   matrix) and D7 (budget)**. Record actuals.
 5. **Signal sanity (metric A):** compute `s(...)` on a handful of benign vs attacked rollouts (causal prefix
    window); inspect the benign-vs-attacked separation **at *both* the clean-instruction ceiling and the
    coarse operator-goal reference**.
@@ -193,7 +193,7 @@ clean-instruction ceiling alone — else detection *necessity* is weak; flag bef
 
 | Risk | Mitigation |
 |------|-----------|
-| GB10 throughput < H100 → attack compute overrun | micro-benchmark first; subsample targets (D7) |
+| Attack compute overrun on the granted A100/H100 | published H100 GCG timings should ≈ transfer; still micro-benchmark on the actual granted HW at M1; subsample targets (D7) |
 | RoboGCG repro fidelity on our checkpoint | confirm at M1; attribute the method; do **not** claim a new attack |
 | Denial-only attack (not targeted) | D2 fallback → reframe metric to task-deviation detection |
 | Privileged-state extraction wrong (A) | **unit-test** extraction against known LIBERO ground truth before trusting scores |

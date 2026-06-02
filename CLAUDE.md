@@ -73,10 +73,13 @@ defended). A graded, single-author dissertation: reproducibility and defensible 
 Headline = ***The Embodiment Evasion Tax*** — a *measurement* of per-layer adaptive-evasion cost (**L0** input /
 **L1** internal-probe / **L2** behavioural action-monitor) on instruction-injected VLA policies; the
 FP-calibrated goal-action detector is the **L2** *instrument*, **not** a claimed universal defence. Base
-**OpenVLA-7B**, **simulation only (LIBERO)**, **instruction channel** (RoboGCG primary). **Claim boundary — don't
-over-claim (Codex review #2, 2026-06-02):** the GB10 floor (**M3 / Tier-F**) delivers only the **oracle** intrinsic
-action-space frontier (**H6-A**); the cross-layer *tax* headline (**H6-D**) is **deployable-vs-deployable** and
-needs the requested cluster (**M4 / Tier-N**) — if it slips, fall back to the oracle-frontier title. Novelty is
+**OpenVLA-7B** (**bf16**), **simulation only (LIBERO)**, **instruction channel** (RoboGCG primary). **Compute (2026-06-02):**
+hardware = **A100/H100** (single-card-vs-cluster TBC), superseding the assumed GB10; the compute *tiers* are now
+three **branches (N / N− / F) selected by the M1 on-GPU timing micro-bench** (D8). **Claim boundary — don't
+over-claim (Codex review #2, 2026-06-02):** the guaranteed floor (**M3**, delivered in every branch) gives only the
+**oracle** intrinsic action-space frontier (**H6-A**); the cross-layer *tax* headline (**H6-D**, **M4**) is
+**deployable-vs-deployable** and is committed only if the **M1 micro-bench** shows the matched-attacker matrix
+affordable (**Branch N/N−**) — if not (**Branch F**), fall back to the oracle-frontier title. Novelty is
 **narrowed** to *adaptive evasion-cost measurement for the instruction channel, FP-calibrated, + action-space
 intrinsic frontier* (a 2026 runtime VLA-safety cluster exists — don't claim the lane is empty).
 **Operational source of truth = `docs/plans/t7-execution-playbook.md`** (status / tasks / decisions / how-to);

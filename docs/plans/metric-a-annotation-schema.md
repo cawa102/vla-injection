@@ -19,7 +19,7 @@ is ever inspected**, so the parser cannot be reverse-engineered from attacks and
 detector.
 
 > **Freeze statement.** Every primitive, the combination rule, and every numeric constant below was chosen
-> from **benign geometry / first principles only**, with **no attack output observed** (no GB10 runs, no GCG
+> from **benign geometry / first principles only**, with **no attack output observed** (no GPU runs, no GCG
 > suffixes, no attacked rollouts exist as of the freeze date). Any change after the *first* attack is inspected
 > must be recorded as a dated **deviation** (rationale + before/after) in this file and reported in the
 > dissertation. Re-tuning constants on attacked data is forbidden; FP calibration of the *threshold* τ is a

@@ -1,4 +1,4 @@
-# T7 — Pre-GB10 Local Preparation Plan (M1 / 8 GB)
+# T7 — Pre-GPU Local Preparation Plan (M1 / 8 GB)
 
 > **For Claude:** REQUIRED SUB-SKILL — implement this plan task-by-task with the **`test-driven-development`**
 > skill (`/tdd`): one failing behaviour test at a time → minimal code → refactor. Use **`executing-plans`**
@@ -6,24 +6,24 @@
 >
 > Companion to the **execution playbook** (`t7-execution-playbook.md`, operational source of truth) and the
 > **Phase-3 plan** (`t7-phase3-implementation-plan.md`, the M1–M2 component contracts this plan realises).
-> This plan covers **only what is buildable on the M1 (8 GB) without the model/GPU**, plus a GB10 runbook —
+> This plan covers **only what is buildable on the M1 (8 GB) without the model/GPU**, plus a GPU runbook —
 > it does **not** add scope beyond M1–M2.
 >
 > ⚠️ AI-assisted scaffold for author review (CLAUDE.md §1/§5). Provisional items are marked.
 
 **Goal:** Build and unit-test every **model-free** M1–M2 engineering component locally (repro infra,
 metric-(A) scorer, calibrated detector, eval statistics, action-codec, baselines, configs/scripts/figures),
-so that when GB10 arrives the remaining work is "plug in OpenVLA + LIBERO and run", and so metric-(A)'s
+so that when the GPU arrives the remaining work is "plug in OpenVLA + LIBERO and run", and so metric-(A)'s
 annotation schema is **frozen before any attack output exists** (a hard requirement we can only satisfy now).
 
 **Architecture:** A small `src/t7` Python package, feature-organised (Phase-3 §3). Everything that touches the
 7B model, GCG, or LIBERO *rollouts* is hidden behind thin interfaces with **synthetic fixtures** for tests;
-the real implementations of those interfaces are deferred to GB10. The scientific core — privileged-state
+the real implementations of those interfaces are deferred to the GPU node. The scientific core — privileged-state
 metric (A), FP-calibration, ROC/AUC + per-rollout TPR@FPR with CIs, detection latency, write-once logging — is
 pure NumPy/SciPy and fully testable on M1. One optional, **time-boxed** state-only LIBERO smoke test validates
 the metric-(A) ground-truth adapter against the real environment; it falls back to mocks if installation fights.
 
-**Tech Stack:** Python **3.11** local (code kept **3.10-compatible** for the GB10 OpenVLA stack), **uv** for
+**Tech Stack:** Python **3.11** local (code kept **3.10-compatible** for the GPU-node OpenVLA stack), **uv** for
 env management, `numpy` `scipy` `scikit-learn` `pyyaml` `pydantic`, `pytest` + `ruff`. LIBERO smoke test (opt):
 `mujoco` + `robosuite` + `libero` in an isolated extras group. No model weights, no CUDA, no GPU.
 
@@ -41,10 +41,10 @@ env management, `numpy` `scipy` `scikit-learn` `pyyaml` `pydantic`, `pytest` + `
 | 5 Metric (A) schema freeze | ✅ schema **FROZEN 2026-05-31** (`docs/plans/metric-a-annotation-schema.md`) + causal scorer; author design delegated & recorded | `2c2f163` |
 | 6 FP-calibrated detector | ✅ | `7f2be7c` |
 | 7 Eval harness + stats | ✅ | `2ab71aa` |
-| 8 Baselines | ✅ goal-agnostic anomaly (χ² OOD) + perplexity filter (mock + GB10 stub), shared `calibrate` | `3287c5c` |
-| 9 Config + scripts + figures | ✅ frozen pydantic `Config` + `one_variable_diff`; shared GB10 guard; `make_figures` script-regenerable from logged `results.json` (`results_table_to_dict` = eval→figures contract); 6 scripts + `_bootstrap` | `60b0462` |
+| 8 Baselines | ✅ goal-agnostic anomaly (χ² OOD) + perplexity filter (mock + GPU stub), shared `calibrate` | `3287c5c` |
+| 9 Config + scripts + figures | ✅ frozen pydantic `Config` + `one_variable_diff`; shared GPU guard; `make_figures` script-regenerable from logged `results.json` (`results_table_to_dict` = eval→figures contract); 6 scripts + `_bootstrap` | `60b0462` |
 | 10 LIBERO state-only smoke | ⬜ time-boxed | — |
-| 11 GB10 runbook | ⬜ | — |
+| 11 GPU runbook | ⬜ | — |
 
 **237 tests green; full `src/t7` is type-clean under `uvx pyright`** (3 pre-existing pyright errors + 1 ruff B905 remain in *test* files `test_state.py`/`test_records.py`/`test_consistency_a.py` — untouched by Task 9, not yet cleaned). *(2026-06-02: +6 tests for the eval-harness held-out-FPR fix, invariant #3 — see execution-playbook §10.)* Infra notes: pytest resolves `t7` via `pythonpath=["src"]` (uv's editable `.pth` is
 unreliable on this host — corrupted on each `uv run`); pyright via `pyrightconfig.json` (`uvx pyright` is the
@@ -66,14 +66,14 @@ broken editable install).
    overwrite**. Tests write to `tmp_path`, never to `results/`.
 6. **Immutability** — records/configs are frozen dataclasses or returned as new copies (coding-style rule).
 7. **Label (A) as a non-deployable upper bound** everywhere it is surfaced (uses privileged sim state).
-8. **No fabricated constants** — exact OpenVLA un-normalisation stats, token mapping, and pinned GB10 versions
+8. **No fabricated constants** — exact OpenVLA un-normalisation stats, token mapping, and pinned GPU-node versions
    are *fetched from source* in their tasks and provenance-recorded; never hand-typed from memory.
 
 **Repo layout created incrementally (a dir only when a task first needs it):**
 ```
 src/t7/{repro,records,policy,metric,detector,eval,baselines,attack,config}/   configs/   scripts/
 tests/t7/...            results/ (write-once, committed: small JSON/CSV + config snapshots)
-docs/setup/gb10-runbook.md
+docs/setup/gpu-runbook.md
 ```
 `data/` and `artifacts/` stay gitignored (already in `.gitignore`); `results/` is committed (holds metrics +
 config snapshots + *references*, not raw tensors — `observation_ref`, not the image).
@@ -96,7 +96,7 @@ extra so it can't break the core env.
 **Test scenarios:** `import t7` succeeds; a trivial `tests/t7/test_smoke.py` passes under `uv run pytest`.
 
 **Dependencies:** none. **Notes:** keep code 3.10-compatible (no 3.11-only syntax) so `src/t7` imports cleanly
-on the GB10 OpenVLA stack. **Commit:** `chore: scaffold t7 package + uv dev env`
+on the GPU-node OpenVLA stack. **Commit:** `chore: scaffold t7 package + uv dev env`
 
 ---
 
@@ -183,7 +183,7 @@ gripper handling from the OpenVLA repo's `ActionTokenizer` / `get_action` — do
 **What:** A **thin, swappable** adapter (Dependency Inversion) that turns a raw env/ground-truth snapshot into
 a normalised `PrivilegedState` the metric reasons over — so the scorer never depends on LIBERO's concrete API.
 Ships with **synthetic fixtures** now; a concrete LIBERO adapter is wired in Task 9 if the smoke test succeeds,
-else deferred to GB10.
+else deferred to the GPU node.
 
 **Interface:**
 - `PrivilegedState` (frozen) — `ee_pose[7], gripper_open:bool, object_poses:dict[str,np.ndarray], target_region:str|None, ...` (the *normalised* schema, env-agnostic).
@@ -263,7 +263,7 @@ primitive (invariant #4). **Commit:** `feat: add FP-calibrated detector (per-rol
 - `assert_disjoint(calib_manifest, test_manifest)` — raises if tasks/scenes/seeds overlap.
 - `run_condition_matrix(matrix_cfg, rollouts_by_condition, metric, detector) -> ResultsTable` — orchestrates
   scoring → calibration (calib split) → evaluation (test split) → emits a results table + the raw arrays
-  `make_figures` consumes. (Rollout *generation* is GB10; this consumes provided/synthetic rollouts.)
+  `make_figures` consumes. (Rollout *generation* is on the GPU node; this consumes provided/synthetic rollouts.)
 
 **Test scenarios:** AUC = 1.0 on perfectly separated synthetic scores, ≈0.5 on overlapping; `tpr_at_fpr` CI
 width shrinks as n grows and Wilson≠normal-approx at small n; `assert_disjoint` raises on a shared seed;
@@ -283,12 +283,12 @@ width shrinks as n grows and Wilson≠normal-approx at small n; `assert_disjoint
 - `goal_agnostic_anomaly_score(rollout, *, benign_stats) -> list[Score]` — fully model-free OOD score on the
   action stream (mandatory baseline: shows goal-conditioning beats mere anomaly detection).
 - `PerplexityFilter` — interface `score(instruction:str) -> float` with a **`MockPerplexityScorer`** for tests;
-  the real LM-perplexity backend is a stub that raises `NotImplementedError("GB10")` so it's swapped in later.
+  the real LM-perplexity backend is a stub that raises `NotImplementedError("GPU")` so it's swapped in later.
 
 **Test scenarios:** anomaly score is high for out-of-distribution action streams vs benign-stats; perplexity
-*interface* + mock calibrate identically through `calibrate`; the real backend stub clearly errors as GB10-only.
+*interface* + mock calibrate identically through `calibrate`; the real backend stub clearly errors as GPU-only.
 **Dependencies:** numpy, `src/t7/detector`. **Notes:** the "text-PF threshold unknowable a priori" point is a
-*deployment* argument stated in prose, **not** an in-experiment handicap. **Commit:** `feat: add anomaly + perplexity-filter baselines (shared calibration; perplexity backend stubbed for GB10)`
+*deployment* argument stated in prose, **not** an in-experiment handicap. **Commit:** `feat: add anomaly + perplexity-filter baselines (shared calibration; perplexity backend stubbed for GPU)`
 
 ---
 
@@ -300,18 +300,18 @@ width shrinks as n grows and Wilson≠normal-approx at small n; `assert_disjoint
 - Test: `tests/t7/config/test_schema.py`, `tests/t7/scripts/test_make_figures.py`
 
 **What:** Pinned-config validation, runnable script skeletons (GPU-dependent ones guard with a clear "requires
-GB10" message), and **`make_figures` working end-to-end on synthetic results** (so figures are
+the GPU" message), and **`make_figures` working end-to-end on synthetic results** (so figures are
 script-regenerable from logged arrays — an M2 deliverable).
 
 **Interface:**
 - `Config` (pydantic) — `model, env, attack, metric{k}, detector{fpr_targets}, eval{matrix,splits}, seed`;
   `load_config(path) -> Config` validates; `one_variable_diff(cfg_a, cfg_b) -> list[str]` (enforces one-variable discipline).
 - `make_figures(results_dir, out_dir)` — ROC curve, TPR@FPR-with-CI bar, score-distribution histogram, ladder-table placeholder — from logged arrays.
-- `run_benign`/`run_attack`/`microbench_gcg` — parse config, set up logging via `RunLogger`, then **guard**: if no CUDA/model, print the GB10 requirement and exit non-zero (no silent no-op).
+- `run_benign`/`run_attack`/`microbench_gcg` — parse config, set up logging via `RunLogger`, then **guard**: if no CUDA/model, print the GPU requirement and exit non-zero (no silent no-op).
 
 **Test scenarios:** valid YAML loads; missing/oob field raises a clear validation error; `one_variable_diff`
 detects exactly the changed field; `make_figures` on a synthetic results dir writes the expected figure files;
-GPU scripts exit with the GB10 message when no model is present. **Dependencies:** pydantic, pyyaml, matplotlib,
+GPU scripts exit with the GPU message when no model is present. **Dependencies:** pydantic, pyyaml, matplotlib,
 numpy, `src/t7/eval`, `src/t7/repro`. **Notes:** keep `make_figures` pure-from-logged-data (no recomputation).
 **Commit:** `feat: add config schema, script skeletons, and synthetic-data figure generation`
 
@@ -331,26 +331,26 @@ Task 4 `PrivilegedState` contract and, if it works, wire a concrete `state_liber
 **Test scenarios (validation, not pytest-gated):** env resets; ground-truth dict contains the fields the
 Task 4 schema assumes; if mismatched, **record the real schema** in `libero-local-notes.md` and adjust the
 *adapter mapping* (not the metric schema). **Rabbit-hole guard:** hard time-box ~90 min; on install failure,
-**stop**, document the blocker, keep synthetic fixtures, and defer the concrete adapter to GB10 — this is a
+**stop**, document the blocker, keep synthetic fixtures, and defer the concrete adapter to the GPU node — this is a
 *validation bonus*, not a blocker for Tasks 0–9. **Dependencies:** `mujoco`, `robosuite`, `libero` (extra).
 **Notes:** never let this destabilise the core env. **Commit:** `chore: add state-only LIBERO smoke test + local notes` (+ `feat: add concrete LIBERO state adapter` only if it works).
 
 ---
 
-## Task 11: GB10 setup runbook + pinned environment
+## Task 11: GPU setup runbook + pinned environment
 
 **Files:**
-- Create: `docs/setup/gb10-runbook.md`, `configs/env/requirements-gb10.txt` (or `environment-gb10.yml`)
+- Create: `docs/setup/gpu-runbook.md`, `configs/env/requirements-gpu.txt` (or `environment-gpu.yml`)
 - Modify: `docs/references/README.md` (add provenance placeholder rows for the OpenVLA-7B LIBERO checkpoints)
 
-**What:** A step-by-step runbook so GB10 day-1 is "clone → create pinned env → download checkpoints (record
+**What:** A step-by-step runbook so GPU day-1 is "clone → create pinned env → download checkpoints (record
 hash) → run benign baseline → reproduce RoboGCG → GCG micro-bench → metric-(A) signal check → GO/NO-GO".
-Pin OpenVLA + LIBERO + RoboGCG (`github.com/eliotjones1/robogcg`) versions; capture the 4-bit quant config;
+Pin OpenVLA + LIBERO + RoboGCG (`github.com/eliotjones1/robogcg`) versions; capture the precision (bf16) config;
 provenance placeholders (source/hash/date/licence) to fill on download.
 
 **Test scenarios:** none (doc). **Checklist mirrors** Playbook §6 (D4/D7 micro-bench), §8 (run protocol), and
 the M1 GO/NO-GO gate. **Dependencies:** none. **Notes:** versions are **best-effort, fetched from the OpenVLA /
-RoboGCG repos and marked `[VERIFY ON GB10]`** — do not invent pins (invariant #8). **Commit:** `docs: add GB10 setup runbook + pinned environment spec`
+RoboGCG repos and marked `[VERIFY ON THE GPU NODE]`** — do not invent pins (invariant #8). **Commit:** `docs: add GPU setup runbook + pinned environment spec`
 
 ---
 
@@ -359,13 +359,13 @@ RoboGCG repos and marked `[VERIFY ON GB10]`** — do not invent pins (invariant 
 - Log the **author-OK to start M1–M2 scaffolding** (2026-05-31) in Playbook §10 decision log and update §1
   *You-Are-Here* + §7 task ledger (the `Define repo layout` ⬜ item) as work lands.
 - As each task completes, tick its line; record any negative/blocker (e.g. LIBERO install failure) honestly.
-- Nothing here generates an experimental *result*, so no §9 claims-ledger rows yet — those start at M1 on GB10.
+- Nothing here generates an experimental *result*, so no §9 claims-ledger rows yet — those start at M1 on the GPU node.
 
 ---
 
 ## Boundary check (what this plan deliberately does NOT build — guards against scope creep)
 
-- ❌ OpenVLA inference / rollouts / GCG optimisation / benign-baseline + attack reproduction → **GB10**.
+- ❌ OpenVLA inference / rollouts / GCG optimisation / benign-baseline + attack reproduction → **the GPU node**.
 - ❌ Metric (B)/(C) deployable detectors → **M4**. ❌ Trusted-reference rung construction → **M3**.
   ❌ Adaptive attack → **M5 (stretch)**. ❌ Final eval matrix sizing (D4) / compute budget (D7) → **M1 micro-bench**.
 - Everything above is interface + synthetic-data-tested only where the model would otherwise be required.

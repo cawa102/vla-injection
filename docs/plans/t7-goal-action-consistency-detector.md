@@ -186,21 +186,23 @@ calibration as the headline result.
    **abort rate / latency**. *(NOT "recovered task-success": a hold/abort fallback prevents the unsafe action
    but does not complete the task — only measure recovery if you also build replan / clean-instruction
    re-execution.)* Report degradation **across the trusted-reference ladder**.
-7. **Compute budget** — GCG sweep cost (H100 numbers may not hold on GB10 → micro-benchmark first, subsample
-   targets); any training for metric (B)/(C).
+7. **Compute budget** — GCG sweep cost (we now run on A100/H100, so the published H100 GCG timings should ≈
+   transfer; we still micro-bench on the actual granted HW at M1 to fix the eval matrix (D4/D7)); any training
+   for metric (B)/(C).
 
 ---
 
-## 8. Feasibility (single GB10 + simulation)
+## 8. Feasibility (A100/H100 + simulation)
 
-- **Model:** OpenVLA-7B (4-bit, fits ~128 GB), LIBERO-finetuned checkpoints. The **detector concept is
+- **Model:** OpenVLA-7B (bf16 — A100/H100-80GB fit OpenVLA-7B at full precision; 4-bit no longer required;
+  fits comfortably on an A100/H100 (≈14 GB in bf16)), LIBERO-finetuned checkpoints. The **detector concept is
   head-agnostic**, but the **initial RoboGCG attack reproduction is scoped to the discrete-action-token
   OpenVLA-7B** — GCG over discrete action tokens does not transfer unchanged to OpenVLA-OFT's continuous L1
   head. (Still better than T5, whose *defense* mechanism itself was tokenization-specific.)
 - **Attack compute:** RoboGCG is **training-free** (inference-time white-box GCG) but **not free** — the
-  published ~185–604 s/target is **H100-based and may be slower on GB10**. Treat it as **bounded and
-  subsampleable**: micro-benchmark GCG on the GB10 first, subsample targets, and concentrate effort on the
-  detector.
+  published ~185–604 s/target is **H100-based**; we now run on A100/H100, so the published H100 GCG timings
+  should ≈ transfer. Treat it as **bounded and subsampleable**: micro-benchmark GCG on the actual granted HW at
+  M1 to fix the eval matrix (D4/D7), subsample targets, and concentrate effort on the detector.
 - **Detector:** metric (A) is analysis-only; (B)/(C) need a small model (in-budget LoRA/MLP scale).
 - **Sim only** — scope all claims to simulation; no real-robot transfer claims. Pin all seeds; write-once
   `results/`; quarantine any attack artefacts under `artifacts/untrusted/` (CLAUDE.md §4, §6).
@@ -223,7 +225,7 @@ calibration as the headline result.
 
 ## 10. Week-1 viability gate (cheap go/no-go before deep work)
 
-1. Stand up OpenVLA-7B (4-bit) on LIBERO; reproduce the **benign** baseline success.
+1. Stand up OpenVLA-7B (bf16) on LIBERO; reproduce the **benign** baseline success.
 2. Reproduce **RoboGCG** on a few tasks; **confirm it achieves *targeted* redirection** (reached an
    attacker-chosen action region), not just task failure. *(If only denial → reframe per §9.)*
 3. Sanity-check the **signal exists**: with the privileged-state metric (A), is the inconsistency score

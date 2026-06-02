@@ -29,22 +29,30 @@ point exists) **or** a negative (it does not — and *why*). Do **not** over-cla
 against an **actual adversarial attack** (RoboGCG) — this is the **committed** novelty (**M4**). Two senses of
 *attacker-aware*: (a) *we test detection against a real attack*, unlike actalign's benign-only setting —
 **committed**; (b) *robustness against an adaptive attacker that knows the detector* — the **realistic-adaptive
-arm (H5 / H6-D, M4, Tier-N)**, pursued only if the cluster lands and M4 finishes with slack; if dropped we make
+arm (H5 / H6-D, M4, Branch N/N−)**, pursued only if the M1 micro-bench shows it affordable and M4 finishes with slack; if dropped we make
 claim (a) and **do not** claim adaptive robustness. The privileged-state floor (below) guarantees a defensible
 dissertation even if the deployable arm underperforms.
 
-**Claim boundary (Codex review #2, 2026-06-02 — load-bearing).** The cross-layer *Embodiment Evasion Tax* is
-**two distinct claims, never conflated**: **H6-A** — the *oracle intrinsic action-space frontier*, what
-**M3 / Tier-F** delivers on GB10 alone (an L2-**oracle** frontier + **non-adaptive** L0/L1/L2 detection; it makes
-**no cross-layer "tax" claim**, because the layers are not attacked by a common attacker) — and **H6-D** — the
-*deployable-vs-deployable* cross-layer tax under a **matched** realistic attacker/budget (**M4 / Tier-N only**).
-A fair "L2 costs more than L1" statement **requires H6-D**; without the cluster we report H6-A + the honest
-oracle-gap and mark the cross-layer deployable tax **unresolved** (fallback title, §3a).
+**Claim boundary (Codex review #2, 2026-06-02 — load-bearing; trigger updated 2026-06-02 for the A100/H100 upgrade).**
+The cross-layer *Embodiment Evasion Tax* is **two distinct claims, never conflated**: **H6-A** — the *oracle
+intrinsic action-space frontier* (an L2-**oracle** frontier + **non-adaptive** L0/L1/L2 detection; it makes
+**no cross-layer "tax" claim**, because the layers are not attacked by a common attacker), the **guaranteed
+floor** result — and **H6-D** — the *deployable-vs-deployable* cross-layer tax under a **matched** realistic
+attacker/budget, the **headline**. A fair "L2 costs more than L1" statement **requires H6-D**. **Which one
+becomes the committed headline is selected at the M1 on-GPU timing micro-bench** (§2 *Compute branches*): if the
+measured GCG / L1-extraction cost on the granted A100/H100 makes the deployable matched-attacker matrix
+affordable within the calendar → **Branch N / N−** commits H6-D; if not → **Branch F** reports H6-A + the honest
+oracle-gap and marks the cross-layer deployable tax **unresolved** (fallback title, §3a). **H6-A is delivered
+either way** — *the tax headline is H6-D's, never H6-A's.*
 
-**Compute & tiers (2026-06-01).** Baseline = single GB10 (**Tier-F**, guaranteed). An **A100/H100 cluster is
-requested** (D8, pending) → **Tier-N** (deployable B/C, realistic adaptive GCG, full reference ladder) becomes
-committed at the **M1 compute-confirmation checkpoint**; fallback to Tier-F if it slips. Headline reframe =
-**§3a / H6**; the **tiered roadmap = §2**; **what to implement = §4b**.
+**Compute (2026-06-02 — D8 updated).** Hardware is now **A100/H100** (single-card vs cluster, and queue depth,
+still TBC) — the previously-assumed single GB10 is superseded; OpenVLA-7B runs in **bf16** (full precision fits
+on an 80 GB card, ≈14 GB; 4-bit no longer required). The old Tier-F / Tier-N *compute classes* are replaced by
+**three pre-registered branches selected at the M1 on-GPU timing micro-bench** (§2 *Compute branches*): **N**
+(full deployable tax) / **N−** (scoped deployable tax) / **F** (oracle frontier only) — chosen by the *measured*
+affordable matrix, not by hope. **Reproducibility rule unchanged: log exact HW + precision + parallelism per
+run; never compare across HW within one claim.** Headline reframe = **§3a / H6**; the **branched roadmap = §2**;
+**what to implement = §4b**.
 
 **Five non-negotiables (CLAUDE.md):**
 1. **Reproducibility** — pin & record seeds; capture exact env; provenance for every checkpoint/dataset
@@ -66,32 +74,43 @@ committed at the **M1 compute-confirmation checkpoint**; fallback to Tier-F if i
 ## 1. You Are Here  ← update this block every session
 
 - **Last updated:** 2026-06-02 (Codex review #2 incorporated across the plan — see §10; **eval-harness held-out-FPR correctness fix** landed same day — see §10)
-- **Phase:** **Design → M0 (exiting)**. Coding gate **lifted for M1–M2 (author OK, 2026-05-31)**; **pre-GB10 local build underway** — model-free M1–M2 components on M1/8 GB (`docs/plans/t7-local-prep-plan.md`). OpenVLA/GCG/LIBERO *runs* await the granted GPU. **Headline reframed → Embodiment Evasion Tax (§3a, H6); milestones re-mapped (§2); what-to-implement = §4b; compute may upgrade GB10→A100/H100 cluster (D8, pending).**
+- **Phase:** **Design → M0 (exiting)**. Coding gate **lifted for M1–M2 (author OK, 2026-05-31)**; **pre-GPU local build underway** — model-free M1–M2 components on M1/8 GB (`docs/plans/t7-local-prep-plan.md`). OpenVLA/GCG/LIBERO *runs* await the granted GPU. **Headline reframed → Embodiment Evasion Tax (§3a, H6); milestones re-mapped (§2); what-to-implement = §4b; compute upgraded GB10→A100/H100 (D8, 2026-06-02) — bf16 default, tier→branch reframe (§2 *Compute branches*).**
 - **Last completed:** Theme = T7; understanding doc; **RoboGCG defence verified** (`docs/references/`); **D1–D7 resolved** (§6/§10; D4/D7 OPEN → M1); **Phase-3 implementation plan drafted**; **Codex third-party review incorporated** (causal prefix-window + detection latency; per-rollout FPR + CIs; metric(A) schema frozen; fair-calibrated baselines; M5→stretch — see §10). **Codex review #2 (2026-06-02) incorporated** — H6 split into **H6-A** (M3, oracle-intrinsic) + **H6-D** (M4, deployable cross-layer tax); novelty narrowed (runtime VLA-safety lane now occupied, 4 papers verified); power / coverage / L1-control / single-route pre-registrations added (§10).
-- **Currently:** Executing the **pre-GB10 local-prep plan** (`docs/plans/t7-local-prep-plan.md`) on M1/8 GB via TDD. **Done 2026-05-31: Tasks 0,1,2,3,4,5,6,7,8,9** — env scaffold, repro infra, data records, **action codec (OpenVLA formula verified from source `c8f03f48`; provenance recorded)**, privileged-state adapter, **metric (A) — annotation schema FROZEN (`docs/plans/metric-a-annotation-schema.md`, `2c2f163`) + causal scorer (P1 progress / P2 distractor / P3 grasp; combine=max; privileged anchor via resolver seam; non-causal monitoring-ceiling variant)**, FP-calibrated detector, eval harness (ROC/AUC, TPR@FPR + Wilson/CP CIs, latency, split-disjointness), **M2 baselines (`3287c5c`): goal-agnostic χ²-OOD action anomaly + perplexity/text-only filter (mock + GB10 stub), both through the *same* `calibrate`**, **config/scripts/figures (`60b0462`): frozen pydantic `Config` + `one_variable_diff`; shared GB10 guard (no-CUDA → exit non-zero, no silent no-op); `make_figures` regenerates ROC/score-hist/TPR@FPR-CI per condition purely from a logged `results.json`; 6 runnable scripts** — **237 tests green, full `src/t7` type-clean** (see plan Status table). **2026-06-02 fix: `tpr_at_fpr`/`run_condition_matrix` now report `realised_fpr` on the *held-out* benign split (invariant #3), not the calibration split it was previously measured on; the in-sample number is retained as the `calib_fpr` diagnostic (see §10).** **Remaining delegable:** Task 11 runbook. **Needs author/me first:** Task 10 LIBERO smoke (time-boxed, optional). *Note: 3 pre-existing pyright errors + 1 ruff B905 sit in untouched test files (`test_state.py`/`test_records.py`/`test_consistency_a.py`) — pre-Task-9, not yet cleaned.*
-- **▶ NEXT ACTION:** **Local (now):** finish local-prep Tasks 10–11 **+ build the model-free §4b interfaces** (L1 `InternalProbe`/`ActivationExtractor`, idealized action-space attacker, cross-layer eval + tax metrics) with synthetic-fixture tests — **now also wiring the Codex-#2 model-free hooks: the #11 L1 confound-control scaffolding (label-shuffle / lexical control), the #6 coverage-manifest stub, and the #10 ΔASR@fixed-evasion primary tax scalar**. **On the granted GPU (M1):** stand up OpenVLA-7B on the *actual* HW; benign baseline + RoboGCG *targeted* redirect; **GCG micro-bench on that HW (fixes D4/D7)**; metric-(A) signal incl. coarse-goal check; **CONFIRM cluster access → lock Tier-N scope (D8)** → **GO/NO-GO gate (H1)**.
+- **Currently:** Executing the **pre-GPU local-prep plan** (`docs/plans/t7-local-prep-plan.md`) on M1/8 GB via TDD. **Done 2026-05-31: Tasks 0,1,2,3,4,5,6,7,8,9** — env scaffold, repro infra, data records, **action codec (OpenVLA formula verified from source `c8f03f48`; provenance recorded)**, privileged-state adapter, **metric (A) — annotation schema FROZEN (`docs/plans/metric-a-annotation-schema.md`, `2c2f163`) + causal scorer (P1 progress / P2 distractor / P3 grasp; combine=max; privileged anchor via resolver seam; non-causal monitoring-ceiling variant)**, FP-calibrated detector, eval harness (ROC/AUC, TPR@FPR + Wilson/CP CIs, latency, split-disjointness), **M2 baselines (`3287c5c`): goal-agnostic χ²-OOD action anomaly + perplexity/text-only filter (mock + GPU stub), both through the *same* `calibrate`**, **config/scripts/figures (`60b0462`): frozen pydantic `Config` + `one_variable_diff`; shared GPU guard (no-CUDA → exit non-zero, no silent no-op); `make_figures` regenerates ROC/score-hist/TPR@FPR-CI per condition purely from a logged `results.json`; 6 runnable scripts** — **237 tests green, full `src/t7` type-clean** (see plan Status table). **2026-06-02 fix: `tpr_at_fpr`/`run_condition_matrix` now report `realised_fpr` on the *held-out* benign split (invariant #3), not the calibration split it was previously measured on; the in-sample number is retained as the `calib_fpr` diagnostic (see §10).** **Remaining delegable:** Task 11 runbook. **Needs author/me first:** Task 10 LIBERO smoke (time-boxed, optional). *Note: 3 pre-existing pyright errors + 1 ruff B905 sit in untouched test files (`test_state.py`/`test_records.py`/`test_consistency_a.py`) — pre-Task-9, not yet cleaned.*
+- **▶ NEXT ACTION:** **Local (now):** finish local-prep Tasks 10–11 **+ build the model-free §4b interfaces** (L1 `InternalProbe`/`ActivationExtractor`, idealized action-space attacker, cross-layer eval + tax metrics) with synthetic-fixture tests — **now also wiring the Codex-#2 model-free hooks: the #11 L1 confound-control scaffolding (label-shuffle / lexical control), the #6 coverage-manifest stub, and the #10 ΔASR@fixed-evasion primary tax scalar**. **On the granted GPU (M1):** stand up OpenVLA-7B on the *actual* HW; benign baseline + RoboGCG *targeted* redirect; **GCG micro-bench on that HW (fixes D4/D7)**; metric-(A) signal incl. coarse-goal check; **run the on-GPU timing micro-bench → select compute Branch N/N−/F (D8)** → **GO/NO-GO gate (H1)**.
 - **Blockers:** none.
-- **Open decisions outstanding:** **D4, D7** (OPEN → M1 GCG micro-bench on the granted HW) **＋ D8 compute tier** (A100/H100 cluster requested 2026-06-01, pending → confirm at M1; sets Tier-N committed scope). D1/D2/D5/D6 DECIDED; **D3 re-tiered** by the reframe (operator-goal rung committed, task-ID → Tier-N, see §2 M5).
+- **Open decisions outstanding:** **D4, D7** (OPEN → M1 GCG micro-bench on the granted HW) **＋ D8 compute** (A100/H100 granted 2026-06-02; single-card-vs-cluster + queue depth TBC → the M1 on-GPU timing micro-bench selects Branch N/N−/F). D1/D2/D5/D6 DECIDED; **D3 re-tiered** by the reframe (operator-goal rung committed, task-ID → stretch / Branch-N, see §2 M5).
 - **Floor secured?** ❌ not yet (target: end of **M2**, ~Jul 12).
-- **Novelty status:** headline = **Embodiment Evasion Tax**, delivered as **two claims**: **H6-A oracle intrinsic action-space frontier + non-adaptive cross-layer detection = committed (M3, Tier-F, GB10-guaranteed)**; the **fair cross-layer *tax* (H6-D, deployable-vs-deployable, matched attacker) = committed-if-cluster (M4, Tier-N, D8)** — *the tax headline is **M4's, not M3's***; **M5 reference-ladder + SABER = secondary/stretch**.
+- **Novelty status:** headline = **Embodiment Evasion Tax**, delivered as **two claims**: **H6-A oracle intrinsic action-space frontier + non-adaptive cross-layer detection = committed (M3, guaranteed floor — delivered in every compute branch)**; the **fair cross-layer *tax* (H6-D, deployable-vs-deployable, matched attacker) = committed-if-affordable (M4, Branch N/N−, selected at the M1 timing micro-bench — D8)** — *the tax headline is **M4's, not M3's***; **M5 reference-ladder + SABER = secondary/stretch (promotion gated on deadline progress)**.
 - **Direction (DECISION, author-converged 2026-06-01 — flag for supervisor sign-off):** research **core reframed** to the *Embodiment Evasion Tax* measurement (see §3 **H6** + **§3a**). The behavioural detector is recast as an **instrument** measuring per-layer adaptive-evasion cost (**L0** input < **L1** internal-probe < **L2** action-monitor), **not** a claimed defence/"firewall". Scope held to the **instruction channel** (RoboGCG primary, SABER secondary); physical/CoT injection (TRAP) = future arm, out of committed scope. Floor (M2 + cheap idealized action-space frontier) unchanged → deliverable still guaranteed. *Citation pass DONE 2026-06-01:* all 5 flagged items resolved + **16 cited PDFs downloaded, gitignored, SHA-256-pinned** with provenance (`docs/references/README.md`). Net (revised, Codex review #2): a **2026 cluster of runtime/inference-time VLA-safety work now exists** (Pre-VLA runtime verification `2605.22446`; HazardArena Safety-Option-Layer `2604.12447`; Concept-Dictionary activation-level `2602.01834`; IGAR attention recalibration `2603.06001` — all **independently verified on arXiv 2026-06-02**), so we **do not** claim the runtime lane is unoccupied. **Narrowed novelty:** *adaptive evasion-cost **measurement** for the **instruction channel**, with **per-rollout FP calibration** and an **action-space intrinsic frontier*** — none of the above measure adaptive evasion cost or FP-calibrate against an adaptive injection attacker (all are mitigations / benign-OOD). *Two of them (`2602.01834`, `2603.06001`) bear on the **L1 arm's** novelty → cite + differentiate there too (§4b-I).* Title **LOCKED** (§3a, pending supervisor).
 
 ---
 
 ## 2. Milestone roadmap (W1 = week of 2026-06-01; submit early Sep 2026)
 
-**Tiers.** **F = Floor** (guaranteed on a single GB10 — but **GB10-feasibility of L1 activation extraction and of
-any adaptive-GCG-against-the-probe is itself an M1 micro-bench item (D7 / Codex #2 #5)**; if adaptive-L1 proves
-infeasible on GB10 it moves to Tier-N and Tier-F keeps **non-adaptive** L1 + the L2-oracle frontier). **N = Novelty** (the real
-goal; **committed once the A100/H100 cluster is confirmed**, gated — gates decide *how to adapt*, never
-*whether to drop*).
+**Compute branches (2026-06-02, D8 — selected at M1).** Hardware is **A100/H100** (single-card vs cluster, and
+queue depth, still TBC); OpenVLA-7B runs in **bf16**. There is no longer a binary "does the cluster exist?"
+gate — instead the **M1 on-GPU timing micro-bench** (measured GCG s/target at bf16, L1 activation/attention
+extraction overhead, LIBERO rollout throughput, effective parallelism) is fed against the remaining calendar to
+compute the **affordable experiment matrix**, which selects one of three **pre-registered** branches:
 
-**Compute posture (2026-06-01, D8 — pending).** Single GB10 is the guaranteed baseline; an **A100/H100 cluster
-has been requested** from the institution and is **expected but unconfirmed**. The roadmap is therefore
-**compute-tiered**: Tier-F secures the dissertation on GB10 alone; Tier-N (deployable B/C, realistic adaptive
-GCG, full reference ladder, larger matrix) is **promoted to committed at the M1 compute-confirmation
-checkpoint**, with graceful fallback to Tier-F if access slips. **Reproducibility rule: log the exact hardware
-per run; never compare results across different hardware within a single claim.**
+- **Branch N (full deployable tax).** The affordable matrix covers the deployable-vs-deployable matched-attacker
+  H6-D experiment (realistic adaptive GCG-through-policy vs deployable L1 *and* L2; one suite, fixed budget;
+  benign N ≥ ~300 for the **1 %-FPR primary**; ≥ 3 seeds) with write-up slack. → **commit H6-D as the headline**;
+  H6-A is the supporting oracle frontier. Stretch (M5 ladder / SABER) becomes promotable if further slack.
+- **Branch N− (scoped deployable tax).** The affordable matrix covers a *reduced* H6-D (the **one** deployable
+  route B-or-C, fewer targets/seeds, **5 %-FPR primary**). → **commit a scoped H6-D** with explicitly reported
+  reduced power **+** the honest oracle-gap. Title = main, subtitle scoped to the reduced matrix.
+- **Branch F (oracle frontier only).** Throughput / queue cannot fit even the reduced deployable matrix within
+  the calendar. → **headline = H6-A** (oracle intrinsic frontier + non-adaptive L0/L1/L2 ordering); H6-D
+  reported as **not run / unresolved**; fall back to the pre-registered oracle-frontier title (§3a).
+
+The branch is chosen by **measured affordability, pre-registered now** (before the numbers are in) so the choice
+is honest, not hope-driven. **M3 (H6-A) is delivered in every branch** — the dissertation is safe regardless of
+which lands. Within the adaptive arm, whether **adaptive-GCG-against-the-L1-probe** is in scope is itself an M1
+micro-bench item (D7 / Codex #2 #5): if it is too costly at the measured budget it is reported as non-adaptive
+L1 + the L2-oracle frontier. **Reproducibility rule: log exact HW + precision + parallelism per run; never
+compare across hardware within a single claim.**
 
 **Milestone contents re-mapped 2026-06-01** for the Evasion-Tax reframe (§3a): the new headline (cross-layer
 comparison + **idealized evasion-tax frontier**) is now **M3**; the old trusted-reference ladder moves to
@@ -101,23 +120,24 @@ remain valid**).
 | ID | Tier | Milestone | Target weeks | Exit gate (verifiable) |
 |----|------|-----------|--------------|------------------------|
 | **M0** | F | **Design lock** — D1–D7 (§6) + the **Evasion-Tax reframe (H6/§3a)** + this guidebook | W1–W2 | done; reframe author-converged (**supervisor sign-off pending**); coding allowed |
-| **M1** | F | **Environment + viability gate + COMPUTE CONFIRMATION** — OpenVLA-7B on the granted HW; benign baseline; RoboGCG *targeted* redirect; **GCG micro-bench on the *actual* HW (resolves D4/D7)**; metric-(A) signal; **confirm cluster → lock Tier-N scope (D8)** | W2–W4 | **GO/NO-GO (H1):** benign reproduced **＋** RoboGCG *targeted* redirect (not denial) **＋** benign-vs-attacked separation **surviving at the coarse operator-goal reference** **＋ compute tier locked**. *Denial-only → reframe to task-deviation (understanding-doc §9); separation only at the clean-instruction ceiling → necessity weak, flag.* |
+| **M1** | F | **Environment + viability gate + COMPUTE CONFIRMATION** — OpenVLA-7B on the granted HW; benign baseline; RoboGCG *targeted* redirect; **GCG micro-bench on the *actual* HW (resolves D4/D7)**; metric-(A) signal; **run the on-GPU timing micro-bench → select compute Branch (D8)** | W2–W4 | **GO/NO-GO (H1):** benign reproduced **＋** RoboGCG *targeted* redirect (not denial) **＋** benign-vs-attacked separation **surviving at the coarse operator-goal reference** **＋ compute Branch N/N−/F selected (D8)**. *Denial-only → reframe to task-deviation (understanding-doc §9); separation only at the clean-instruction ceiling → necessity weak, flag.* |
 | **M2** | F | **Floor detection layer** — **L0** (perplexity) + **L2-oracle** (metric A) FP-calibrated; **build the L1 internal-probe arm** (activation-delta primary; attention ablation) | W4–W6 | **non-adaptive cross-layer TPR@{1%,5%} per-rollout FPR** (L0/L1/L2) on a **held-out** split + ROC/AUC + CIs + benign degradation (**H2**) |
-| **M3** | **F** | **Oracle intrinsic action-space frontier (M-b) — H6-A** — idealized action-space attacker vs the **L2-oracle** → (ASR, evasion) Pareto + intrinsic-tax scalar; **non-adaptive** L0/L1/L2 evasion-cost ordering at matched FPR. *(Adaptive-GCG-vs-L1 is **conditional on the M1 GB10 micro-bench, D7/#5**; it is a standalone white-box result, **not** fused with L2's oracle frontier into a cross-layer "tax" — that conflates attacker models, #1.)* | W6–W9 | **H6-A:** L2-oracle (ASR, evasion) frontier + intrinsic-tax scalar with CIs; **non-adaptive** cross-layer ordering; **no cross-layer deployable-tax claim here** (that is H6-D / M4) |
-| **M4** | **N — committed-if-cluster** | **Deployable L2 (ONE of B/C, chosen at M2) + the H6-D cross-layer tax** — build **one** deployable behavioural detector (B **or** C, **train/test task-disjoint**); **realistic adaptive GCG-through-policy** vs **deployable L1 and deployable L2** at a **matched** query/compute budget (**one suite, fixed budget**, #8) → the *deployable-vs-deployable* tax | W8–W11 | deployable per-rollout TPR@FPR +CIs **and** the **H6-D** matched-attacker tax with **honest gap to the M3 oracle** (**H4 + H6-D**). *Fallback if no cluster: report M3 / H6-A + oracle-gap; mark H6-D **not run**.* |
-| **M5** | **N — secondary/stretch** | **Reference-coarsening ladder + threat-generalization** — operator-goal rung (committed-secondary, Tier-F-cheap) ＋ task-ID rung (Tier-N) ＋ **SABER** fluent attack (where L0 dies) ＋ physical/CoT note (discussion only) | W9–W12 | ladder TPR@FPR per rung (**H3**); SABER arm = input-level dies but behavioural fires |
+| **M3** | **F** | **Oracle intrinsic action-space frontier (M-b) — H6-A** — idealized action-space attacker vs the **L2-oracle** → (ASR, evasion) Pareto + intrinsic-tax scalar; **non-adaptive** L0/L1/L2 evasion-cost ordering at matched FPR. *(Adaptive-GCG-vs-L1 is **conditional on the M1 on-GPU micro-bench, D7/#5**; it is a standalone white-box result, **not** fused with L2's oracle frontier into a cross-layer "tax" — that conflates attacker models, #1.)* | W6–W9 | **H6-A:** L2-oracle (ASR, evasion) frontier + intrinsic-tax scalar with CIs; **non-adaptive** cross-layer ordering; **no cross-layer deployable-tax claim here** (that is H6-D / M4) |
+| **M4** | **N/N− — branch-selected (M1)** | **Deployable L2 (ONE of B/C, chosen at M2) + the H6-D cross-layer tax** — build **one** deployable behavioural detector (B **or** C, **train/test task-disjoint**); **realistic adaptive GCG-through-policy** vs **deployable L1 and deployable L2** at a **matched** query/compute budget (**one suite, fixed budget**, #8) → the *deployable-vs-deployable* tax | W8–W11 | deployable per-rollout TPR@FPR +CIs **and** the **H6-D** matched-attacker tax with **honest gap to the M3 oracle** (**H4 + H6-D**). *Branch N = full matrix; Branch N− = reduced (one route, 5 %-FPR primary). Fallback (Branch F): report M3 / H6-A + oracle-gap; mark H6-D **not run**.* |
+| **M5** | **N — secondary/stretch** | **Reference-coarsening ladder + threat-generalization** — operator-goal rung (committed-secondary, compute-cheap) ＋ task-ID rung (stretch) ＋ **SABER** fluent attack (where L0 dies) ＋ physical/CoT note (discussion only). *Promotion of any stretch item is gated on deadline progress, not spare GPU.* | W9–W12 | ladder TPR@FPR per rung (**H3**); SABER arm = input-level dies but behavioural fires |
 | **M6** | F | **Consolidation + ablations** — one-variable ablations (k, probe type, combine rule); freeze operating points; figures script-regenerable | W11–W12 | **RESULTS FREEZE** in write-once `results/`; every figure script-regenerable |
 | **M7** | F | **Analysis + claims ledger** — every claim→evidence; report negatives | W12–W13 | §9 ledger complete; every claim → a result file |
 | **M8** | F | **Write-up** — draft (overlaps M7); author rewrites generated prose; verify citations | W12–W14 | complete draft; **zero** `[CITATION NEEDED]` |
 | **M9** | F | **Polish + submit** — reproducibility appendix; submission | W14–W15 | submitted early Sep 2026 |
 
-**Critical path & protection.** M0→M1→M2→**M3** secure the **floor + the H6-A oracle intrinsic-frontier result on
-GB10 alone** — the dissertation is safe regardless of the cluster, but note **M3 is an oracle / non-deployable
-analysis, not a runtime-defence comparison**. **M4 (Tier-N)** turns this into the fair *deployable-vs-deployable*
-**H6-D tax** the moment the cluster is confirmed; if it slips, M3 / H6-A + the honest oracle-gap still stand and
-the **title falls back** to the oracle-frontier wording (§3a). **M5 is secondary/stretch** (lead the necessity
-argument with the operator-goal rung). The only **hard kill** is the M1 GO/NO-GO (no signal at all); later gates
-*adapt scope* (trim M5, defer M4 realistic-arm) but **never abandon M3** (the committed H6-A result).
+**Critical path & protection.** M0→M1→M2→**M3** secure the **floor + the H6-A oracle intrinsic-frontier result
+in every compute branch** — the dissertation is safe regardless of which branch the M1 micro-bench selects, but
+note **M3 is an oracle / non-deployable analysis, not a runtime-defence comparison**. **M4 (Branch N/N−)** turns
+this into the fair *deployable-vs-deployable* **H6-D tax** once the M1 timing micro-bench shows the matched-attacker
+matrix affordable; if it does not (**Branch F**), M3 / H6-A + the honest oracle-gap still stand and the **title
+falls back** to the oracle-frontier wording (§3a). **M5 is secondary/stretch** (lead the necessity argument with
+the operator-goal rung). The only **hard kill** is the M1 GO/NO-GO (no signal at all); later gates *adapt scope*
+(trim M5, scope M4 to Branch N−) but **never abandon M3** (the committed H6-A result).
 
 ---
 
@@ -132,9 +152,9 @@ argument with the operator-goal rung). The only **hard kill** is the M1 GO/NO-GO
 | **H2** | M2 | A threshold τ set on a **calibration split** gives **high TPR at a low *per-rollout* benign false-abort rate** *without* destroying benign task success — the **usable operating point RoboGCG's borrowed defences lacked**. | per-rollout TPR@{1%,5%} false-abort (with CIs) ≫ **fair-calibrated** perplexity baseline; benign task-success drop small; bounded detection latency. | No τ separates without large benign cost. | Usable point → floor secured, push novelty. None → **negative result** (behavioural detection also lacks a usable point under these conditions) — still publishable; report cleanly. | ⬜ untested |
 | **H3** | M5 | Detection degrades **gracefully** as the trusted reference coarsens; still useful at deployment-realistic rungs. | ~monotone TPR@FPR decline; coarse-goal rung still > baseline. | Detection collapses to baseline once the reference is coarser than the operational instruction. | Survives → lead the deployment argument with coarse rungs. Collapses → report where/why the "necessity" critique bites (thesis backbone either way). | ⬜ untested |
 | **H4** | M4 | A **deployable** metric (B/C, no privileged state) recovers a **substantial fraction** of the (A) ceiling's detection power. | deployable TPR@FPR within a modest gap of (A). | Large gap → deployable detection infeasible at this budget. | Small gap → headline deployable result. Large gap → report (A) as upper-bound-only + the gap as a finding. | ⬜ untested |
-| **H5** *(Tier-N; realistic-adaptive arm of H6)* | M4 | An attacker aware of the **deployable B/C** detector can reduce detection **but at a measurable cost** (lower ASR / higher perplexity / restricted targets) — the detector **raises the attacker's bar** even if not unbreakable. | adaptive attack (fixed query/compute budget) lowers detection *and* lowers ASR / raises cost — a quantified trade-off. | Adaptive attacker evades at **no** cost. | Trade-off exists → bonus security contribution. No cost → important **negative**. *Only if M4 done with slack; else not claimed.* | ⬜ untested (stretch) |
-| **H6-A** *(reframe core — committed, M3/Tier-F)* | M3 | The **L2-oracle** intrinsic action-space frontier shows that the *embodiment* constraint imposes a measurable **intrinsic** evasion cost that **persists under an idealized action-space attacker (mechanism M-b)**, not merely an artifact of GCG failing to differentiate through the closed-loop rollout (**M-a**). *This is an **oracle** statement; it makes **no** deployable cross-layer claim.* | the idealized (ASR, evasion) Pareto frontier vs the L2-oracle shows an intrinsic tax > 0 with CIs; **non-adaptive** L0/L1/L2 ordering recorded at matched FPR. | tax ≤ 0, **or** it vanishes under the idealized attacker (it was only M-a). | **reportable either way:** intrinsic tax > 0 → embodiment constrains the attacker at the action concept; ≤ 0 → it does not. *(Cross-layer "which layer wins" → H6-D.)* | ⬜ untested |
-| **H6-D** *(cross-layer tax — committed-if-cluster, M4/Tier-N)* | M4 | At **matched benign FPR and a matched realistic attacker/budget**, the **deployable** L2 imposes a **higher adaptive-evasion cost** than the **deployable** L1 (and L0). | suppressing deployable-L2's TPR to deployable-L1's evaded level forces measurable ASR forfeit / more queries under the **same** GCG-through-policy budget; **ΔASR-at-fixed-evasion > 0** with CIs. | deployable-L2 evaded at **≤** deployable-L1's cost (tax ≤ 0). | **4 outcomes, all reportable:** (i) L2>L1 → *embodiment creates an evasion tax → place the boundary at the action layer* (headline). (ii) L2 also falls → *embodiment alone does not save VLA defences*. (iii) L1 strong → *VLA internal reps carry security-relevant injection signal* (**cite & differentiate Concept-Dictionary `2602.01834`, IGAR `2603.06001`**). (iv) both weak → *adaptive evaluation is mandatory for VLA defences*. | ⬜ untested (Tier-N) |
+| **H5** *(Branch N/N−; realistic-adaptive arm of H6)* | M4 | An attacker aware of the **deployable B/C** detector can reduce detection **but at a measurable cost** (lower ASR / higher perplexity / restricted targets) — the detector **raises the attacker's bar** even if not unbreakable. | adaptive attack (fixed query/compute budget) lowers detection *and* lowers ASR / raises cost — a quantified trade-off. | Adaptive attacker evades at **no** cost. | Trade-off exists → bonus security contribution. No cost → important **negative**. *Only if M4 done with slack; else not claimed.* | ⬜ untested (stretch) |
+| **H6-A** *(reframe core — committed, M3; all branches)* | M3 | The **L2-oracle** intrinsic action-space frontier shows that the *embodiment* constraint imposes a measurable **intrinsic** evasion cost that **persists under an idealized action-space attacker (mechanism M-b)**, not merely an artifact of GCG failing to differentiate through the closed-loop rollout (**M-a**). *This is an **oracle** statement; it makes **no** deployable cross-layer claim.* | the idealized (ASR, evasion) Pareto frontier vs the L2-oracle shows an intrinsic tax > 0 with CIs; **non-adaptive** L0/L1/L2 ordering recorded at matched FPR. | tax ≤ 0, **or** it vanishes under the idealized attacker (it was only M-a). | **reportable either way:** intrinsic tax > 0 → embodiment constrains the attacker at the action concept; ≤ 0 → it does not. *(Cross-layer "which layer wins" → H6-D.)* | ⬜ untested |
+| **H6-D** *(cross-layer tax — committed-if-affordable, M4 / Branch N–N−)* | M4 | At **matched benign FPR and a matched realistic attacker/budget**, the **deployable** L2 imposes a **higher adaptive-evasion cost** than the **deployable** L1 (and L0). | suppressing deployable-L2's TPR to deployable-L1's evaded level forces measurable ASR forfeit / more queries under the **same** GCG-through-policy budget; **ΔASR-at-fixed-evasion > 0** with CIs. | deployable-L2 evaded at **≤** deployable-L1's cost (tax ≤ 0). | **4 outcomes, all reportable:** (i) L2>L1 → *embodiment creates an evasion tax → place the boundary at the action layer* (headline). (ii) L2 also falls → *embodiment alone does not save VLA defences*. (iii) L1 strong → *VLA internal reps carry security-relevant injection signal* (**cite & differentiate Concept-Dictionary `2602.01834`, IGAR `2603.06001`**). (iv) both weak → *adaptive evaluation is mandatory for VLA defences*. | ⬜ untested (Branch N/N−) |
 
 ### 3a. Direction lock — the *Embodiment Evasion Tax* measurement frame (DECISION 2026-06-01)
 
@@ -156,8 +176,10 @@ variant for dissertation register; the subtitle ("Measuring … Costs") is **out
 result. One-line swap if preferred: *… Do Behavioural Monitors Cost More to Bypass than Internal Probes in VLA
 Policies?*
 
-**No-cluster fallback title (Codex review #2, 2026-06-02 — pre-registered).** If Tier-N (D8) does not land,
-**H6-D is not delivered**, so the committed result is the oracle frontier alone; the title falls back to
+**Branch-F fallback title (Codex review #2, 2026-06-02 — pre-registered; trigger updated for the A100/H100 upgrade).**
+If the M1 on-GPU timing micro-bench selects **Branch F** (D8 — the deployable matched-attacker matrix is
+unaffordable within the calendar), **H6-D is not delivered**, so the committed result is the oracle frontier
+alone; the title falls back to
 *"Measuring an Oracle Action-Space Frontier for VLA Injection Detection"* (or keeps the main title with the
 subtitle scoped to H6-A), and the **cross-layer deployable tax is reported as explicitly unresolved**, not
 implied. The "tax" headline is **M4's claim, not M3's** — never let M3 alone carry it.
@@ -173,7 +195,7 @@ implied. The "tax" headline is **M4's claim, not M3's** — never let M3 alone c
 tax as **two measurements**, never one:
 - **M-b (intrinsic, cheap, carries the core claim):** an *idealized action-space* attacker directly optimises an
   action sequence to maximise attack-target reach while minimising L2's score → the (ASR, evasion) Pareto
-  frontier. No GCG needed → GB10-cheap. Isolates the embodiment-intrinsic tax from attack-access. *This is an
+  frontier. No GCG needed → compute-cheap. Isolates the embodiment-intrinsic tax from attack-access. *This is an
   **oracle** measurement (Codex #2 #2): the frontier **upper-bounds** the evasion cost any **deployable**
   goal-consistency detector can impose (defender best-case) and **lower-bounds** a **realistic** attacker's cost
   against the **same** oracle (attacker best-case) — it does **not** lower-bound cost against "any detector"
@@ -213,10 +235,10 @@ attack-only). "firewall" may appear in the **intro framing only**, never the mai
     metric blind spot and M3 measures *coverage gaps, not embodiment*. Uncovered cases are **pre-registered
     exclusions reported as a headline limitation**, never silently abstained.
 - **(B) Learned action-semantics map** — small model: (observation, action_window) → goal embedding /
-  descriptor; compare to trusted-goal embedding. *Deployable.* → **M4 (deployable L2; Tier-N).** *Default
+  descriptor; compare to trusted-goal embedding. *Deployable.* → **M4 (deployable L2; Branch N/N−).** *Default
   committed route; **exactly one** of B/C is built (Codex #2 #8 — choice locked at M2 from the observed (A) signal).*
 - **(C) Reference-policy divergence** — a small benign policy predicts expected action distribution for the
-  trusted goal; flag divergence. *Deployable; needs a second policy.* → **M4 (deployable L2; Tier-N), alt.**
+  trusted goal; flag divergence. *Deployable; needs a second policy.* → **M4 (deployable L2; Branch N/N−), alt.**
   *Built **only if** chosen over B at M2 — not both.*
 - **(D) VLM/LLM judge** — **avoid** (too close to Wu et al. `actalign`; heavy; undermines the
   lightweight/non-CoT differentiation). Only if B and C both fail and time remains.
@@ -278,13 +300,13 @@ attack-only). "firewall" may appear in the **intro framing only**, never the mai
   fixed evasion; (c) **area between Pareto frontiers**. These double as the **reusable VLA defence-evaluation
   protocol** (the free secondary contribution; AttackVLA is attack-only).
 - **Roles fixed:** L2-oracle = metric A (privileged; M-b + non-adaptive ceiling). L2-deployable = metric B/C
-  (M4, Tier-N). L1 = internal probe. L0 = perplexity. **Never present the oracle as deployable.**
+  (M4, Branch N/N−). L1 = internal probe. L0 = perplexity. **Never present the oracle as deployable.**
 
 **Build order:** L1 interface + idealized-attacker optimiser + cross-layer eval (all model-free, **now**) →
-real `ActivationExtractor` + LIBERO reachability (M1/M2 on GPU) → **M1 GB10 micro-bench of L1 extraction +
-adaptive-GCG-against-the-probe (D7 / #5): if the adaptive-L1 attack is GB10-infeasible it moves to Tier-N and
-Tier-F keeps non-adaptive L1 + the L2-oracle frontier** → oracle intrinsic frontier (**M3 / H6-A**) → deployable
-B-or-C + realistic adaptive (**M4 / H6-D**, Tier-N).
+real `ActivationExtractor` + LIBERO reachability (M1/M2 on GPU) → **M1 on-GPU micro-bench of L1 extraction +
+adaptive-GCG-against-the-probe (D7 / #5): if the adaptive-L1 attack is too costly at the measured budget it is
+dropped to a later branch and the floor keeps non-adaptive L1 + the L2-oracle frontier** → oracle intrinsic
+frontier (**M3 / H6-A**) → deployable B-or-C + realistic adaptive (**M4 / H6-D**, Branch N/N−).
 
 ---
 
@@ -317,7 +339,7 @@ B-or-C + realistic adaptive (**M4 / H6-D**, Tier-N).
   it; "threshold unknowable a priori" is a separate *deployment* argument, stated as such, not an in-experiment
   excuse); **goal-agnostic action-anomaly baseline (mandatory** — shows goal-conditioning beats mere OOD
   detection); position conceptually vs `actalign`.
-- **Hardware provenance (2026-06-01):** record the **exact hardware** (GB10 / A100 / H100) in every run log;
+- **Hardware provenance (2026-06-02):** record the **exact hardware** (A100 / H100 — card model + count) **and precision (bf16)** in every run log;
   **never compare results across different hardware within a single claim** (HW is a variable — re-run the
   comparator on the same HW). All L0/L1/L2 cross-layer comparisons and adaptive-cost frontiers must be produced
   on one hardware class.
@@ -337,8 +359,8 @@ B-or-C + realistic adaptive (**M4 / H6-D**, Tier-N).
 | **D4** | Eval scale | Suites: LIBERO-Spatial/-Object/-Goal core (-10 optional). Provisional: ~5–10 tasks/suite, ~20–50 targets/task (subsampled from RoboGCG's 1792), ≥3 pinned seeds; calibration/test split disjoint by task/scene/seed. **Final matrix fixed at M1** from micro-benchmark s/target. | **OPEN** → M1 |
 | **D5** | Baselines | benign success; RoboGCG published numbers (attack sanity); **perplexity/text-only filter** (detector to beat, **given the same calibration protocol** — fair); **goal-agnostic action-anomaly baseline (mandatory)**; conceptual positioning vs `actalign`. | **DECIDED** |
 | **D6** | Metrics | per §5 (causal prefix-window detection; **per-rollout** TPR@{1%,5%} false-abort **+ CIs** held-out; **detection latency**; benign degradation; detection & **target-action-blocked** rate; M5(stretch) detection-vs-adaptive-ASR). No "recovered task-success" unless replan built. | **DECIDED** |
-| **D7** | Compute budget | GCG micro-benchmark on the granted HW first (H100's ~185–604 s/target may not hold at 4-bit on GB10); bound attack compute, concentrate on detector; **subsample to fit at M1**. Record actual s/target. **Extended (Codex #2 #5): also micro-bench L1 activation/attention extraction overhead AND adaptive-GCG-against-the-probe-score on GB10** — if adaptive-L1 is infeasible, move it to Tier-N and keep Tier-F = non-adaptive L1 + L2-oracle frontier. | **OPEN** → M1 |
-| **D8** | Compute tier | Baseline single GB10 = **Tier-F** (guaranteed). **A100/H100 cluster requested 2026-06-01** → if confirmed at M1, **Tier-N** (deployable B/C, realistic adaptive GCG, full reference ladder, larger matrix) becomes committed; else graceful fallback to Tier-F. **Log HW per run; no cross-HW comparison within a claim.** | **OPEN** → M1 confirmation |
+| **D7** | Compute budget | GCG micro-benchmark on the granted A100/H100 first to fix the eval matrix; bound attack compute, concentrate on detector; **subsample to fit at M1**. Record actual s/target at bf16. **Extended (Codex #2 #5): also micro-bench L1 activation/attention extraction overhead AND adaptive-GCG-against-the-probe-score** — if adaptive-L1 is too costly at the measured budget, drop it and keep non-adaptive L1 + the L2-oracle frontier. *(The published H100 ~185–604 s/target should ≈ transfer on A100/H100; measured on the actual granted card.)* | **OPEN** → M1 |
+| **D8** | Compute | **A100/H100 granted 2026-06-02** (single-card vs cluster + queue depth TBC), superseding the assumed single GB10; OpenVLA-7B in **bf16**. The **M1 on-GPU timing micro-bench** computes the affordable matrix → selects **Branch N** (full deployable tax) / **N−** (scoped) / **F** (oracle frontier only) — see §2 *Compute branches*. **Log exact HW + precision + parallelism per run; no cross-HW comparison within a claim.** | **OPEN** → M1 (branch selection) |
 
 > **Post-review refinements (2026-05-31, Codex third-party review):** (1) detection is **causal** (prefix
 > window + **detection-latency** metric); full-window = monitoring ceiling. (2) primary FPR = **per-rollout**
@@ -359,21 +381,21 @@ B-or-C + realistic adaptive (**M4 / H6-D**, Tier-N).
 ### M0 — Design lock
 - ✅ Resolve D1–D7 with author sign-off → recorded §6/§10 (2026-05-31; D4/D7 OPEN → M1).
 - ✅ Write Phase-3 implementation plan (`docs/plans/t7-phase3-implementation-plan.md`) **+ revise per Codex review**. `verify:` author OKs before coding.
-- 🔄 Define repo layout for code/configs/results — **pre-GB10 local-prep plan written** (`t7-local-prep-plan.md`); model-free scaffolding via TDD underway (Task 0+).
+- 🔄 Define repo layout for code/configs/results — **pre-GPU local-prep plan written** (`t7-local-prep-plan.md`); model-free scaffolding via TDD underway (Task 0+).
 
 ### M1 — Environment + viability gate
-- ⬜ Stand up OpenVLA-7B (4-bit) on GB10; record exact env + provenance (checkpoint source/hash/date/licence) in `docs/references/`.
+- ⬜ Stand up OpenVLA-7B (bf16) on the granted A100/H100; record exact env + provenance (checkpoint source/hash/date/licence) in `docs/references/`.
 - ⬜ Reproduce **benign** LIBERO baseline success (pinned seeds). `verify:` numbers logged to write-once `results/`.
 - ⬜ Reproduce **RoboGCG** on a few tasks; **confirm targeted redirect** (not denial). Quarantine suffixes in `artifacts/untrusted/`.
-- ⬜ **GCG micro-benchmark** on GB10 → resolve D4 + D7. **＋ (Codex #2 #5) micro-bench L1 extraction + adaptive-GCG-against-probe → decide Tier-F vs Tier-N placement of the adaptive-L1 arm.**
+- ⬜ **GCG micro-benchmark** on the granted A100/H100 → resolve D4 + D7. **＋ (Codex #2 #5) micro-bench L1 extraction + adaptive-GCG-against-probe → decide whether the adaptive-L1 arm is in scope at the measured budget.**
 - ⬜ Metric (A) signal sanity-check: separation that **survives at the coarse operator-goal reference** (not the clean-instruction ceiling alone). → **GO/NO-GO gate (H1)**.
 
 ### M2 — Floor detector (A) + FP-calibration
-- ✅ Implement metric (A) on a **causal prefix window**: `s(observation_t, action_{t-k+1:t}, trusted_goal, [state_t])`; **annotation schema FROZEN before attack inspection** (`docs/plans/metric-a-annotation-schema.md`, `2c2f163`); unit-tested in isolation. *(model-free scorer done locally; per-task fixtures on real LIBERO ground truth + the GB10 benign-vs-attacked signal check remain M1.)*
+- ✅ Implement metric (A) on a **causal prefix window**: `s(observation_t, action_{t-k+1:t}, trusted_goal, [state_t])`; **annotation schema FROZEN before attack inspection** (`docs/plans/metric-a-annotation-schema.md`, `2c2f163`); unit-tested in isolation. *(model-free scorer done locally; per-task fixtures on real LIBERO ground truth + the on-GPU benign-vs-attacked signal check remain M1.)*
 - ⬜ Build calibrated detector: τ on calibration split → target **per-rollout** false-abort; fire → hold before executing `a_t`.
 - ⬜ Evaluate: ROC/AUC, **per-rollout** TPR@{1%,5%} false-abort (**+CIs**) on held-out split, benign degradation, **detection latency**. → **H2**, **FLOOR SECURED**.
-- ✅ Baselines under the **same calibration** (model-free, `3287c5c`): **mandatory goal-agnostic anomaly** (χ²-OOD on the action stream, goal-blind + causal) **+ perplexity/text-only filter** (`MockPerplexityScorer` + GB10 stub `RealPerplexityScorer`; monotone ppl→score keeps calibration order-equivalent to raw-perplexity thresholding). *(Real LM-perplexity backend + actual benign-vs-attacked numbers remain GB10.)*
-- ⬜ **(NEW, model-free — build now, §4b)** Interfaces + synthetic-fixture tests for the **L1 internal probe** (`InternalProbe` + `ActivationExtractor`), the **idealized action-space attacker**, and the **cross-layer eval + tax metrics** — so GPU day-1 is "plug in activations + rollouts". `verify:` all calibrate through the *same* `calibrate`; activation/LIBERO impls stubbed for GB10.
+- ✅ Baselines under the **same calibration** (model-free, `3287c5c`): **mandatory goal-agnostic anomaly** (χ²-OOD on the action stream, goal-blind + causal) **+ perplexity/text-only filter** (`MockPerplexityScorer` + GPU stub `RealPerplexityScorer`; monotone ppl→score keeps calibration order-equivalent to raw-perplexity thresholding). *(Real LM-perplexity backend + actual benign-vs-attacked numbers remain on the GPU node.)*
+- ⬜ **(NEW, model-free — build now, §4b)** Interfaces + synthetic-fixture tests for the **L1 internal probe** (`InternalProbe` + `ActivationExtractor`), the **idealized action-space attacker**, and the **cross-layer eval + tax metrics** — so GPU day-1 is "plug in activations + rollouts". `verify:` all calibrate through the *same* `calibrate`; activation/LIBERO impls stubbed for the GPU node.
 - ⬜ **(Codex #2 #6) Coverage manifest** for metric (A) over the D4 matrix (supported / unsupported / abstained); **constrain the idealized attacker (§4b-II) to supported targets**; pre-register uncovered cases as a reported limitation.
 - ⬜ **(Codex #2 #3) Power / sample-size rule:** benign-N target per FPR claim — **5% primary; 1% only if held-out benign N ≥ ~300** — recorded in the run config.
 
@@ -381,12 +403,12 @@ B-or-C + realistic adaptive (**M4 / H6-D**, Tier-N).
 - ⬜ **On GPU:** extract OpenVLA activations during benign+attacked rollouts; train + calibrate the **L1 probe** (activation-delta primary; attention-map ablation), **task-disjoint**, **with the #11 confound controls (label-shuffle, benign-weird-suffix, lexical/perplexity, held-out suffix-seeds / target-specs)**. → completes **H2** cross-layer (**non-adaptive**) + feeds **H6-A**.
 - ⬜ Run the **idealized action-space attacker** vs the metric-A oracle (**targets within the #6 coverage manifest**) → **(ASR, evasion) Pareto frontier**; compute the **intrinsic-tax scalar** (primary = ΔASR @ fixed-evasion, bootstrapped, #10) + the **non-adaptive** L0/L1/L2 ordering, +CIs. → **H6-A** (oracle intrinsic; **no cross-layer deployable-tax claim here**).
 
-### M4 — Deployable L2 (B/C) + realistic adaptive  *(N — committed-if-cluster)*
+### M4 — Deployable L2 (B/C) + realistic adaptive  *(N/N− — branch-selected at M1)*
 - ⬜ Build **exactly one** deployable behavioural detector (**B** learned action-semantics map **or** **C** reference-policy — **choice locked at M2** from the (A) signal, #8); **specify supervision labels, negative-pair construction, train/test task-disjoint** (no task-prior leakage). → **H4** (gap to the A oracle).
-- ⬜ **Realistic adaptive GCG-through-policy** vs **deployable L1 and deployable L2** at a **matched** query/compute budget (**one suite, fixed budget**, #8) → the *deployable-vs-deployable* tax. → **H6-D**. *Fallback if no cluster: skip; report M3 / H6-A + oracle-gap, mark H6-D **not run**.*
+- ⬜ **Realistic adaptive GCG-through-policy** vs **deployable L1 and deployable L2** at a **matched** query/compute budget (**one suite, fixed budget**, #8) → the *deployable-vs-deployable* tax. → **H6-D**. *Fallback (Branch F): skip; report M3 / H6-A + oracle-gap, mark H6-D **not run**.*
 
 ### M5 — Reference ladder + threat-generalization  *(N — secondary/stretch)*
-- ⬜ Operator-goal rung (committed-secondary, Tier-F) + task-ID rung (Tier-N); sweep detection+FPR across rungs → ladder table. → **H3**.
+- ⬜ Operator-goal rung (committed-secondary, compute-cheap) + task-ID rung (stretch); sweep detection+FPR across rungs → ladder table. → **H3**.
 - ⬜ (stretch) **SABER** fluent-injection arm — **confirm OpenVLA inclusion first** (`docs/references/README.md`); show L0 (perplexity) dies but L2 fires. (Physical/CoT generalization = discussion only.)
 
 ### M6–M9 — Consolidate / analyse / write / submit
@@ -402,7 +424,7 @@ B-or-C + realistic adaptive (**M4 / H6-D**, Tier-N).
 ```
 run_id:        <UTC timestamp>-<short-slug>
 git_commit:    <hash>
-hardware:      <GB10 | A100 | H100-cluster> — record exact HW + CUDA/driver/torch (NEVER compare across HW within one claim)
+hardware:      <A100 | H100 | A100/H100-cluster> — record exact card + count + precision (bf16) + CUDA/driver/torch (NEVER compare across HW within one claim)
 config:        <path to pinned config>
 seed(s):       <pinned, recorded>
 hypothesis:    <H#>
@@ -463,6 +485,7 @@ one_variable:  <what single variable changed vs the previous run>
 | 2026-06-01 | **D8 compute tier OPEN** — A100/H100 cluster requested (pending); roadmap **compute-tiered** (Tier-F GB10-guaranteed / Tier-N committed-if-cluster) | author: cluster access likely → de-risks deployable B/C + realistic adaptive + full ladder; unconfirmed → floor stays compute-agnostic | §0,§2,§6 (D8),§8,§12; M1 compute-confirmation checkpoint |
 | 2026-06-02 | **Codex review #2 incorporated** (12 findings; **all accepted with refinements, author OK to apply**) | third-party review; the 4 "omitted scoop" papers (`2605.22446` Pre-VLA, `2604.12447` HazardArena, `2602.01834` Concept-Dictionary, `2603.06001` IGAR) **independently re-verified on arXiv 2026-06-02** before acting on them (integrity rule — do not weaken a claim on unverified citations) | **#1/#4 claim boundary: split H6 → H6-A (M3, oracle intrinsic frontier, *no* cross-layer tax) + H6-D (M4, deployable-vs-deployable matched-attacker tax) + no-cluster fallback title**; #2 oracle-bound wording fixed (upper-bounds deployable-detector cost / lower-bounds realistic-attacker cost vs the *same* oracle — **not** "any detector"); #3 power rule (5% primary, 1% needs benign N ≥ ~300); #5 D7 extended to L1 extraction + adaptive-GCG-against-probe (Tier-F no longer assumed compute-agnostic); #6 metric-(A) coverage manifest pre-M2; #7 novelty **narrowed** (runtime VLA-safety lane now occupied) + 4 papers logged; #8 M4 → one deployable route + one-suite adaptive; #10 primary tax scalar = ΔASR@fixed-evasion; #11 L1 confound controls; #12 `:137` tag → `2510.09023`; #9 stale M3/M5/M4 labels reconciled. §0,§2,§3,§3a,§4,§4b,§5,§6,§7,§9,§12 + refs README + phase-3 plan banner |
 | 2026-06-02 | **Eval-harness held-out-FPR correctness fix** (invariant #3) | the operating point's `realised_fpr` (+CI) was being measured on the **calibration** split τ was set on (in-sample, conservative-by-construction), while `benign_test` fed only ROC/AUC — so the held-out benign false-abort rate, the number invariant #3 mandates and on which the M2 floor/H2 claim rests, was never computed. TDD: 6 failing tests first (incl. a harness test showing `realised_fpr=0.0` in-sample vs `1.0` held-out under a shifted benign split), then minimal fix. 237 tests green, ruff clean. | `tpr_at_fpr(benign_calib, attacked, *, benign_eval_scores=…)` reports `realised_fpr`/CI/`n_benign` on the **held-out** split; in-sample retained as `calib_fpr`/`calib_fpr_ci`/`n_benign_calib` (diagnostic). `run_condition_matrix` passes `benign_eval_scores=benign_test`. Backward-compatible (no eval set → falls back to calib, equals `calib_fpr`). `src/t7/eval/{metrics,harness}.py` + tests |
+| 2026-06-02 | **GPU upgraded GB10 → A100/H100** (author; single-card-vs-cluster + queue depth TBC) → **D8 re-cast: compute *tiers* → three pre-registered *branches* (N / N− / F) selected by the M1 on-GPU timing micro-bench**; precision **4-bit → bf16**; stretch (M5 ladder / SABER) promotion gated on **deadline progress**, not spare GPU | the old Tier-F/Tier-N gate was binary on cluster existence; the relaxed compute makes H6-D plausibly committable, but the author chose a **data-driven branch keyed on measured GCG/L1 cost** rather than a hard commit now (Q2), and held scope to **fidelity + power** (bf16; benign N ≥ ~300 for the 1 %-FPR primary; more seeds) with no new attack families (Q3); H6-A floor unchanged (delivered in every branch) | §0,§1,§2 *Compute branches*,§3 (H5/H6-A/H6-D),§3a fallback,§5,§6 (D7/D8),§7,§8 + CLAUDE.md theme block + code (`gb10_*`→`gpu_*` guard, `quantization: bf16`) + understanding/phase3/local-prep/metric-a docs + 2 historical scoping-doc banners |
 
 ---
 
@@ -511,9 +534,11 @@ one_variable:  <what single variable changed vs the previous run>
   instruction channel, FP-calibrated, with an action-space intrinsic frontier** — none of these measure adaptive
   evasion cost. `2602.01834` / `2603.06001` also bound the **L1-arm** novelty (cite + differentiate in §4b-I).
   *PDFs not yet downloaded — pending SHA-pin into `docs/references/README.md`.*
-- **Hardware:** baseline **single GB10** (~128 GB unified; OpenVLA-7B 4-bit fits; H100 timings may not
-  transfer). **A100/H100 cluster requested 2026-06-01 (D8, pending)** → if confirmed, Tier-N committed + GCG
-  timing approaches the paper's. **Log exact HW per run; never compare across HW within one claim.**
+- **Hardware:** **A100/H100** (granted 2026-06-02; single-card vs cluster + queue depth TBC), superseding the
+  assumed single GB10. OpenVLA-7B runs in **bf16** (≈14 GB; fits an 80 GB card; 4-bit no longer required) → the
+  published H100 GCG timings should ≈ transfer (verified at the M1 micro-bench). The compute branch (N / N− / F)
+  is selected at M1 (§2). **Log exact HW + precision + parallelism per run; never compare across HW within one
+  claim.**
 - **Key paths:** understanding doc `docs/plans/t7-goal-action-consistency-detector.md`; landscape
   `docs/lit-review/`; references + verified facts `docs/references/`; results (write-once) `results/`;
   untrusted artefacts `artifacts/untrusted/`.
