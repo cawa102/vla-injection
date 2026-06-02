@@ -210,6 +210,81 @@ def test_tpr_at_fpr_does_not_mutate_input():
 
 
 # --------------------------------------------------------------------------- #
+# tpr_at_fpr — held-out FPR (invariant #3: set tau on calib, report FPR on a   #
+# disjoint held-out split, never on the calibration rollouts)                  #
+# --------------------------------------------------------------------------- #
+
+
+def _calib_low_eval_high():
+    """A calib set with low benign scores and a *disjoint* held-out (eval) set
+    whose benign scores all sit above any tau calibrated on calib.
+
+    This is the regime invariant #3 exists to expose: tau looks fine on the
+    calibration rollouts (~0 false aborts) but the held-out benign distribution
+    has shifted, so the *honest* held-out false-abort rate is far higher.
+    """
+    benign_calib = [0.10 + 0.0005 * i for i in range(100)]  # all < 0.15
+    benign_eval = [0.5] * 100  # held-out benign, all above any calib tau
+    attacked = [0.9] * 100
+    return benign_calib, benign_eval, attacked
+
+
+def test_realised_fpr_is_measured_on_heldout_benign_eval():
+    # With a held-out benign set provided, realised_fpr is its fire-rate at tau
+    # (here 1.0), NOT the in-sample calibration fire-rate (here ~0).
+    benign_calib, benign_eval, attacked = _calib_low_eval_high()
+    (p,) = tpr_at_fpr(
+        benign_calib, attacked, benign_eval_scores=benign_eval, fpr_targets=(0.05,)
+    )
+    assert p.realised_fpr == pytest.approx(1.0)
+    assert p.n_benign == 100  # n_benign now describes the held-out eval split
+
+
+def test_calib_fpr_diagnostic_stays_conservative_below_target():
+    # The in-sample calibration FPR is retained as a diagnostic and must remain
+    # conservative (<= target), independent of the held-out realised_fpr.
+    benign_calib, benign_eval, attacked = _calib_low_eval_high()
+    for target in (0.01, 0.05):
+        (p,) = tpr_at_fpr(
+            benign_calib, attacked, benign_eval_scores=benign_eval, fpr_targets=(target,)
+        )
+        assert p.calib_fpr <= target + 1e-12
+        # The held-out FPR is the honest, much larger number — they must differ.
+        assert p.realised_fpr > p.calib_fpr
+
+
+def test_tau_unchanged_by_benign_eval():
+    # benign_eval must not influence tau (tau is calibrated on benign_calib only).
+    benign_calib, benign_eval, attacked = _calib_low_eval_high()
+    (with_eval,) = tpr_at_fpr(
+        benign_calib, attacked, benign_eval_scores=benign_eval, fpr_targets=(0.05,)
+    )
+    (without_eval,) = tpr_at_fpr(benign_calib, attacked, fpr_targets=(0.05,))
+    assert with_eval.tau == without_eval.tau
+    # calibrate takes rollouts (sequences of per-step scores); wrap each scalar.
+    expected = calibrate([[v] for v in benign_calib], target_per_rollout_fpr=0.05)
+    assert with_eval.tau == expected.tau
+
+
+def test_realised_fpr_falls_back_to_calib_when_no_eval_given():
+    # Backward-compatible default: with no held-out set, realised_fpr == calib_fpr.
+    benign, attacked = _separated_per_rollout(seed=11)
+    (p,) = tpr_at_fpr(benign, attacked, fpr_targets=(0.05,))
+    assert p.realised_fpr == p.calib_fpr
+
+
+def test_heldout_fpr_ci_uses_eval_n():
+    # The realised_fpr CI must be computed on the held-out eval count, so it is
+    # the CI of the honest held-out rate (the one a 1% claim's power depends on).
+    benign_calib, benign_eval, attacked = _calib_low_eval_high()
+    (p,) = tpr_at_fpr(
+        benign_calib, attacked, benign_eval_scores=benign_eval, fpr_targets=(0.05,)
+    )
+    expected = proportion_ci(100, 100, method="wilson")  # 100/100 fired held-out
+    assert p.realised_fpr_ci == expected
+
+
+# --------------------------------------------------------------------------- #
 # benign_degradation / abort_rate / detection_latency_summary                 #
 # --------------------------------------------------------------------------- #
 

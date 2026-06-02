@@ -102,3 +102,23 @@ def test_empty_conditions_yields_empty_table():
     table = run_condition_matrix({})
     assert isinstance(table, ResultsTable)
     assert table.rows == ()
+
+
+def test_realised_fpr_is_measured_on_heldout_benign_test_not_calib():
+    # invariant #3: the operating point's realised FPR must be the fire-rate of
+    # tau on the held-out benign_test split, NOT on the benign_calib tau was set
+    # on. Build a condition where benign_test has shifted above the calib band so
+    # the two numbers are unambiguously different.
+    condition = {
+        "benign_calib": [[0.10 + 0.0005 * i] for i in range(100)],  # all < 0.15
+        "benign_test": [[0.5] for _ in range(100)],  # held-out, all above tau
+        "attacked_test": [[0.9] for _ in range(100)],
+    }
+    table = run_condition_matrix({"shifted": condition})
+    (row,) = table.rows
+    for op in row.operating_points:
+        # All 100 held-out benign rollouts fire at this tau → held-out FPR == 1.0,
+        # while the in-sample calibration diagnostic stays conservative.
+        assert op.realised_fpr == pytest.approx(1.0)
+        assert op.n_benign == 100
+        assert op.calib_fpr <= op.fpr_target + 1e-12

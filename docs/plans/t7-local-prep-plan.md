@@ -46,7 +46,7 @@ env management, `numpy` `scipy` `scikit-learn` `pyyaml` `pydantic`, `pytest` + `
 | 10 LIBERO state-only smoke | ⬜ time-boxed | — |
 | 11 GB10 runbook | ⬜ | — |
 
-**231 tests green; full `src/t7` is type-clean under `uvx pyright`** (3 pre-existing pyright errors + 1 ruff B905 remain in *test* files `test_state.py`/`test_records.py`/`test_consistency_a.py` — untouched by Task 9, not yet cleaned). Infra notes: pytest resolves `t7` via `pythonpath=["src"]` (uv's editable `.pth` is
+**237 tests green; full `src/t7` is type-clean under `uvx pyright`** (3 pre-existing pyright errors + 1 ruff B905 remain in *test* files `test_state.py`/`test_records.py`/`test_consistency_a.py` — untouched by Task 9, not yet cleaned). *(2026-06-02: +6 tests for the eval-harness held-out-FPR fix, invariant #3 — see execution-playbook §10.)* Infra notes: pytest resolves `t7` via `pythonpath=["src"]` (uv's editable `.pth` is
 unreliable on this host — corrupted on each `uv run`); pyright via `pyrightconfig.json` (`uvx pyright` is the
 authoritative type-check — the harness LSP's `reportMissingImports` for `t7.*` are cosmetic artifacts of the
 broken editable install).

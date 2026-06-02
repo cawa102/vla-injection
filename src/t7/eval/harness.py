@@ -8,6 +8,9 @@ operating points and latency summary, plus the raw test-score arrays that
 No-leakage guarantee (plan invariant #3): ``tau`` is calibrated on
 ``benign_calib`` only; AUC and operating points are evaluated on the disjoint
 ``benign_test`` / ``attacked_test`` splits. Calibration never sees a test array.
+In particular the operating points' reported ``realised_fpr`` is the **held-out**
+benign false-abort rate on ``benign_test`` (the calibration-split fire-rate is
+kept only as the ``calib_fpr`` diagnostic).
 """
 
 from __future__ import annotations
@@ -87,10 +90,12 @@ def run_condition_matrix(
 
         _, _, auc = roc_auc(benign_test_scores, attacked_test_scores)
 
-        # Calibrate tau on benign_calib ONLY; evaluate on the test splits.
+        # Calibrate tau on benign_calib ONLY; report the held-out benign FPR on
+        # the disjoint benign_test split (invariant #3) and TPR on attacked_test.
         operating_points = tpr_at_fpr(
             benign_calib,
             attacked_test,
+            benign_eval_scores=benign_test,
             fpr_targets=_DEFAULT_FPR_TARGETS,
             ci_method=ci_method,
         )

@@ -133,16 +133,32 @@ def roc_auc(
 class OperatingPoint:
     """A calibrated operating point at one target FPR.
 
+    The honest false-abort rate (invariant #3) is the fire-rate of ``tau`` on a
+    **held-out** benign split disjoint from the rollouts ``tau`` was calibrated
+    on. ``realised_fpr`` reports exactly that when a held-out set is supplied; the
+    in-sample calibration fire-rate is retained separately as ``calib_fpr``, a
+    diagnostic that ``tau`` hit its budget on the calibration set (and is
+    conservative ``<= fpr_target`` by construction) — it is **not** the reported
+    operating-point FPR.
+
     Attributes:
         fpr_target: The benign false-abort budget this point was calibrated to.
-        tau: The threshold from :func:`calibrate` on the benign split.
+        tau: The threshold from :func:`calibrate` on the calibration benign split.
         tpr: Fraction of attacked rollouts whose per-rollout score exceeds tau.
         tpr_ci: Binomial CI on ``tpr``.
-        realised_fpr: Fraction of benign rollouts that fire at this tau
-            (conservative: ``<= fpr_target``).
-        realised_fpr_ci: Binomial CI on ``realised_fpr``.
-        n_benign: Number of benign rollouts evaluated.
+        realised_fpr: **Held-out** benign false-abort rate — the fraction of the
+            held-out benign split that fires at this tau (falls back to the
+            calibration split, equal to ``calib_fpr``, when no held-out set is
+            given).
+        realised_fpr_ci: Binomial CI on ``realised_fpr`` (over ``n_benign``).
+        n_benign: Number of benign rollouts ``realised_fpr`` was measured on (the
+            held-out split when supplied; this is the N a reported FPR claim's
+            power depends on).
         n_attacked: Number of attacked rollouts evaluated.
+        calib_fpr: In-sample fire-rate of tau on the calibration split
+            (conservative: ``<= fpr_target``). A diagnostic, not the headline FPR.
+        calib_fpr_ci: Binomial CI on ``calib_fpr`` (over ``n_benign_calib``).
+        n_benign_calib: Number of benign rollouts in the calibration split.
     """
 
     fpr_target: float
@@ -153,6 +169,9 @@ class OperatingPoint:
     realised_fpr_ci: tuple[float, float]
     n_benign: int
     n_attacked: int
+    calib_fpr: float
+    calib_fpr_ci: tuple[float, float]
+    n_benign_calib: int
 
 
 def _per_rollout_score(rollout: ScoreLike | Sequence[ScoreLike]) -> float:
@@ -172,57 +191,79 @@ def _per_rollout_scores(rollouts: Sequence[ScoreLike | Sequence[ScoreLike]]) -> 
 
 
 def tpr_at_fpr(
-    benign_rollout_scores: Sequence[ScoreLike | Sequence[ScoreLike]],
+    benign_calib_scores: Sequence[ScoreLike | Sequence[ScoreLike]],
     attacked_rollout_scores: Sequence[ScoreLike | Sequence[ScoreLike]],
     *,
+    benign_eval_scores: Sequence[ScoreLike | Sequence[ScoreLike]] | None = None,
     fpr_targets: Sequence[float] = (0.01, 0.05),
     ci_method: str = "wilson",
 ) -> list[OperatingPoint]:
     """TPR (with CI) at each target FPR, with tau chosen by ``calibrate``.
 
     For each target FPR, ``tau`` is obtained by calling
-    :func:`t7.detector.calibrate.calibrate` on the *benign* rollouts (the same
-    per-rollout-max quantile rule the detector uses — never reimplemented here).
-    TPR is the fraction of attacked rollouts whose per-rollout score exceeds
-    tau; the realised benign FPR (and both CIs) are also reported.
+    :func:`t7.detector.calibrate.calibrate` on the **calibration** benign
+    rollouts only (the same per-rollout-max quantile rule the detector uses —
+    never reimplemented here). TPR is the fraction of attacked rollouts whose
+    per-rollout score exceeds tau.
+
+    The reported ``realised_fpr`` is the **held-out** benign false-abort rate —
+    the fire-rate of tau on ``benign_eval_scores``, a split *disjoint* from the
+    calibration rollouts (invariant #3: never set and report FPR on the same
+    rollouts). The in-sample calibration fire-rate is retained as ``calib_fpr``
+    (a diagnostic that tau hit its budget). When ``benign_eval_scores`` is
+    omitted, ``realised_fpr`` falls back to the calibration split (equal to
+    ``calib_fpr``) — caller-beware, that is the in-sample number.
 
     Args:
-        benign_rollout_scores: Benign rollouts; each is a per-rollout score
-            value/``Score`` or a sequence of per-step values (max is taken).
+        benign_calib_scores: Benign rollouts tau is calibrated on; each is a
+            per-rollout score value/``Score`` or a sequence of per-step values
+            (max is taken).
         attacked_rollout_scores: Attacked rollouts, same shape options.
+        benign_eval_scores: Held-out benign rollouts (disjoint from
+            ``benign_calib_scores``) on which the reported ``realised_fpr`` is
+            measured. If ``None``, the calibration split is reused.
         fpr_targets: Target benign false-abort budgets.
-        ci_method: ``"wilson"`` or ``"clopper_pearson"`` for both CIs.
+        ci_method: ``"wilson"`` or ``"clopper_pearson"`` for every CI.
 
     Returns:
         One :class:`OperatingPoint` per target FPR, in target order.
     """
-    benign = _per_rollout_scores(benign_rollout_scores)
+    benign_calib = _per_rollout_scores(benign_calib_scores)
     attacked = _per_rollout_scores(attacked_rollout_scores)
-    n_benign = len(benign)
+    benign_eval = (
+        benign_calib
+        if benign_eval_scores is None
+        else _per_rollout_scores(benign_eval_scores)
+    )
+    n_benign_calib = len(benign_calib)
+    n_benign_eval = len(benign_eval)
     n_attacked = len(attacked)
 
     points: list[OperatingPoint] = []
     for target in fpr_targets:
         # Reuse calibrate (DRY): wrap each benign per-rollout score as a
         # single-step rollout so calibrate's per-rollout max == that value.
-        thr = calibrate([[v] for v in benign], target_per_rollout_fpr=target)
+        # tau is set on the calibration split ONLY.
+        thr = calibrate([[v] for v in benign_calib], target_per_rollout_fpr=target)
         tau = thr.tau
 
         k_tp = int(np.count_nonzero(attacked > tau))
-        k_fp = int(np.count_nonzero(benign > tau))
-        tpr = k_tp / n_attacked
-        realised_fpr = k_fp / n_benign
+        k_fp_eval = int(np.count_nonzero(benign_eval > tau))  # held-out (reported)
+        k_fp_calib = int(np.count_nonzero(benign_calib > tau))  # in-sample (diagnostic)
 
         points.append(
             OperatingPoint(
                 fpr_target=float(target),
                 tau=tau,
-                tpr=tpr,
+                tpr=k_tp / n_attacked,
                 tpr_ci=proportion_ci(k_tp, n_attacked, method=ci_method),
-                realised_fpr=realised_fpr,
-                realised_fpr_ci=proportion_ci(k_fp, n_benign, method=ci_method),
-                n_benign=n_benign,
+                realised_fpr=k_fp_eval / n_benign_eval,
+                realised_fpr_ci=proportion_ci(k_fp_eval, n_benign_eval, method=ci_method),
+                n_benign=n_benign_eval,
                 n_attacked=n_attacked,
+                calib_fpr=k_fp_calib / n_benign_calib,
+                calib_fpr_ci=proportion_ci(k_fp_calib, n_benign_calib, method=ci_method),
+                n_benign_calib=n_benign_calib,
             )
         )
     return points
