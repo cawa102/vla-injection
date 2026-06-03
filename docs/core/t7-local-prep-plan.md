@@ -44,7 +44,7 @@ env management, `numpy` `scipy` `scikit-learn` `pyyaml` `pydantic`, `pytest` + `
 | 8 Baselines | ✅ goal-agnostic anomaly (χ² OOD) + perplexity filter (mock + GPU stub), shared `calibrate` | `3287c5c` |
 | 9 Config + scripts + figures | ✅ frozen pydantic `Config` + `one_variable_diff`; shared GPU guard; `make_figures` script-regenerable from logged `results.json` (`results_table_to_dict` = eval→figures contract); 6 scripts + `_bootstrap` | `60b0462` |
 | 10 LIBERO state-only smoke | ⬜ time-boxed | — |
-| 11 GPU runbook | ⬜ | — |
+| 11 GPU runbook | ✅ runbook + pinned env spec for **Kelvin2** (granted GPU); OpenVLA/LIBERO/RoboGCG pins fetched from source (invariant #8, all `[VERIFY ON THE GPU NODE]`); checkpoint provenance placeholder rows; cluster mechanics in `docs/gpu/` | `a491a63`, `9c3eaff` |
 
 **237 tests green; full `src/t7` is type-clean under `uvx pyright`** (3 pre-existing pyright errors + 1 ruff B905 remain in *test* files `test_state.py`/`test_records.py`/`test_consistency_a.py` — untouched by Task 9, not yet cleaned). *(2026-06-02: +6 tests for the eval-harness held-out-FPR fix, invariant #3 — see execution-playbook §10.)* Infra notes: pytest resolves `t7` via `pythonpath=["src"]` (uv's editable `.pth` is
 unreliable on this host — corrupted on each `uv run`); pyright via `pyrightconfig.json` (`uvx pyright` is the
