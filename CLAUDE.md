@@ -5,7 +5,7 @@ Guidance for Claude Code in this directory. These take precedence over default b
 
 ---
 
-## The Four Principles
+## The Five Principles
 
 ### 1. Think Before Coding
 
@@ -70,7 +70,7 @@ The documents in this repo must be updated.
 
 Before you start coding, use "writing-plans" skill to create the implementation plan.
 
-## This project
+## Customization - This project
 
 **Project.** MSc Cyber Security & AI individual research project on **VLA-model security — integrity focus**
 (does the perception→reasoning→action pipeline produce correct, untampered actions; how is it subverted or
