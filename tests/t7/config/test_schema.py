@@ -121,6 +121,8 @@ def test_one_variable_diff_reports_multiple_changes():
     a = Config.model_validate(_valid_dict())
     changed = _valid_dict()
     changed["seed"] = 99
-    changed["detector"]["fpr_targets"] = [0.02]
+    # Keep 0.05 in the list so the default primary_fpr stays valid + unchanged
+    # (the diff under test is seed + fpr_targets, not primary_fpr).
+    changed["detector"]["fpr_targets"] = [0.02, 0.05]
     b = Config.model_validate(changed)
     assert one_variable_diff(a, b) == ["detector.fpr_targets", "seed"]

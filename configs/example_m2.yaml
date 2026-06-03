@@ -28,6 +28,8 @@ metric:
 
 detector:
   fpr_targets: [0.01, 0.05]  # per-rollout benign false-abort budgets
+  primary_fpr: 0.05  # pre-registered primary operating point (Codex #2 #3); 1% is
+                     # exploratory unless held-out benign N >= ~300 (rule of three)
 
 eval:
   matrix: [clean_ceiling, coarse_goal]  # trusted-reference rungs (M2 subset)

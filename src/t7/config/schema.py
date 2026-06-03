@@ -13,11 +13,12 @@ versus its predecessor.
 
 from __future__ import annotations
 
+import math
 from os import PathLike
 from pathlib import Path
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 StrPath = str | PathLike[str]
 
@@ -60,9 +61,16 @@ class MetricConfig(_Frozen):
 
 
 class DetectorConfig(_Frozen):
-    """FP-calibration targets — the per-rollout benign false-abort budgets."""
+    """FP-calibration targets — the per-rollout benign false-abort budgets.
+
+    ``primary_fpr`` pins the **pre-registered primary operating point** (Codex
+    review #2 #3): 5% is the headline; a tighter point is exploratory unless its
+    held-out benign N clears the rule-of-three floor (see :mod:`t7.eval.power`).
+    It must be one of ``fpr_targets``.
+    """
 
     fpr_targets: list[float] = Field(min_length=1)
+    primary_fpr: float = 0.05
 
     @field_validator("fpr_targets")
     @classmethod
@@ -71,6 +79,15 @@ class DetectorConfig(_Frozen):
             if not (0.0 < t < 1.0):
                 raise ValueError(f"fpr_targets must each be in (0, 1), got {t}")
         return targets
+
+    @model_validator(mode="after")
+    def _primary_fpr_is_a_target(self) -> DetectorConfig:
+        if not any(math.isclose(self.primary_fpr, t) for t in self.fpr_targets):
+            raise ValueError(
+                f"primary_fpr {self.primary_fpr} must be one of fpr_targets "
+                f"{self.fpr_targets}"
+            )
+        return self
 
 
 class SplitManifest(_Frozen):
