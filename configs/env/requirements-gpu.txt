@@ -1,0 +1,63 @@
+# T7 — GPU-node pinned environment (OpenVLA-7B + LIBERO eval layer)
+# ---------------------------------------------------------------------------
+# PROVENANCE (invariant #8 — fetched from source, NOT hand-typed from memory):
+#   OpenVLA `pyproject.toml` @ github.com/openvla/openvla (main, fetched 2026-06-03);
+#   codec-verified pin = commit c8f03f48 (docs/references/README.md).
+#   OpenVLA README "results obtained with": Python 3.10.13, PyTorch 2.2.0,
+#   transformers 4.40.1, flash-attn 2.5.5, NVIDIA A100.
+#
+# Every line is BEST-EFFORT and must be re-checked on Kelvin2 before the env is
+# frozen for a logged run: [VERIFY ON THE GPU NODE]. On confirmation, capture the
+# real `pip freeze` + CUDA/driver/torch into the run log (playbook §8) and the
+# checkpoint hashes into docs/references/README.md.
+#
+# This file is the OpenVLA + T7 *pip* layer. Two stacks install separately and are
+# NOT pinned here (they bring their own env files — see docs/setup/gpu-runbook.md):
+#   - LIBERO sim  : git clone Lifelong-Robot-Learning/LIBERO + libero_requirements.txt
+#   - RoboGCG     : its own `robo_env.yml` conda env (likely conflicts with this one
+#                   → keep RoboGCG in a SEPARATE env; see runbook §6)
+# ---------------------------------------------------------------------------
+
+# --- Python: OpenVLA requires-python is >=3.8; results env = 3.10.13.
+#     Keep 3.10 (our local src/t7 is pinned 3.10-compatible for exactly this).
+
+# --- Core deep-learning stack (OpenVLA exact pins) ---
+torch==2.2.0                 # [VERIFY] CUDA build must match the Kelvin2 CUDA module (torch 2.2.0 default = cu121)
+torchvision==0.17.0
+torchaudio==2.2.0
+transformers==4.40.1
+tokenizers==0.19.1
+timm==0.9.10
+peft==0.11.1
+accelerate>=0.25.0
+sentencepiece==0.1.99
+draccus==0.8.0
+einops
+huggingface_hub
+json-numpy
+jsonlines
+protobuf
+rich
+
+# --- flash-attn: build AFTER torch is installed (needs nvcc + matching CUDA).
+#     OpenVLA results env used 2.5.5. Do NOT add to a one-shot `pip install -r`;
+#     install separately: `pip install "flash-attn==2.5.5" --no-build-isolation`
+# flash-attn==2.5.5          # [VERIFY ON THE GPU NODE] — separate build step
+
+# --- OpenVLA data dep (git) ---
+dlimp @ git+https://github.com/moojink/dlimp_openvla
+
+# --- TensorFlow stack (OpenVLA pulls these for dataset/IO; only needed if using
+#     the OpenVLA training/data pipeline — likely NOT for inference-only eval.
+#     Install only if a script imports them):
+# tensorflow==2.15.0
+# tensorflow_datasets==4.9.3
+# tensorflow_graphics==2021.12.3
+
+# --- T7 model-free core (mirrors pyproject.toml; already unit-tested locally) ---
+numpy>=1.26
+scipy>=1.11
+scikit-learn>=1.3
+pyyaml>=6.0
+pydantic>=2.5
+matplotlib>=3.8

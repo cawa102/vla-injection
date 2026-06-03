@@ -28,8 +28,7 @@ __pycache__/
 *.py[cod]
 .venv/
 venv/
-env/
-!configs/env/          # virtualenv dirs are ignored, but configs/env/ is a tracked config dir
+/env/                  # repo-root virtualenv only; configs/env/ stays tracked
 *.egg-info/
 .ipynb_checkpoints/
 
