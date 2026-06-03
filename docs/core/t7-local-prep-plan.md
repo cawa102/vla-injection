@@ -38,7 +38,7 @@ env management, `numpy` `scipy` `scikit-learn` `pyyaml` `pydantic`, `pytest` + `
 | 2 Data records | ✅ | `50336f6` |
 | 3 Action codec | ✅ formula **verified from OpenVLA source** (`c8f03f48`; provenance in `docs/references/README.md`) | `e69f1b0`, `e4fd1fd` |
 | 4 Privileged-state adapter | ✅ | `ad62616` |
-| 5 Metric (A) schema freeze | ✅ schema **FROZEN 2026-05-31** (`docs/plans/metric-a-annotation-schema.md`) + causal scorer; author design delegated & recorded | `2c2f163` |
+| 5 Metric (A) schema freeze | ✅ schema **FROZEN 2026-05-31** (`docs/core/metric-a-annotation-schema.md`) + causal scorer; author design delegated & recorded | `2c2f163` |
 | 6 FP-calibrated detector | ✅ | `7f2be7c` |
 | 7 Eval harness + stats | ✅ | `2ab71aa` |
 | 8 Baselines | ✅ goal-agnostic anomaly (χ² OOD) + perplexity filter (mock + GPU stub), shared `calibrate` | `3287c5c` |
@@ -199,7 +199,7 @@ contract Task 5 freezes against; keep LIBERO specifics out of it. **Commit:** `f
 ## Task 5: Consistency metric (A) — **schema freeze** + causal scorer (`src/t7/metric/consistency_a.py`)
 
 **Files:**
-- Create: `docs/plans/metric-a-annotation-schema.md` (the **frozen** schema, dated, committed)
+- Create: `docs/core/metric-a-annotation-schema.md` (the **frozen** schema, dated, committed)
 - Create: `src/t7/metric/consistency_a.py`
 - Test: `tests/t7/metric/test_consistency_a.py` (per-task unit tests)
 

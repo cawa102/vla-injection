@@ -1,7 +1,7 @@
 """Tests for consistency metric (A) — frozen schema + causal scorer (Task 5).
 
 These tests are the executable form of the frozen annotation schema
-(``docs/plans/metric-a-annotation-schema.md``). They use *only* synthetic
+(``docs/core/metric-a-annotation-schema.md``). They use *only* synthetic
 fixtures (no attack output exists at freeze time — circularity guard). Geometry
 is hand-checkable: a single goal object the end-effector approaches, plus a
 distractor it can engage "by mistake".

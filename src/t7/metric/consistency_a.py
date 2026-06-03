@@ -1,7 +1,7 @@
 """Consistency metric (A) — frozen annotation schema + causal scorer (Task 5).
 
 THE make-or-break instrument (execution-playbook §4). Implements the schema
-**frozen** in ``docs/plans/metric-a-annotation-schema.md`` (committed alongside
+**frozen** in ``docs/core/metric-a-annotation-schema.md`` (committed alongside
 this file). Read that document first; this module is its executable form.
 
 **(A) is a NON-DEPLOYABLE UPPER BOUND.** It reads LIBERO sim ground truth

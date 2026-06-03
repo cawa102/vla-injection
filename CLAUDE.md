@@ -63,9 +63,12 @@ For multi-step tasks, state a brief plan:
 
 Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
 
-## docs directory
+### 5. Document-Driven Execution
 
-Before you start working, have a look @./docs/ to understand what to do. The documents in this repo must be updated.
+Before you start working, have a look @`./docs/core/` to understand what to do. 
+The documents in this repo must be updated.
+
+Before you start coding, use "writing-plans" skill to create the implementation plan.
 
 ## This project
 
@@ -86,11 +89,11 @@ over-claim (Codex review #2, 2026-06-02):** the guaranteed floor (**M3**, delive
 affordable (**Branch N/N−**) — if not (**Branch F**), fall back to the oracle-frontier title. Novelty is
 **narrowed** to *adaptive evasion-cost measurement for the instruction channel, FP-calibrated, + action-space
 intrinsic frontier* (a 2026 runtime VLA-safety cluster exists — don't claim the lane is empty).
-**Operational source of truth = `docs/plans/t7-execution-playbook.md`** (status / tasks / decisions / how-to);
-what & why = `docs/plans/t7-goal-action-consistency-detector.md`; verified facts = `docs/references/`; landscape =
+**Operational source of truth = `docs/core/t7-execution-playbook.md`** (status / tasks / decisions / how-to);
+what & why = `docs/core/t7-goal-action-consistency-detector.md`; verified facts = `docs/references/`; landscape =
 `docs/lit-review/`. **Phase: Design → M0 exiting; coding gate LIFTED for M1–M2 *model-free* work (author OK
 2026-05-31) — OpenVLA / GCG / LIBERO *runs* await the granted GPU.** Don't write experiment code beyond what the
-agreed `docs/plans/` plan covers.
+agreed `docs/core/` plan covers.
 
 **Phases — know which one a task belongs to; don't skip ahead.**
 Scope → Literature review → Design → Implement → Run & analyse → Write up.

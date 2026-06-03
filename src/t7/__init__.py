@@ -9,7 +9,7 @@ Model/GPU-dependent pieces (OpenVLA-7B inference, GCG optimisation, LIBERO *roll
 deferred to the GPU node (A100/H100) and sit behind thin interfaces with synthetic fixtures
 for tests.
 
-See ``docs/plans/t7-local-prep-plan.md`` for the task breakdown.
+See ``docs/core/t7-local-prep-plan.md`` for the task breakdown.
 """
 
 __version__ = "0.0.0"

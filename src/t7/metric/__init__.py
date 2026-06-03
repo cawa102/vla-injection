@@ -3,7 +3,7 @@
 Exposes the env-agnostic privileged-state adapter seam (Task 4), the consistency
 metric (A) scorer + its frozen-schema types (Task 5) — the L2 oracle — and the L1
 internal-representation probe + its confound-control scaffolding (§4b-(I)). Metric
-(A) is a non-deployable upper bound; see ``docs/plans/metric-a-annotation-schema.md``.
+(A) is a non-deployable upper bound; see ``docs/core/metric-a-annotation-schema.md``.
 """
 
 from t7.metric.consistency_a import (

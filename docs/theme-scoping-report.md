@@ -3,7 +3,7 @@
 *MSc Cyber Security & AI — Individual Research Project. Phase: theme scoping.*
 *Prepared 2026-05-29. All technical claims cite sources actually fetched during this review; unverifiable claims are flagged `[CITATION NEEDED]`.*
 
-> **⚠️ Compute superseded 2026-06-02 (historical doc — body left intact for provenance):** the "single NVIDIA GB10 node" feasibility assumption throughout this report no longer holds — the project now runs on **A100/H100** (bf16). This only *relaxes* the feasibility judgments below; the theme selection (T7) is unaffected. Forward-looking compute decisions live in `docs/plans/t7-execution-playbook.md` §2 (*Compute branches*) / D8.
+> **⚠️ Compute superseded 2026-06-02 (historical doc — body left intact for provenance):** the "single NVIDIA GB10 node" feasibility assumption throughout this report no longer holds — the project now runs on **A100/H100** (bf16). This only *relaxes* the feasibility judgments below; the theme selection (T7) is unaffected. Forward-looking compute decisions live in `docs/core/t7-execution-playbook.md` §2 (*Compute branches*) / D8.
 
 ---
 
