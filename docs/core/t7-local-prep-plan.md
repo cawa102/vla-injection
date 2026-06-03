@@ -29,7 +29,7 @@ env management, `numpy` `scipy` `scikit-learn` `pyyaml` `pydantic`, `pytest` + `
 
 ---
 
-## Status (live — 2026-05-31)
+## Status (live — 2026-06-03)
 
 | Task | Status | Commit |
 |------|--------|--------|
@@ -43,7 +43,7 @@ env management, `numpy` `scipy` `scikit-learn` `pyyaml` `pydantic`, `pytest` + `
 | 7 Eval harness + stats | ✅ | `2ab71aa` |
 | 8 Baselines | ✅ goal-agnostic anomaly (χ² OOD) + perplexity filter (mock + GPU stub), shared `calibrate` | `3287c5c` |
 | 9 Config + scripts + figures | ✅ frozen pydantic `Config` + `one_variable_diff`; shared GPU guard; `make_figures` script-regenerable from logged `results.json` (`results_table_to_dict` = eval→figures contract); 6 scripts + `_bootstrap` | `60b0462` |
-| 10 LIBERO state-only smoke | ⬜ time-boxed | — |
+| 10 LIBERO state-only smoke | ✅ Tier R (robosuite) pass — real MuJoCo ground truth → `PrivilegedState` constructs **unmodified** (no schema change; Task-5 freeze stands); real LIBERO deferred to GPU node (`benchmark` hard-imports torch + `OffScreenRenderEnv` needs GL; pins robosuite 1.4 vs local 1.5.2); synthetic fixtures kept; **no** `state_libero.py` yet (conditional). Notes: `docs/setup/libero-local-notes.md` | `577c2d1` |
 | 11 GPU runbook | ✅ runbook + pinned env spec for **Kelvin2** (granted GPU); OpenVLA/LIBERO/RoboGCG pins fetched from source (invariant #8, all `[VERIFY ON THE GPU NODE]`); checkpoint provenance placeholder rows; cluster mechanics in `docs/gpu/` | `a491a63`, `9c3eaff` |
 
 **362 tests green; full `src/t7` *and* the test tree are type-clean under `uvx pyright` and ruff-clean** *(2026-06-03 `2963e72`: the 3 pyright errors + 1 ruff B905 that previously sat in `test_state.py`/`test_records.py`/`test_consistency_a.py` are cleared — `reached_window` annotation widened to match its `(n,7)`-array docstring; intentional-bad-input tests `# type: ignore`d; `zip(strict=True)`)*. *(2026-06-02: +6 tests for the eval-harness held-out-FPR fix, invariant #3 — see execution-playbook §10.)* Infra notes: pytest resolves `t7` via `pythonpath=["src"]` (uv's editable `.pth` is
