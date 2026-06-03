@@ -79,6 +79,28 @@ there is **no** hardcoded "gripper-dim" rule.
 values) via `scripts/fetch_openvla_stats.py` → gitignored `data/openvla/`; its provenance row
 (`openvla-stats:<repo>`, source/hash/date/licence) is written to `data/openvla/provenance.json` at download time.
 
+## OpenVLA-7B checkpoints — provenance (placeholders; fill on download at M1)
+
+Weights are **gitignored** (downloaded to `/mnt/scratch2/users/<id>/checkpoints/` on Kelvin2 — see
+`docs/setup/gpu-runbook.md` Step 2). HF repo names verified from the OpenVLA README (fetched 2026-06-03).
+SHA-256 = hash of the resolved weight files; **licence MUST be verified on each HF model card** (OpenVLA repo is
+MIT, but the 7B weights carry a **Llama-2 backbone** → community-licence terms may apply — do not assume MIT for
+the weights). Fill each `[on download]` cell at M1 before the checkpoint backs any logged result.
+
+| Checkpoint (HF repo) | Role | Source URL | Retrieved | SHA-256 | Licence |
+|---|---|---|---|---|---|
+| `openvla/openvla-7b` | base model | https://huggingface.co/openvla/openvla-7b | `[on download]` | `[on download]` | `[VERIFY model card — Llama-2 terms?]` |
+| `openvla/openvla-7b-finetuned-libero-spatial` | LIBERO-Spatial fine-tune | https://huggingface.co/openvla/openvla-7b-finetuned-libero-spatial | `[on download]` | `[on download]` | `[VERIFY model card]` |
+| `openvla/openvla-7b-finetuned-libero-object` | LIBERO-Object fine-tune | https://huggingface.co/openvla/openvla-7b-finetuned-libero-object | `[on download]` | `[on download]` | `[VERIFY model card]` |
+| `openvla/openvla-7b-finetuned-libero-goal` | LIBERO-Goal fine-tune | https://huggingface.co/openvla/openvla-7b-finetuned-libero-goal | `[on download]` | `[on download]` | `[VERIFY model card]` |
+| `openvla/openvla-7b-finetuned-libero-10` | LIBERO-10 fine-tune | https://huggingface.co/openvla/openvla-7b-finetuned-libero-10 | `[on download]` | `[on download]` | `[VERIFY model card]` |
+
+**Pinned GPU env (best-effort, fetched from OpenVLA source 2026-06-03 — `[VERIFY ON THE GPU NODE]`):** Python
+3.10.13, torch 2.2.0 (+ torchvision 0.17.0, torchaudio 2.2.0), transformers 4.40.1, tokenizers 0.19.1, timm
+0.9.10, peft 0.11.1, sentencepiece 0.1.99, draccus 0.8.0, flash-attn 2.5.5 (separate build), on A100/H100 bf16.
+Full spec: `configs/env/requirements-gpu.txt`. Confirm CUDA/driver/torch on Kelvin2 and record the real
+`pip freeze` into a run-env row here at M1.
+
 **Why this matters for T7.** RoboGCG shows the borrowed *input-side* defenses have **no usable operating
 point** (PF threshold unknowable a priori; smoothing destroys benign; multimodal PF fails outright). T7's
 FP-calibrated, benign-cost-measured *behavioral* (goal-action consistency) detector targets exactly that gap.
