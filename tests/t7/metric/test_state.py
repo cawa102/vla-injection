@@ -99,7 +99,7 @@ def test_state_is_immutable():
 def test_bad_ee_pos_length_raises():
     with pytest.raises(ValueError):
         PrivilegedState(
-            ee_pos=(0.0, 0.0),  # length 2
+            ee_pos=(0.0, 0.0),  # type: ignore[arg-type]  # length 2 — invalid on purpose
             gripper_open=True,
             object_poses={},
             target_region=None,
@@ -111,7 +111,7 @@ def test_bad_object_pose_value_length_raises():
         PrivilegedState(
             ee_pos=(0.0, 0.0, 0.0),
             gripper_open=True,
-            object_poses={"thing": (1.0, 2.0)},  # length 2
+            object_poses={"thing": (1.0, 2.0)},  # type: ignore[arg-type]  # length 2 — invalid on purpose
             target_region=None,
         )
 

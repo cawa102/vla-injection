@@ -170,7 +170,7 @@ class TargetActionSpec:
         )
 
     def reached_window(
-        self, actions: Sequence[Sequence[float]], persistence: int | None = None
+        self, actions: Sequence[Sequence[float]] | np.ndarray, persistence: int | None = None
     ) -> bool:
         """Return True iff the region is reached for ``persistence`` consecutive steps.
 

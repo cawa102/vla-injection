@@ -385,7 +385,7 @@ def test_monitoring_ceiling_is_a_true_upper_bound_on_causal():
     m = _metric(k=3)
     causal = m.score_rollout(roll)
     ceiling = m.score_rollout_monitoring_ceiling(roll)
-    assert all(c.value >= s.value for c, s in zip(ceiling, causal))
+    assert all(c.value >= s.value for c, s in zip(ceiling, causal, strict=True))
 
 
 def test_monitoring_ceiling_can_see_future_deviation_that_causal_misses():
