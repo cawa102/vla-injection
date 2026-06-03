@@ -46,7 +46,7 @@ env management, `numpy` `scipy` `scikit-learn` `pyyaml` `pydantic`, `pytest` + `
 | 10 LIBERO state-only smoke | ⬜ time-boxed | — |
 | 11 GPU runbook | ✅ runbook + pinned env spec for **Kelvin2** (granted GPU); OpenVLA/LIBERO/RoboGCG pins fetched from source (invariant #8, all `[VERIFY ON THE GPU NODE]`); checkpoint provenance placeholder rows; cluster mechanics in `docs/gpu/` | `a491a63`, `9c3eaff` |
 
-**237 tests green; full `src/t7` is type-clean under `uvx pyright`** (3 pre-existing pyright errors + 1 ruff B905 remain in *test* files `test_state.py`/`test_records.py`/`test_consistency_a.py` — untouched by Task 9, not yet cleaned). *(2026-06-02: +6 tests for the eval-harness held-out-FPR fix, invariant #3 — see execution-playbook §10.)* Infra notes: pytest resolves `t7` via `pythonpath=["src"]` (uv's editable `.pth` is
+**362 tests green; full `src/t7` *and* the test tree are type-clean under `uvx pyright` and ruff-clean** *(2026-06-03 `2963e72`: the 3 pyright errors + 1 ruff B905 that previously sat in `test_state.py`/`test_records.py`/`test_consistency_a.py` are cleared — `reached_window` annotation widened to match its `(n,7)`-array docstring; intentional-bad-input tests `# type: ignore`d; `zip(strict=True)`)*. *(2026-06-02: +6 tests for the eval-harness held-out-FPR fix, invariant #3 — see execution-playbook §10.)* Infra notes: pytest resolves `t7` via `pythonpath=["src"]` (uv's editable `.pth` is
 unreliable on this host — corrupted on each `uv run`); pyright via `pyrightconfig.json` (`uvx pyright` is the
 authoritative type-check — the harness LSP's `reportMissingImports` for `t7.*` are cosmetic artifacts of the
 broken editable install).
