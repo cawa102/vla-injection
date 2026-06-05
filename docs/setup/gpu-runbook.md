@@ -1,4 +1,4 @@
-# T7 — GPU Day-1 Runbook (Kelvin2 / M1 viability gate)
+# Embodiment Evasion Tax — GPU Day-1 Runbook (Kelvin2 / M1 viability gate)
 
 > **Purpose.** Turn GPU access into the **M1 GO/NO-GO gate** with no improvisation: clone → pinned env →
 > checkpoints (hash) → benign baseline → RoboGCG redirect → GCG + L1 micro-bench → metric-(A) signal → **branch
@@ -34,11 +34,11 @@
 Three stacks; **keep RoboGCG isolated** from the OpenVLA/LIBERO env (its `robo_env.yml` likely conflicts).
 
 ```bash
-# (a) OpenVLA + T7 inference/eval env
+# (a) OpenVLA + project inference/eval env
 module purge
 module load <anaconda-module>          # [VERIFY] e.g. `apps/anaconda3/...`; or python3 + venv
 module load <cuda-module>              # [VERIFY] match torch 2.2.0 (default cu121)
-conda create -n t7-openvla python=3.10.13 -y && conda activate t7-openvla
+conda create -n evasion_tax-openvla python=3.10.13 -y && conda activate evasion_tax-openvla
 
 git clone https://github.com/openvla/openvla.git && cd openvla
 git checkout c8f03f48                  # codec-verified commit (docs/references)
@@ -52,13 +52,13 @@ pip install -e .
 pip install -r ../openvla/experiments/robot/libero/libero_requirements.txt   # [VERIFY path]
 cd ..
 
-# (c) install our package into the same env so scripts import `t7`
+# (c) install our package into the same env so scripts import `evasion_tax`
 cd vla-injection && pip install -e . && cd ..
 ```
 
 **Capture the env** the moment it works (reproducibility):
 ```bash
-pip freeze > results/$(date -u +%Y%m%dT%H%M%SZ)-env/pip-freeze.txt   # or use src/t7/repro/capture_env
+pip freeze > results/$(date -u +%Y%m%dT%H%M%SZ)-env/pip-freeze.txt   # or use src/evasion_tax/repro/capture_env
 python -c "import torch; print(torch.__version__, torch.version.cuda, torch.cuda.get_device_name(0))"
 ```
 Record CUDA/driver/torch + the loaded module strings into `docs/references/README.md` (pinned-env row).
@@ -104,7 +104,7 @@ python openvla/experiments/robot/libero/run_libero_eval.py \
 
 Log success rate + per-rollout records (the `RolloutStep` schema) to write-once `results/`. **Benign rollouts
 are cheap (no GCG)** → generate enough to support the FPR claims: **≥ ~300 held-out benign** for a **1 %** point,
-**≥ 60** for the **5 %** primary (playbook §5 power rule / Codex #2 #3; `src/t7/eval/power.py`).
+**≥ 60** for the **5 %** primary (playbook §5 power rule / Codex #2 #3; `src/evasion_tax/eval/power.py`).
 
 > **Gate 3 (H1 part a):** benign success reproduced within tolerance of OpenVLA's published LIBERO numbers on
 > pinned seeds, logged. Mismatch → debug env (center_crop, dtype, checkpoint) before proceeding.
@@ -162,7 +162,7 @@ Feed these against the remaining calendar to compute the **affordable matrix** �
 
 ## Step 6 — Metric-(A) signal sanity check
 
-Run the (already-built, unit-tested) `t7.metric.consistency_a` L2-oracle scorer over benign vs attacked
+Run the (already-built, unit-tested) `evasion_tax.metric.consistency_a` L2-oracle scorer over benign vs attacked
 rollouts, with the **real LIBERO ground-truth** state adapter wired in (the model-free piece deferred from
 local-prep Task 4/10):
 

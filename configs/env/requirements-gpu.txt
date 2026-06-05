@@ -1,4 +1,4 @@
-# T7 — GPU-node pinned environment (OpenVLA-7B + LIBERO eval layer)
+# Embodiment Evasion Tax — GPU-node pinned environment (OpenVLA-7B + LIBERO eval layer)
 # ---------------------------------------------------------------------------
 # PROVENANCE (invariant #8 — fetched from source, NOT hand-typed from memory):
 #   OpenVLA `pyproject.toml` @ github.com/openvla/openvla (main, fetched 2026-06-03);
@@ -11,7 +11,7 @@
 # real `pip freeze` + CUDA/driver/torch into the run log (playbook §8) and the
 # checkpoint hashes into docs/references/README.md.
 #
-# This file is the OpenVLA + T7 *pip* layer. Two stacks install separately and are
+# This file is the OpenVLA + project *pip* layer. Two stacks install separately and are
 # NOT pinned here (they bring their own env files — see docs/setup/gpu-runbook.md):
 #   - LIBERO sim  : git clone Lifelong-Robot-Learning/LIBERO + libero_requirements.txt
 #   - RoboGCG     : its own `robo_env.yml` conda env (likely conflicts with this one
@@ -19,7 +19,7 @@
 # ---------------------------------------------------------------------------
 
 # --- Python: OpenVLA requires-python is >=3.8; results env = 3.10.13.
-#     Keep 3.10 (our local src/t7 is pinned 3.10-compatible for exactly this).
+#     Keep 3.10 (our local src/evasion_tax is pinned 3.10-compatible for exactly this).
 
 # --- Core deep-learning stack (OpenVLA exact pins) ---
 torch==2.2.0                 # [VERIFY] CUDA build must match the Kelvin2 CUDA module (torch 2.2.0 default = cu121)
@@ -54,7 +54,7 @@ dlimp @ git+https://github.com/moojink/dlimp_openvla
 # tensorflow_datasets==4.9.3
 # tensorflow_graphics==2021.12.3
 
-# --- T7 model-free core (mirrors pyproject.toml; already unit-tested locally) ---
+# --- Embodiment Evasion Tax model-free core (mirrors pyproject.toml; already unit-tested locally) ---
 numpy>=1.26
 scipy>=1.11
 scikit-learn>=1.3

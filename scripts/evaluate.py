@@ -23,10 +23,10 @@ from pathlib import Path
 
 import _bootstrap  # noqa: F401  (import side effect: puts src/ on sys.path)
 
-from t7.config import load_config  # noqa: E402
-from t7.eval.figures import results_table_to_dict  # noqa: E402
-from t7.eval.harness import run_condition_matrix  # noqa: E402
-from t7.repro.run_logger import RunLogger  # noqa: E402
+from evasion_tax.config import load_config  # noqa: E402
+from evasion_tax.eval.figures import results_table_to_dict  # noqa: E402
+from evasion_tax.eval.harness import run_condition_matrix  # noqa: E402
+from evasion_tax.repro.run_logger import RunLogger  # noqa: E402
 
 
 def main(argv: list[str] | None = None) -> int:

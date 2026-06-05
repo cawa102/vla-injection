@@ -1,6 +1,6 @@
 ---
 name: status-snapshot
-description: T7 plan-vs-code status as of 2026-06-03 — what is built (incl. L1 probe now landed), what is gated, open decisions and sign-offs. Re-verify against git/playbook before acting.
+description: Embodiment Evasion Tax plan-vs-code status as of 2026-06-03 — what is built (incl. L1 probe now landed), what is gated, open decisions and sign-offs. Re-verify against git/playbook before acting.
 metadata:
   type: project
 ---
@@ -9,14 +9,14 @@ Snapshot frozen 2026-06-03. For *current* state always prefer `git log` + the pl
 
 **Phase:** Design → M0 exiting. Coding gate **lifted for model-free M1-M2 work** (author OK 2026-05-31). OpenVLA/GCG/LIBERO *runs* await the granted GPU (A100/H100; single-card-vs-cluster + queue depth TBC).
 
-**Built (local-prep Tasks 0-9 ✅):** env scaffold, repro infra, data records, action codec (OpenVLA formula verified from source `c8f03f48`), privileged-state adapter, metric A (schema FROZEN, causal scorer) = the L2-oracle, FP-calibrated detector, eval harness (ROC/AUC, TPR@FPR + Wilson/CP CIs, latency, split-disjointness), baselines (χ²-OOD anomaly + perplexity = L0), config/scripts/figures. ~234-237 tests green, `src/t7` type-clean.
+**Built (local-prep Tasks 0-9 ✅):** env scaffold, repro infra, data records, action codec (OpenVLA formula verified from source `c8f03f48`), privileged-state adapter, metric A (schema FROZEN, causal scorer) = the L2-oracle, FP-calibrated detector, eval harness (ROC/AUC, TPR@FPR + Wilson/CP CIs, latency, split-disjointness), baselines (χ²-OOD anomaly + perplexity = L0), config/scripts/figures. ~234-237 tests green, `src/evasion_tax` type-clean.
 
-**§4b instrument progress (2026-06-03):** L1 internal-probe arm (§4b-I) now LANDED — `src/t7/metric/probe_internal.py` (InternalProbe activation-delta logistic probe + ActivationExtractor Protocol seam; Synthetic + Real-GPU-stub) and `src/t7/metric/probe_confounds.py` (#11 label-shuffle + probe_auc) committed `fadc008`; 265 tests green, ruff+pyright clean. Attention-map MLP ablation deferred to M2/GPU.
+**§4b instrument progress (2026-06-03):** L1 internal-probe arm (§4b-I) now LANDED — `src/evasion_tax/metric/probe_internal.py` (InternalProbe activation-delta logistic probe + ActivationExtractor Protocol seam; Synthetic + Real-GPU-stub) and `src/evasion_tax/metric/probe_confounds.py` (#11 label-shuffle + probe_auc) committed `fadc008`; 265 tests green, ruff+pyright clean. Attention-map MLP ablation deferred to M2/GPU.
 
 **Not yet built:**
 - Local-prep Task 10 (LIBERO state-only smoke, optional/time-boxed — needs author), Task 11 (GPU runbook — delegable).
-- §4b-II idealized action-space attacker: `src/t7/attack/idealized_frontier.py` — **`src/t7/attack/` dir confirmed absent**.
-- §4b-III cross-layer eval + tax metrics in `src/t7/eval/` — **no tax/cross-layer/pareto/frontier symbols in src/t7/eval/ yet**. Includes Codex-#2 hooks #6 coverage-manifest stub and #10 ΔASR@fixed-evasion primary tax scalar.
+- §4b-II idealized action-space attacker: `src/evasion_tax/attack/idealized_frontier.py` — **`src/evasion_tax/attack/` dir confirmed absent**.
+- §4b-III cross-layer eval + tax metrics in `src/evasion_tax/eval/` — **no tax/cross-layer/pareto/frontier symbols in src/evasion_tax/eval/ yet**. Includes Codex-#2 hooks #6 coverage-manifest stub and #10 ΔASR@fixed-evasion primary tax scalar.
 
 **Open decisions / sign-offs:**
 - Supervisor sign-off PENDING on the whole Embodiment-Evasion-Tax reframe + locked title (author-converged 2026-06-01).

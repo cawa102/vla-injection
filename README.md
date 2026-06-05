@@ -1,4 +1,4 @@
-# T7 — The Embodiment Evasion Tax
+# The Embodiment Evasion Tax
 
 > MSc Cyber Security & AI individual research project — **VLA-model security, integrity focus**.
 > Private repository for the author, supervisor, and collaborators. Single-author dissertation:
@@ -71,7 +71,7 @@ a model: they consume an identical `UnitOutcome` contract whether the rollout wa
 ## Repository layout
 
 ```
-src/t7/        Python package — model-free core (27 modules, ~4.3k LOC)
+src/evasion_tax/        Python package — model-free core (27 modules, ~4.3k LOC)
   attack/        idealized action-space attacker + Pareto frontier
   baselines/     L0 perplexity / anomaly detectors
   metric/        L1 activation-delta probe · L2 goal-action consistency (A)
@@ -98,8 +98,8 @@ Source-of-truth ordering (follow this when documents appear to disagree):
 
 | You want… | Read |
 |-----------|------|
-| **What & why** (threat model, novelty, design rationale) | [`docs/core/t7-goal-action-consistency-detector.md`](docs/core/t7-goal-action-consistency-detector.md) |
-| **Status / tasks / decisions / how-to** (operational source of truth) | [`docs/core/t7-execution-playbook.md`](docs/core/t7-execution-playbook.md) |
+| **What & why** (threat model, novelty, design rationale) | [`docs/core/goal-action-consistency-detector.md`](docs/core/goal-action-consistency-detector.md) |
+| **Status / tasks / decisions / how-to** (operational source of truth) | [`docs/core/execution-playbook.md`](docs/core/execution-playbook.md) |
 | **Verified external facts** (papers, provenance, hashes) | [`docs/references/README.md`](docs/references/README.md) |
 | **Code structure** | [`docs/CODEMAPS/`](docs/CODEMAPS/README.md) |
 | **Literature landscape** | [`docs/lit-review/`](docs/lit-review/) |
@@ -130,7 +130,7 @@ it can never break the core environment — see `pyproject.toml` `[project.optio
 **Reproducibility (non-negotiable).** Seeds are pinned and recorded; the exact environment is captured per run;
 data/checkpoint provenance (source, hash, date, licence) is logged; each run is written to a timestamped
 **write-once** `results/`; experiments change one variable at a time; figures are regenerable from logged data
-by a script; negative results are reported, not dropped. The `src/t7/repro/` package implements these
+by a script; negative results are reported, not dropped. The `src/evasion_tax/repro/` package implements these
 invariants.
 
 **Security-research ethics.** Attack code (instruction injection, action-space manipulation) is built only for

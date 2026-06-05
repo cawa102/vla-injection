@@ -56,7 +56,7 @@ CPU resource idioms:
 | `k2-epsrc` | (EPSRC allocation) | 128 | 773–1023 GB |
 | `k2-himem` | **3 days** | 128–256 | 2051–2063 GB |
 
-## GPU partitions  ← T7 runs here
+## GPU partitions  ← the project runs here
 
 | Partition | GPUs | Walltime | GPU mem | `--gres` type |
 |-----------|------|----------|---------|---------------|
@@ -79,13 +79,13 @@ Examples:
 - `#SBATCH --gres=gpu:v100:1` — one V100
 - `#SBATCH --gres=gpu:2g.20gb:1` — one A100 MIG slice (small/debug)
 
-> **T7:** OpenVLA-7B bf16 ≈14 GB → **`--gres=gpu:a100:1`** (or `h100`) on `k2-gpu-a100` / `k2-gpu-h100`. **3-day
+> **Project:** OpenVLA-7B bf16 ≈14 GB → **`--gres=gpu:a100:1`** (or `h100`) on `k2-gpu-a100` / `k2-gpu-h100`. **3-day
 > walltime cap** is the hard per-job calendar limit the M1 micro-bench budgets against (D8 branch selection).
 > GCG suffix optimisation is the expensive part — chunk it into ≤3-day jobs with checkpointing, or it dies at
 > the walltime wall. A MIG slice (`k2-gpu-a100mig`) is ideal for **cheap smoke tests / debugging** the harness
 > before burning a full A100.
 
-## Example GPU batch script (adapt for T7)
+## Example GPU batch script (adapt for the project)
 
 Official example (MATLAB on an A100 MIG slice):
 
@@ -105,11 +105,11 @@ module load matlab/R2024a
 matlab -nosplash -nodisplay -r "matlab_gpu_script;"
 ```
 
-T7-shaped skeleton (verify module names on-node during M1):
+Project-shaped skeleton (verify module names on-node during M1):
 
 ```bash
 #!/bin/bash
-#SBATCH --job-name=t7-benign-baseline
+#SBATCH --job-name=evasion_tax-benign-baseline
 #SBATCH --output=results/slurm/%x-%j.out      # %x=jobname %j=jobid
 #SBATCH --error=results/slurm/%x-%j.err
 #SBATCH --time=1-00:00:00                      # 1 day (≤3-day cap)
@@ -124,7 +124,7 @@ T7-shaped skeleton (verify module names on-node during M1):
 
 module purge
 module load apps/python3/3.10.5/gcc-9.3.0      # + the CUDA module found via `module avail cuda`
-source /users/<studentnumber>/venvs/t7/bin/activate
+source /users/<studentnumber>/venvs/evasion_tax/bin/activate
 
 nvidia-smi                                     # log the exact GPU into the run record (provenance)
 python -m scripts.run_benign --config configs/example_m2.yaml
@@ -142,14 +142,14 @@ Grab an interactive shell on a node (good for debugging, first OpenVLA stand-up)
 # CPU example from the docs:
 srun -p k2-hipri -N 1 -n 10 --mem-per-cpu=1G --time=1:00:00 --pty bash
 
-# GPU interactive (T7 — one A100, 2h):
+# GPU interactive (project — one A100, 2h):
 srun -p k2-gpu-a100 --gres=gpu:a100:1 -N 1 -n 1 --cpus-per-task=8 \
      --mem-per-cpu=8G --time=2:00:00 --pty bash
 ```
 
 Graphical apps (VNC), per docs: start an interactive job → `vncserver` → SSH-tunnel from the Mac
 `ssh -L 5903:node<N>.pri.kelvin2.alces.network:5901 <studentnumber>@kelvin2.qub.ac.uk` → connect VNC to
-`localhost:5903` → `vncserver -kill :1` to stop. (Rarely needed for T7 — it's headless.)
+`localhost:5903` → `vncserver -kill :1` to stop. (Rarely needed here — it's headless.)
 
 ## Job management
 

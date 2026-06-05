@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Task 10 — time-boxed state-only LIBERO smoke test (plan: t7-local-prep-plan.md).
+"""Task 10 — time-boxed state-only LIBERO smoke test (plan: local-prep-plan.md).
 
 Attempt, in an isolated env, to spin up a **state-only** (no rendering, no policy,
 8 GB-safe) MuJoCo-backed robot env, dump its *real* ground-truth schema, and check
@@ -38,20 +38,20 @@ from typing import Any
 os.environ.setdefault("MUJOCO_GL", "disable")
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
-_STATE_PATH = _REPO_ROOT / "src" / "t7" / "metric" / "state.py"
-_REPORT_PATH = Path.home() / ".cache" / "t7-libero-smoke" / "smoke_report.json"
+_STATE_PATH = _REPO_ROOT / "src" / "evasion_tax" / "metric" / "state.py"
+_REPORT_PATH = Path.home() / ".cache" / "evasion_tax-libero-smoke" / "smoke_report.json"
 
-# The four fields the Task-4 PrivilegedState contract requires (see src/t7/metric/state.py).
+# The four fields the Task-4 PrivilegedState contract requires (see evasion_tax/metric/state.py).
 _CONTRACT_FIELDS = ("ee_pos", "gripper_open", "object_poses", "target_region")
 
 
 def _load_privileged_state_cls() -> Any:
-    """Load ``PrivilegedState`` directly from its file (decoupled from the t7 package).
+    """Load ``PrivilegedState`` directly from its file (decoupled from the evasion_tax package).
 
-    Avoids importing the whole ``t7`` package (and its numpy/scipy deps) into the
+    Avoids importing the whole ``evasion_tax`` package (and its numpy/scipy deps) into the
     smoke venv: ``state.py`` itself imports only the stdlib.
     """
-    spec = importlib.util.spec_from_file_location("t7_state_smoke", _STATE_PATH)
+    spec = importlib.util.spec_from_file_location("evasion_tax_state_smoke", _STATE_PATH)
     if spec is None or spec.loader is None:  # pragma: no cover - defensive
         raise ImportError(f"cannot load PrivilegedState from {_STATE_PATH}")
     module = importlib.util.module_from_spec(spec)
@@ -216,7 +216,7 @@ def try_robosuite() -> dict[str, Any] | None:
 def _print_report(result: dict[str, Any]) -> None:
     line = "=" * 72
     print(line)
-    print("T7 Task 10 — state-only env smoke test")
+    print("Task 10 — state-only env smoke test")
     print(line)
     tier = result.get("tier", "0")
     if tier == "0":

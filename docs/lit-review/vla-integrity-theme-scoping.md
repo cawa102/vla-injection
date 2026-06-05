@@ -1,5 +1,9 @@
 # VLA Integrity Security — Theme-Scoping Literature Review & Ranked Research Themes
 
+> **Naming note (added later):** the candidate written **EET** below is the selected dissertation theme —
+> **The Embodiment Evasion Tax**. This doc predates that title, so EET replaces its old scratch label; the
+> other T-numbers (T3/T5/T6/T8/T9) remain as scratch labels from the selection process.
+
 > **Phase:** Scope → Literature review (CLAUDE.md §3, steps 1–2)
 > **Date:** 2026-05-30
 > **Produced by:** a 67-agent deep-research workflow (6 search angles → 16 fetched sources →
@@ -14,7 +18,7 @@
 > assumption above no longer holds — the project now runs on **A100/H100** (bf16; OpenVLA-7B at full precision).
 > This only *relaxes* the feasibility envelope below (the "if real compute/time differs, re-weight" note further
 > down has fired **favourably**); the theme-ranking conclusions are unaffected. Forward-looking compute decisions
-> live in `docs/core/t7-execution-playbook.md` §2 (*Compute branches*) / D8.
+> live in `docs/core/execution-playbook.md` §2 (*Compute branches*) / D8.
 >
 > **⚠️ This is an AI-generated research scaffold for the author to review and rewrite
 > (CLAUDE.md §5).** Citations marked **[verified]** were independently re-fetched from
@@ -118,7 +122,7 @@ transfer ablation in sim; per-encoder (SigLIP vs DINOv2) robustness; safety-marg
 | **T4** | Does LoRA/PEFT change backdoor susceptibility vs full FT? | poisoning | benchmark | G5 |
 | **T5** | **Action-tokenization (256-bin) plausibility defense** | action-space | defense | G2 |
 | **T6** | Action-consistency runtime monitor (temporal + cross-modal) | visual+backdoor | defense | G1 |
-| **T7** | Cross-modal instruction injection + goal-action consistency defense | language | defense | G7 |
+| **EET** | Cross-modal instruction injection + goal-action consistency defense | language | defense | G7 |
 | **T8** | **Trojaned-checkpoint supply-chain audit** (data-free, trigger-agnostic) | supply-chain | defense | G3 |
 
 ---
@@ -145,7 +149,7 @@ transfer ablation in sim; per-encoder (SigLIP vs DINOv2) robustness; safety-marg
   ~12 h/LoRA run makes the scoped grid deliverable. Lands #2 — safest deliverable, clean-label arm survives.
 - **Overlap policing.** No two top-5 themes share a core method: T5 = token/clamp level; T6 =
   trajectory/cross-modal; T8 = checkpoint/weight level, trigger-agnostic; T3 = training-data;
-  T7 = language channel.
+  EET = language channel.
 
 ---
 
@@ -190,7 +194,7 @@ weakens statistical detection-rate claims → scope to tested trigger types.
 Adaptive adversary is the binding limit (now demonstrated for chunk models by SilentDrift) → adaptive
 arm mandatory. Below T8 because its defended gain is structurally hostage to the adaptive attacker.
 
-### #5 — T7 · Cross-Modal Instruction Injection (+ consistency defense)
+### #5 — EET · Cross-Modal Instruction Injection (+ consistency defense)
 *Defense (attack-motivated).* Most original *surviving attack-flavoured* contribution and cheapest to
 run (text-only GCG, no patch-reproduction tax). Lock "successful redirection" to a specific reachable
 attacker-chosen action (not denial), and derive the consistency metric from benign instruction-action
@@ -269,16 +273,16 @@ before citing: *Model-agnostic Adversarial Attack & Defense for VLA* `2510.13237
 - **Web-search recall, not exhaustive survey.** 16 sources fetched from 44 found; non-arXiv venues,
   very new pre-prints, and closed-source VLAs (RT-2, π0) are under-covered.
 - **Feasibility assumes the stated GB10 profile.** If real compute/time differs, re-weight T3/T4
-  (training-heavy) vs T5/T6/T7 (inference-heavy).
+  (training-heavy) vs T5/T6/EET (inference-heavy).
 - **No real-robot validation** — all claims scoped to simulation; sim-to-real transfer is out of scope.
 - **AI-generated scaffold** — prose, rankings, and rationale must be reviewed and rewritten by the
   author; secondary citations must be verified individually (§10).
 
 ---
 
-## 12. Addendum (2026-05-30) — Consistency-Detector Prior Work & T7 Reframing
+## 12. Addendum (2026-05-30) — Consistency-Detector Prior Work & EET Reframing
 
-External review surfaced a **prior-work landmine** for the *consistency-detector* themes (T6, T7),
+External review surfaced a **prior-work landmine** for the *consistency-detector* themes (T6, EET),
 independently verified on arXiv:
 
 - **[9] Wu et al., "Do What You Say"** (`2510.16281`) **[verified]** already proposes runtime
@@ -291,14 +295,14 @@ independently verified on arXiv:
 **Impact on the ranking:**
 
 - **The bare "pick actions consistent with the plan" idea is no longer novel** — an examiner can
-  point to [9]. Any T6/T7 contribution **must not claim to invent consistency checking.**
-- **T7 survives only if its novelty is narrowed to:** (i) a **security threat model** —
+  point to [9]. Any T6/EET contribution **must not claim to invent consistency checking.**
+- **EET survives only if its novelty is narrowed to:** (i) a **security threat model** —
   attacker-aware detection of inconsistency against *externally injected* instructions (the attacker
   controls the stated instruction, so the detector must compare the action against a *trusted/sanitized*
   goal, not the attacker's text — a genuinely non-trivial, unaddressed design problem); (ii)
   **false-positive-rate calibration** of the detector; and (iii) a **lightweight runtime detector on
   vanilla (non-CoT) OpenVLA** — i.e. no embodied-CoT, no simulator-in-the-loop, unlike [9].
-- **Reframed T7 (recommended form):** reuse **RoboGCG [4]** to reproduce the instruction-injection
+- **Reframed EET (recommended form):** reuse **RoboGCG [4]** to reproduce the instruction-injection
   attack (abstract confirms full action-space reachability), then contribute the **security-framed,
   FP-calibrated goal-action-consistency detector**. Publishable either way: a usable operating point
   = positive; *inability to separate benign from attacked without breaking benign* = negative — and
@@ -313,7 +317,7 @@ independently verified on arXiv:
   this in scope and report it as a measurement, not a solved system.
 - **[verified 2026-05-31 — RoboGCG full text §5 + Table 3; PDF saved `docs/references/2506.03350-...pdf`,
   facts in `docs/references/README.md`]** The earlier claims about RoboGCG's evaluated defenses are
-  **confirmed, and they *motivate* T7 rather than pre-empt it.** Defense eval = 120 random one-hot target
+  **confirmed, and they *motivate* EET rather than pre-empt it.** Defense eval = 120 random one-hot target
   actions. Table 3 ASR (%): No Defense 63.3 / 100 / 96.7 / 100 (Libero-10/Goal/Object/Spatial);
   **Multimodal PF = identical to No Defense (useless** — image embeddings dominate the loss, so multimodal
   perplexity never sees the suffix); **LLM-Only PF → 0.0 everywhere; Smoothing → 0.0 everywhere.**
@@ -322,7 +326,7 @@ independently verified on arXiv:
   open-world robotics applications"; smoothing "results in a 0% success rate, **but also corrupts the
   instructions, resulting in a 0% success rate on non-attacked tasks**." Their conclusion: "This points to
   the need for notions of **VLA refusal** when attempts to subvert control are detected" — i.e. they treat
-  the defense problem as **open**. → T7's FP-calibrated *behavioral* detector targets exactly the
+  the defense problem as **open**. → EET's FP-calibrated *behavioral* detector targets exactly the
   no-usable-operating-point gap RoboGCG leaves; the perplexity / text-only filter is a *baseline to beat*
   (beatable: multimodal PF fails, text PF has no a-priori threshold, both blind to fluent/visual/adaptive
   injection). *(Supersedes the prior "~38%" guess: 38.0 is the SIMPLER real-world-image transfer overall
@@ -331,9 +335,9 @@ independently verified on arXiv:
   target × ~1792 targets). **Subsample targets**, run a GCG micro-benchmark on the GB10 first, and
   put effort into the detector rather than a large attack re-run.
 
-**Net effect on ranks:** [9] *lowers the novelty ceiling of T6 and T7* (both consistency-based) but
+**Net effect on ranks:** [9] *lowers the novelty ceiling of T6 and EET* (both consistency-based) but
 **does not touch T5 (token-plausibility clamp — different mechanism), T3 (poisoning), or T8 (checkpoint
-audit).** Reframed-T7 becomes a sharper, more examiner-defensible theme than the original §7 entry —
+audit).** Reframed-EET becomes a sharper, more examiner-defensible theme than the original §7 entry —
 strong enough to contend with T5 for the top slot *if* the supervisor is specifically interested in the
 language→physical-action threat (see decision note in chat).
 
@@ -356,11 +360,11 @@ remains, which **collapses into T6**. So **T5 is locked to the discrete OpenVLA-
   to discrete OpenVLA-7B and frame the continuous-head divergence as a stated limitation (or pivot to
   the *discrete-vs-continuous action-head robustness comparison* — novel but heavier, attacks on
   continuous heads are less established).
-- **T3 (poisoning) and T7 (injection + consistency detector) are head-agnostic** — they work on both
+- **T3 (poisoning) and EET (injection + consistency detector) are head-agnostic** — they work on both
   discrete OpenVLA and OpenVLA-OFT — so they do **not** carry this model-lock-in risk. Under a
-  *guaranteed-deliverable-first* lean this further separates T3/T7 from T5.
+  *guaranteed-deliverable-first* lean this further separates T3/EET from T5.
 
-### 12b. T7's load-bearing assumption — the "trusted intent" channel
+### 12b. EET's load-bearing assumption — the "trusted intent" channel
 
 **Locked framing (2026-05-30).**
 *Main Question:* **"Can instruction-injection attacks on VLA models be detected by checking whether the
@@ -385,7 +389,7 @@ survive the "necessity" critique below:
 → These rows **are** the trusted-reference ladder (below): use the benchmark clean instruction to *measure*
 the detector's ceiling, and the coarse operator-goal / task-ID-restored-goal as the *realistic* rungs.
 
-The T7 detector flags injection by checking the action against the *intended* goal. For this to detect
+The EET detector flags injection by checking the action against the *intended* goal. For this to detect
 anything, the intent reference must be one the **attacker does not control** — otherwise the redirected
 action is consistent with the attacker's injected instruction and the detector is blind. Using the
 **clean LIBERO instruction as the trusted reference while feeding OpenVLA `clean + RoboGCG-suffix`** is a
@@ -443,9 +447,9 @@ practitioner workflow (download → clean LoRA → deploy). **Stance: defense (a
 
 **Why it's strong:** verified threat anchor + **verified-open** defense gap; **head-agnostic** (persistence
 is a weights phenomenon → works on discrete OpenVLA *and* OpenVLA-OFT, so **no T5-style model lock-in**);
-**no T7-style trusted-intent fragility**; vivid practitioner narrative ("you fine-tuned on clean data and
+**no EET-style trusted-intent fragility**; vivid practitioner narrative ("you fine-tuned on clean data and
 were still owned"); fresh novelty (INFUSE is Feb 2026, defense explicitly open) → cleaner novelty position
-than T7's contested detector; **publishable either way** (removal works = positive; *no cheap method
+than EET's contested detector; **publishable either way** (removal works = positive; *no cheap method
 neutralizes it* = strong security finding that the persistence threat is unmitigated by standard practice).
 
 **The single load-bearing gate (check FIRST):** can you obtain a *persistent* backdoor **cheaply**?
@@ -481,7 +485,7 @@ that T3 lacks; T3 has the lowest build risk (no artifact dependency) but heavier
 pre-empted rate-curve. Choose T9 if comfortable building a (simplified) persistent backdoor; T3 if you want
 minimal build risk.
 
-### 12d. Narrowed **T9** (BadVLA baseline + targeted-module audit) vs **T7** — head-to-head
+### 12d. Narrowed **T9** (BadVLA baseline + targeted-module audit) vs **EET** — head-to-head
 
 **Recommended narrowed-T9 scope:** a *coupled* attack→defense story driven by one structural fact.
 - **Attack side (kept minimal):** use **BadVLA** (public code) as the **weak-persistence baseline** (~38.8%
@@ -496,14 +500,14 @@ minimal build risk.
   keep it as the **contrast/baseline**; the simplified-INFUSE case is what cleanly tests the hypothesis.
 
 **Risk-axis correction:** T9's attack reproduction (BadVLA poison + **two** ~12 h LoRA fine-tunes per
-condition) is genuinely **heavier** than T7's (RoboGCG = **training-free**, inference-time GCG). So T7 wins
-the **compute/execution** axis. **But** the two themes' *dominant* risks live on different axes: **T7's risk
+condition) is genuinely **heavier** than EET's (RoboGCG = **training-free**, inference-time GCG). So EET wins
+the **compute/execution** axis. **But** the two themes' *dominant* risks live on different axes: **EET's risk
 is conceptual** (trusted-intent realism/necessity — can't be "scoped down", only reframed), **T9's risk is
 executional** (compute/build — bounded, scope-able via fewer seeds/conditions). For a graded MSc, *irreducible
 conceptual risk is worse than bounded compute risk.*
 
 **Scored (1–5):**
-| Dimension | Narrowed-T9 | T7 (ladder) |
+| Dimension | Narrowed-T9 | EET (ladder) |
 |---|---|---|
 | Novelty (clean vs contested) | **5** (first persistent-backdoor defense; verified-open) | 3 (Wu et al. + task-drift adjacent) |
 | Conceptual robustness / viva-defensibility | **5** (unimpeachable premise) | 2 (trusted-intent fragility) |
@@ -513,8 +517,8 @@ conceptual risk is worse than bounded compute risk.*
 | Supervisor salience | 4 (supply-chain trust) | 4 (injection→harm) |
 | **Lean (deliverable-first)** | **higher overall** | lower |
 
-**Verdict: narrowed-T9 > T7 overall.** T9 wins on the **grade-determining** axes (novelty + viva-defensibility)
-and only loses on the **most manageable** axis (compute). **T7 wins only if** (a) the supervisor specifically
+**Verdict: narrowed-T9 > EET overall.** T9 wins on the **grade-determining** axes (novelty + viva-defensibility)
+and only loses on the **most manageable** axis (compute). **EET wins only if** (a) the supervisor specifically
 wants the *language-injection→dangerous-action* story, or (b) compute/time is so tight that any training-heavy
 plan is infeasible and the training-free attack is required.
 
@@ -522,12 +526,12 @@ plan is infeasible and the training-free attack is required.
 
 | Cluster | Paper | Authors / Institutions (verified) | Standing |
 |---|---|---|---|
-| **T7** | **RoboGCG** [4] (`2506.03350`) | Jones, Robey, Zou, Ravichandran, Pappas, Hassani, Fredrikson, **Kolter** — **Gray Swan AI + CMU + UPenn** | **Elite** — the GCG inventors (Zou/Fredrikson/Kolter), RoboPAIR (Robey), UPenn GRASP |
-| **T7** | **Do What You Say** [9] (`2510.16281`) | Wu, Bajcsy (**CMU**) + Ramos, Pérez-D'Arpino, Hermans (**NVIDIA**); **code released → `NVlabs/actalign`** | **Elite** — NVIDIA Research + CMU, *reference impl public* |
+| **EET** | **RoboGCG** [4] (`2506.03350`) | Jones, Robey, Zou, Ravichandran, Pappas, Hassani, Fredrikson, **Kolter** — **Gray Swan AI + CMU + UPenn** | **Elite** — the GCG inventors (Zou/Fredrikson/Kolter), RoboPAIR (Robey), UPenn GRASP |
+| **EET** | **Do What You Say** [9] (`2510.16281`) | Wu, Bajcsy (**CMU**) + Ramos, Pérez-D'Arpino, Hermans (**NVIDIA**); **code released → `NVlabs/actalign`** | **Elite** — NVIDIA Research + CMU, *reference impl public* |
 | **T9** | **AttackVLA/DropVLA** [5][6] | **Fudan** (corr. **Xingjun Ma, Yu-Gang Jiang**) + CityU HK + SMU | **Strong** — Yu-Gang Jiang highly-cited; trustworthy-ML/CV |
 | **T9** | **INFUSE** [10] (`2602.00500`) | Zhou, Shao, Yang, Wei (**HIT Shenzhen**) + Zhen (**Meituan Robotics**) + Zhao (**SJTU**) + Xia (**NUS**) + Su (**CSU**); **code "coming soon", unreleased** | **Solid/rising** — academia + industry robotics; *defense left open* |
 
-**Raw prestige verdict:** **T7's foundation is the stronger of the two.** The RoboGCG author list (Kolter /
+**Raw prestige verdict:** **EET's foundation is the stronger of the two.** The RoboGCG author list (Kolter /
 Zou / Fredrikson + Gray Swan AI + UPenn) is arguably the single strongest in VLA security, and the nearest
 defense (Wu et al.) is NVIDIA+CMU with **released code**. T9's cluster (Fudan/Yu-Gang Jiang, HIT, NUS, SJTU,
 Meituan) is genuinely strong but a notch below in adversarial-ML/safety-community visibility.
@@ -535,7 +539,7 @@ Meituan) is genuinely strong but a notch below in adversarial-ML/safety-communit
 **Strategic read (the part that matters for an MSc):** competitor strength is an *asset when it's your
 foundation* (you cite them) and a *liability when it's your competition* (they scoop you / you look
 incremental).
-- **T7:** strong groups occupy **both** the attack (RoboGCG) **and your intended defense niche** —
+- **EET:** strong groups occupy **both** the attack (RoboGCG) **and your intended defense niche** —
   NVIDIA's **actalign** is a *released consistency-verification reference implementation*. → highest
   credibility foundation, but **highest competition/scoop risk on your exact contribution**, and actalign
   **raises the novelty bar** for any consistency detector further (on top of the Wu-et-al. landmine in §12).
@@ -543,8 +547,8 @@ incremental).
   code unreleased → the **defense lane is clear**. Lower head-to-head competition on your niche (caveat:
   the same capable groups *could* publish a defense follow-up — monitor).
 
-**Net:** on "stronger papers," **T7**; on "stronger *position* for a single-author MSc," **T9** — the
-landscape evidence **reinforces narrowed-T9 > T7** (open lane beats crowded lane, even crowded-by-elites).
+**Net:** on "stronger papers," **EET**; on "stronger *position* for a single-author MSc," **T9** — the
+landscape evidence **reinforces narrowed-T9 > EET** (open lane beats crowded lane, even crowded-by-elites).
 
 **Suggested clean scope (avoid the 4-cell sprawl of "detect/neutralize × before/after"):** a single pipeline —
 (0) obtain/reproduce a persistent backdoor; **replicate** the post-LoRA survival gap on your setup;

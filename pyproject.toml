@@ -1,7 +1,7 @@
 [project]
-name = "t7"
+name = "evasion_tax"
 version = "0.0.0"
-description = "T7 — goal-action consistency detection for instruction-injected VLA policies (model-free local components)"
+description = "Embodiment Evasion Tax — goal-action consistency detection for instruction-injected VLA policies (model-free local components)"
 requires-python = ">=3.10"
 dependencies = [
     "numpy>=1.26",
@@ -32,19 +32,19 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/t7"]
+packages = ["src/evasion_tax"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 # Make `src` importable independently of the editable install (uv's editable .pth
-# is regenerated on every `uv run` and is unreliable on this machine); `t7` then
+# is regenerated on every `uv run` and is unreliable on this machine); `evasion_tax` then
 # resolves from the source tree regardless.
 pythonpath = ["src"]
-# importlib mode + no __init__.py in tests/ avoids the test tree shadowing the real `t7` package.
+# importlib mode + no __init__.py in tests/ avoids the test tree shadowing the real `evasion_tax` package.
 addopts = "-q --import-mode=importlib"
 
 [tool.ruff]
-# Keep source 3.10-compatible so `src/t7` imports unchanged on the GB10 OpenVLA stack.
+# Keep source 3.10-compatible so `src/evasion_tax` imports unchanged on the GB10 OpenVLA stack.
 target-version = "py310"
 line-length = 100
 src = ["src", "tests"]
@@ -54,4 +54,4 @@ select = ["E", "F", "I", "B", "UP"]
 
 # Pyright is configured in `pyrightconfig.json` (canonical, higher precedence than
 # this table) — pinned to py3.11 + the src layout so `X | None`, `zip(strict=)`, and
-# `t7.*` imports resolve. Keep config in one place (DRY).
+# `evasion_tax.*` imports resolve. Keep config in one place (DRY).

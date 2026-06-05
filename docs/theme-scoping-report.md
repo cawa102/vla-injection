@@ -3,7 +3,9 @@
 *MSc Cyber Security & AI — Individual Research Project. Phase: theme scoping.*
 *Prepared 2026-05-29. All technical claims cite sources actually fetched during this review; unverifiable claims are flagged `[CITATION NEEDED]`.*
 
-> **⚠️ Compute superseded 2026-06-02 (historical doc — body left intact for provenance):** the "single NVIDIA GB10 node" feasibility assumption throughout this report no longer holds — the project now runs on **A100/H100** (bf16). This only *relaxes* the feasibility judgments below; the theme selection (T7) is unaffected. Forward-looking compute decisions live in `docs/core/t7-execution-playbook.md` §2 (*Compute branches*) / D8.
+> **⚠️ Compute superseded 2026-06-02 (historical doc — body left intact for provenance):** the "single NVIDIA GB10 node" feasibility assumption throughout this report no longer holds — the project now runs on **A100/H100** (bf16). This only *relaxes* the feasibility judgments below; the theme selection (EET) is unaffected. Forward-looking compute decisions live in `docs/core/execution-playbook.md` §2 (*Compute branches*) / D8.
+>
+> **Naming note (added later):** the candidate written **EET** below is the selected dissertation theme — **The Embodiment Evasion Tax**. This report predates that title, so EET replaces its old scratch label; the other T-numbers remain as scratch labels from the selection process.
 
 ---
 
@@ -204,7 +206,7 @@ flagged refuted in cross-examination and are excluded from the DONE section.
 | T4 | Does LoRA/PEFT change a VLA's backdoor susceptibility vs full fine-tuning? | data poisoning/backdoor under different fine-tuning regimes | benchmark | Differential security of LoRA/PEFT vs full fine-tuning |
 | T5 | Action-tokenization plausibility defense: hardening OpenVLA's 256-bin action head | action-space manipulation + perturbation/backdoor surfacing as anomalous action tokens | defense | Action-tokenization (256-bin → Llama vocab) as an integrity surface |
 | T6 | Action-consistency runtime monitor: temporal + cross-modal plausibility checks | visual perturbation + backdoor (anomalous emitted actions) | defense | VLA-specific defenses beating the four broken preprocessing baselines |
-| T7 | Cross-modal instruction injection on a benign scene, with a goal-action consistency defense | language/prompt injection → action-space manipulation | defense | Adversarial/injected language instructions as an integrity threat |
+| EET | Cross-modal instruction injection on a benign scene, with a goal-action consistency defense | language/prompt injection → action-space manipulation | defense | Adversarial/injected language instructions as an integrity threat |
 | T8 | Trojaned-checkpoint supply-chain audit: detecting hidden backdoors in distributed weights | supply-chain tampering / trojaned weights | defense | Data-free, trigger-agnostic checkpoint auditing before deployment |
 
 ---
@@ -336,10 +338,10 @@ motions), detection latency, and recovered-success under the adaptive attacker; 
 broken preprocessing defenses. Pin seeds; quarantine artifacts. Keep trajectory/cross-modal to
 avoid overlap with T5.
 
-### #5 — T7: Cross-Modal Instruction Injection + Goal-Action Consistency Defense
+### #5 — EET: Cross-Modal Instruction Injection + Goal-Action Consistency Defense
 **Justification.** The most original *surviving* attack-flavoured contribution and the cheapest
 theme to run. The chair confirmed AttackVLA [6] covers textual attacks generically but **not** the
-specific pairing T7 proposes (benign scene + injected language suffix redirecting the *physical*
+specific pairing EET proposes (benign scene + injected language suffix redirecting the *physical*
 action, paired with a goal-action consistency defense). The language pathway is a verified low-cost
 surface (GCG converges in minutes) [4] and a realistic deployment entry point. Ranks #5 because the
 consistency defense risks circularity and may need a lightweight reference judge, and "meaningful

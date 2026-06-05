@@ -2,12 +2,12 @@ CODEMAP SCAN REPORT
 ===================
 Date:        2026-06-05
 Command:     /update-codemaps (re-run)
-Project:     T7 (Embodiment Evasion Tax) — MSc VLA-security research
+Project:     Embodiment Evasion Tax — MSc VLA-security research
 Type:        single Python package (model-free core + Protocol-gated GPU seams); no routes / DB / UI
 
 FILES SCANNED
 -------------
-src/t7      36 .py  (27 modules + 9 __init__)  ~4.3k LOC, 8 subpackages + root
+src/evasion_tax      36 .py  (27 modules + 9 __init__)  ~4.3k LOC, 8 subpackages + root
 scripts/     9 .py  (CLI entry points; GPU-marked ones cuda-guarded)
 tests/      31 .py  (28 test_* modules + 2 conftest + 1 fixtures; 354 test fns)
 configs/     2       (example_m2.yaml, env/requirements-gpu.txt)
@@ -41,4 +41,4 @@ None (no new routes, services, modules, or external integrations).
 STALENESS
 ---------
 Codemaps current as of 2026-06-05. Regenerate after each milestone (M-tag) or when
-src/t7 subpackages change. results/ still absent (write-once logs created on first GPU run).
+src/evasion_tax subpackages change. results/ still absent (write-once logs created on first GPU run).

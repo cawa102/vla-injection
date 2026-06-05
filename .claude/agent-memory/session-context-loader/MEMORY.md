@@ -1,2 +1,2 @@
-- [Project layout & sources of truth](project-map.md) — T7 VLA-security dissertation; where the active plan, code, tests, and references live
+- [Project layout & sources of truth](project-map.md) — Embodiment Evasion Tax VLA-security dissertation; where the active plan, code, tests, and references live
 - [Plan-vs-code status snapshot](status-snapshot.md) — local-prep Tasks 0-9 done; §4b instruments not yet built; gates and open decisions (FROZEN at 2026-06-03, re-verify with git)

@@ -2,7 +2,7 @@
 """Calibrate the detector threshold from logged benign scores (model-free, local).
 
 Sets ``tau`` on a benign calibration split to a per-rollout false-abort budget
-via the shared :func:`t7.detector.calibrate` (the same primitive baselines reuse;
+via the shared :func:`evasion_tax.detector.calibrate` (the same primitive baselines reuse;
 plan invariant #4). Consumes a JSON of per-rollout score arrays — no model needed
 — so it runs locally on logged data.
 
@@ -21,7 +21,7 @@ from pathlib import Path
 
 import _bootstrap  # noqa: F401  (import side effect: puts src/ on sys.path)
 
-from t7.detector import calibrate  # noqa: E402
+from evasion_tax.detector import calibrate  # noqa: E402
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -10,7 +10,7 @@ Usage:
         --repo-id openvla/openvla-7b-finetuned-libero-spatial \\
         [--out-dir data/openvla] [--licence "<from model card>"]
 
-The pure URL/provenance logic lives in ``t7.policy.openvla_stats`` (unit-tested);
+The pure URL/provenance logic lives in ``evasion_tax.policy.openvla_stats`` (unit-tested);
 this wrapper only performs the network download.
 """
 
@@ -21,10 +21,10 @@ import datetime
 import sys
 from pathlib import Path
 
-# Make `src/t7` importable when this script is run standalone (no editable install).
+# Make `src/evasion_tax` importable when this script is run standalone (no editable install).
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from t7.policy.openvla_stats import (  # noqa: E402
+from evasion_tax.policy.openvla_stats import (  # noqa: E402
     STATS_FILENAME,
     record_stats_provenance,
     stats_url,

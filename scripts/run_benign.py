@@ -18,7 +18,7 @@ import sys
 
 import _bootstrap  # noqa: F401  (import side effect: puts src/ on sys.path)
 
-from t7.config import cuda_available, gpu_required_message, load_config  # noqa: E402
+from evasion_tax.config import cuda_available, gpu_required_message, load_config  # noqa: E402
 
 STAGE = "run_benign"
 _EXIT_REQUIRES_GPU = 2

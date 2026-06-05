@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>T7 — A Friendly Guide to the Embodiment Evasion Tax</title>
+<title>A Friendly Guide to the Embodiment Evasion Tax</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,7 +11,7 @@
 
 <style>
 /* ============================================================
-   T7 — Friendly explainer.  Light · warm · soft · approachable.
+   Embodiment Evasion Tax — Friendly explainer.  Light · warm · soft · approachable.
    A study aid, deliberately the opposite of the dark talk deck.
    ============================================================ */
 :root{
@@ -282,7 +282,7 @@ footer a{ color:var(--indigo); text-decoration:none; }
 
 <!-- ============================== NAV ============================== -->
 <nav class="nav">
-  <span class="brand"><span class="pip"></span>T7 · Friendly Guide</span>
+  <span class="brand"><span class="pip"></span>Embodiment Evasion Tax · Friendly Guide</span>
   <span class="links">
     <a href="#overview">Overview</a>
     <a href="#background">Background</a>
@@ -604,7 +604,7 @@ footer a{ color:var(--indigo); text-decoration:none; }
 <section id="code">
   <p class="eyebrow">Code Map</p>
   <h2>Every file, in one line</h2>
-  <p>The codebase is the Python package <code>t7</code> (under <code>src/t7/</code>), plus runnable
+  <p>The codebase is the Python package <code>evasion_tax</code> (under <code>src/evasion_tax/</code>), plus runnable
   <code>scripts/</code> and <code>configs/</code>. It follows the data flow from earlier: define data →
   configure → model glue → attack → metrics → detector → baselines → evaluation → reproducibility.
   Package marker files (<code>__init__.py</code>) are skipped.</p>
@@ -614,14 +614,14 @@ footer a{ color:var(--indigo); text-decoration:none; }
   </p>
 
   <div class="codegroup">
-    <h3>Shared foundation <span class="path">src/t7/</span></h3>
+    <h3>Shared foundation <span class="path">src/evasion_tax/</span></h3>
     <div class="files">
       <div class="file"><div class="fp">records.py</div><div class="fd">The shared, immutable "vocabulary" of the project: a rollout, a step, a target spec, a score, a decision.</div></div>
     </div>
   </div>
 
   <div class="codegroup">
-    <h3>Configuration <span class="path">src/t7/config/</span></h3>
+    <h3>Configuration <span class="path">src/evasion_tax/config/</span></h3>
     <div class="files">
       <div class="file"><div class="fp">schema.py</div><div class="fd">Defines &amp; validates a run's settings (model, environment, attack, metric, detector) loaded from a YAML file — and enforces "change one variable at a time".</div></div>
       <div class="file"><div class="fp">runtime.py</div><div class="fd">A safety gate that checks whether a real GPU is present, so model scripts fail loudly instead of pretending to work.</div></div>
@@ -629,7 +629,7 @@ footer a{ color:var(--indigo); text-decoration:none; }
   </div>
 
   <div class="codegroup">
-    <h3>Model glue <span class="path">src/t7/policy/</span></h3>
+    <h3>Model glue <span class="path">src/evasion_tax/policy/</span></h3>
     <div class="files">
       <div class="file"><div class="fp">action_codec.py</div><div class="fd">Translates OpenVLA's discrete output tokens into real 7-number robot actions (verified against the model's source).</div></div>
       <div class="file"><div class="fp">openvla_stats.py</div><div class="fd">Downloads the model's official dataset statistics and records exactly where they came from (provenance).</div></div>
@@ -637,7 +637,7 @@ footer a{ color:var(--indigo); text-decoration:none; }
   </div>
 
   <div class="codegroup">
-    <h3>The attacker side <span class="path">src/t7/attack/</span></h3>
+    <h3>The attacker side <span class="path">src/evasion_tax/attack/</span></h3>
     <div class="files">
       <div class="file"><div class="fp">dynamics.py</div><div class="fd">Turns "an action" into "what happens in the world" — a fast fake version for local tests, plus a real-simulator stub for the GPU.</div></div>
       <div class="file"><div class="fp">frontier.py</div><div class="fd">Pure geometry for trade-off curves: given many (attack-success, evasion) points, find the best-possible frontier.</div></div>
@@ -646,7 +646,7 @@ footer a{ color:var(--indigo); text-decoration:none; }
   </div>
 
   <div class="codegroup">
-    <h3>The inspectors' brains <span class="path">src/t7/metric/</span></h3>
+    <h3>The inspectors' brains <span class="path">src/evasion_tax/metric/</span></h3>
     <div class="files">
       <div class="file"><div class="fp">state.py</div><div class="fd">A clean adapter for the simulator's "privileged" ground truth (where the arm, gripper, and objects really are).</div></div>
       <div class="file"><div class="fp">consistency_a.py</div><div class="fd">The L2-oracle metric (A): scores how well recent actions match the goal, using ground truth — the "ceiling" inspector.</div></div>
@@ -657,7 +657,7 @@ footer a{ color:var(--indigo); text-decoration:none; }
   </div>
 
   <div class="codegroup">
-    <h3>The decision maker <span class="path">src/t7/detector/</span></h3>
+    <h3>The decision maker <span class="path">src/evasion_tax/detector/</span></h3>
     <div class="files">
       <div class="file"><div class="fp">calibrate.py</div><div class="fd">Sets the alarm threshold so the false-alarm rate matches a chosen budget (e.g. 5%), measured on a calibration set.</div></div>
       <div class="file"><div class="fp">decide.py</div><div class="fd">Makes the causal stop/allow call step-by-step, and measures detection latency (how late the alarm fired).</div></div>
@@ -665,7 +665,7 @@ footer a{ color:var(--indigo); text-decoration:none; }
   </div>
 
   <div class="codegroup">
-    <h3>Comparison baselines <span class="path">src/t7/baselines/</span></h3>
+    <h3>Comparison baselines <span class="path">src/evasion_tax/baselines/</span></h3>
     <div class="files">
       <div class="file"><div class="fp">anomaly.py</div><div class="fd">A goal-blind "is this movement unusual?" detector our method must beat — proving goal-awareness actually helps.</div></div>
       <div class="file"><div class="fp">perplexity.py</div><div class="fd">The L0 text-only filter: flags instructions whose wording looks statistically odd.</div></div>
@@ -673,7 +673,7 @@ footer a{ color:var(--indigo); text-decoration:none; }
   </div>
 
   <div class="codegroup">
-    <h3>Scoring &amp; evidence <span class="path">src/t7/eval/</span></h3>
+    <h3>Scoring &amp; evidence <span class="path">src/evasion_tax/eval/</span></h3>
     <div class="files">
       <div class="file"><div class="fp">harness.py</div><div class="fd">Runs the whole comparison grid and guarantees no cheating (tune on one split, report on a disjoint one).</div></div>
       <div class="file"><div class="fp">metrics.py</div><div class="fd">The statistics toolbox: ROC/AUC, catch-rate at a fixed false-alarm rate, and proper confidence intervals.</div></div>
@@ -685,7 +685,7 @@ footer a{ color:var(--indigo); text-decoration:none; }
   </div>
 
   <div class="codegroup">
-    <h3>Reproducibility plumbing <span class="path">src/t7/repro/</span></h3>
+    <h3>Reproducibility plumbing <span class="path">src/evasion_tax/repro/</span></h3>
     <div class="files">
       <div class="file"><div class="fp">seeds.py</div><div class="fd">Seeds every random-number generator so a run can be repeated exactly.</div></div>
       <div class="file"><div class="fp">env_capture.py</div><div class="fd">Snapshots the exact environment (Python, packages, git commit, GPU driver) for the run log.</div></div>
@@ -705,7 +705,7 @@ footer a{ color:var(--indigo); text-decoration:none; }
       <div class="file"><div class="fp">evaluate.py <span class="local-pill">LOCAL</span></div><div class="fd">Turns logged scores into the results file (catch-rates, AUC, intervals).</div></div>
       <div class="file"><div class="fp">make_figures.py <span class="local-pill">LOCAL</span></div><div class="fd">Regenerates all charts from the results file.</div></div>
       <div class="file"><div class="fp">libero_state_smoketest.py <span class="local-pill">LOCAL</span></div><div class="fd">A quick check that the simulator's ground-truth fits our expected data shape.</div></div>
-      <div class="file"><div class="fp">_bootstrap.py <span class="local-pill">LOCAL</span></div><div class="fd">A tiny helper so standalone scripts can import the <code>t7</code> package.</div></div>
+      <div class="file"><div class="fp">_bootstrap.py <span class="local-pill">LOCAL</span></div><div class="fd">A tiny helper so standalone scripts can import the <code>evasion_tax</code> package.</div></div>
     </div>
   </div>
 
@@ -747,9 +747,9 @@ footer a{ color:var(--indigo); text-decoration:none; }
   <p><strong>About this page.</strong> A friendly, high-level summary written to help build understanding
   before the GPU experiments begin. It is a simplification — the authoritative sources of truth live in the repo:</p>
   <p>
-    • Status, roadmap &amp; decisions → <code>docs/core/t7-execution-playbook.md</code><br>
-    • What &amp; why (threat model, design) → <code>docs/core/t7-goal-action-consistency-detector.md</code><br>
-    • Verified external facts → <code>docs/references/README.md</code> &nbsp;·&nbsp; Code → <code>src/t7/</code>
+    • Status, roadmap &amp; decisions → <code>docs/core/execution-playbook.md</code><br>
+    • What &amp; why (threat model, design) → <code>docs/core/goal-action-consistency-detector.md</code><br>
+    • Verified external facts → <code>docs/references/README.md</code> &nbsp;·&nbsp; Code → <code>src/evasion_tax/</code>
   </p>
   <p>Generated 2026-06-03 · MSc Cyber Security &amp; AI individual research project · simulation only, defensive research.</p>
 </footer>

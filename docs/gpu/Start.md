@@ -29,7 +29,7 @@ monitoring jobs. **Never run OpenVLA / GCG / LIBERO here** — that belongs in a
 quota -s          # check your home quota
 ```
 
-> **T7 mapping:** clone the repo into `$HOME`; stage OpenVLA-7B weights + LIBERO into scratch; copy anything that
+> **Project mapping:** clone the repo into `$HOME`; stage OpenVLA-7B weights + LIBERO into scratch; copy anything that
 > must survive the 90-day purge (provenance-hashed checkpoints, write-once `results/`) back to home or push to
 > `origin`. The 100k-file home limit matters — conda envs have many files; prefer one env, and keep datasets off
 > home.
@@ -52,7 +52,7 @@ Module names are **versioned and compiler-tagged** (e.g. `apps/python3/3.10.5/gc
 `mpi/openmpi/5.0.3/gcc-14.1.0`). Always `module purge` at the top of a job script, then load exactly what you
 need, so the environment is reproducible (CLAUDE.md: capture exact env).
 
-> **T7 note:** the playbook pins the OpenVLA stack as **Python 3.10-compatible** (the local code is kept
+> **Project note:** the playbook pins the OpenVLA stack as **Python 3.10-compatible** (the local code is kept
 > 3.10-safe for exactly this node). Find the CUDA + Python + (likely conda) modules during M1 with
 > `module avail`, record the exact module strings into `docs/references/README.md`, and pin them in
 > `configs/env/requirements-gpu.txt`.
@@ -64,8 +64,8 @@ isolated environment (verify the exact anaconda module name on-node with `module
 
 ```bash
 module load apps/python3/3.10.5/gcc-9.3.0      # or an anaconda module
-python3 -m venv /users/<studentnumber>/venvs/t7   # or: conda create -n t7 python=3.10
-source /users/<studentnumber>/venvs/t7/bin/activate
+python3 -m venv /users/<studentnumber>/venvs/evasion_tax   # or: conda create -n evasion_tax python=3.10
+source /users/<studentnumber>/venvs/evasion_tax/bin/activate
 pip install -r requirements-gpu.txt
 ```
 
@@ -116,5 +116,5 @@ For **large** transfers (checkpoints, datasets) use the **data-mover nodes** `dm
 - Scripts/config in **home**; big data in **scratch**; intermediate files in `/tmp`.
 - Archive small files before transferring.
 - Request McClayRDS for secure, replicated project storage if needed.
-- (T7) one variable per run, seeds pinned, exact env captured, results to write-once `results/` — the Kelvin2
+- (project) one variable per run, seeds pinned, exact env captured, results to write-once `results/` — the Kelvin2
   storage layout above is how those rules land on this cluster.

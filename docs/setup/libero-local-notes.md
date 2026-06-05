@@ -1,13 +1,13 @@
 # LIBERO state-only smoke test — local notes (Task 10)
 
 > **What this is.** The honest record of the time-boxed Task-10 validation bonus
-> (`t7-local-prep-plan.md` Task 10): can we stand up a **state-only** (no render, no
+> (`local-prep-plan.md` Task 10): can we stand up a **state-only** (no render, no
 > policy, 8 GB-safe) MuJoCo-backed robot env on the M1 box, dump its real
 > ground-truth schema, and confirm the Task-4 `PrivilegedState` contract is
 > constructible from it? Script: [`../../scripts/libero_state_smoketest.py`](../../scripts/libero_state_smoketest.py).
 >
 > **Date:** 2026-06-03. **Box:** Apple Silicon (arm64), 8 GB, Python 3.11.14, `uv`.
-> **Isolation:** throwaway venv at `~/.cache/t7-libero-smoke/venv` — the core `.venv`
+> **Isolation:** throwaway venv at `~/.cache/evasion_tax-libero-smoke/venv` — the core `.venv`
 > was **not** touched (plan: "never let this destabilise the core env").
 
 ---
@@ -84,7 +84,7 @@ GPU-node pinned stack resolves** — so none is a project risk:
    local combo is **not representative** of production anyway.
 4. **uv editable `.pth` unreliable on this host** (already documented in the plan):
    `import libero` failed after `pip install -e` and needed a `PYTHONPATH` shim — the
-   same M1 quirk noted for the `t7` editable install.
+   same M1 quirk noted for the `evasion_tax` editable install.
 
 The smoke-test script handles this gracefully: a `torch`/LIBERO `ImportError`
 (Tier L) silently falls back to Tier R, and a box with neither lib falls back to a
@@ -94,9 +94,9 @@ clean SKIP. On the GPU node (torch + GL + LIBERO present), Tier L runs automatic
 
 ## Decision (recorded)
 
-- **Keep synthetic fixtures** (`tests/t7/metric/fixtures_state.py`) as the metric-(A)
+- **Keep synthetic fixtures** (`tests/evasion_tax/metric/fixtures_state.py`) as the metric-(A)
   test contract — unchanged.
-- **Do not create `src/t7/metric/state_libero.py` yet.** Wire the concrete LIBERO
+- **Do not create `src/evasion_tax/metric/state_libero.py` yet.** Wire the concrete LIBERO
   `StateAdapter` on the GPU node (runbook Step 6 / metric-(A) signal check), where
   the real LIBERO env + checkpoints + BDDL goal regions exist. The smoke test proved
   the *target* `PrivilegedState` schema is sound, so that adapter is a mapping job,
@@ -107,12 +107,12 @@ clean SKIP. On the GPU node (torch + GL + LIBERO present), Tier L runs automatic
 
 ### GPU-node reproduction (for the runbook)
 ```bash
-# inside the pinned t7-openvla env (Py3.10, LIBERO + robosuite 1.4, torch, GL):
+# inside the pinned evasion_tax-openvla env (Py3.10, LIBERO + robosuite 1.4, torch, GL):
 python scripts/libero_state_smoketest.py     # Tier L should now run (torch + GL present)
 ```
 Then add `target_region` (from the BDDL goal) + the LIBERO object-name mapping and,
-on a clean reset, materialise `src/t7/metric/state_libero.py`.
+on a clean reset, materialise `src/evasion_tax/metric/state_libero.py`.
 
 ### Cleanup
-The isolated env is disposable: `rm -rf ~/.cache/t7-libero-smoke` removes the venv +
+The isolated env is disposable: `rm -rf ~/.cache/evasion_tax-libero-smoke` removes the venv +
 LIBERO clone (nothing in the repo depends on it).

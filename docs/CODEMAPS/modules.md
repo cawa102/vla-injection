@@ -1,6 +1,6 @@
 <!-- Generated: 2026-06-05 | Files scanned: 36 src (27 modules · 9 __init__) | Token estimate: ~900 -->
 
-# Modules — `src/t7`
+# Modules — `src/evasion_tax`
 
 Stands in for the template's `backend.md` (this is a library, not an HTTP backend).
 8 subpackages + root, **36 `.py` files** (27 modules · 9 `__init__`), **~4.3k LOC**.

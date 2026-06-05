@@ -1,4 +1,4 @@
-"""Put ``src/`` on ``sys.path`` so standalone scripts can ``import t7``.
+"""Put ``src/`` on ``sys.path`` so standalone scripts can ``import evasion_tax``.
 
 The editable install is unreliable on this host (uv regenerates its ``.pth`` on
 every run), so each script imports this module first — its import side effect

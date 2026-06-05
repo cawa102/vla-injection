@@ -1,7 +1,6 @@
-<!-- Generated: 2026-06-05 | Source: src/t7/records.py, eval/cross_layer.py | Token estimate: ~550 -->
+<!-- Generated: 2026-06-05 | Source: src/evasion_tax/records.py, eval/cross_layer.py | Token estimate: ~550 -->
 
-# Data — T7
-
+# Data — Embodiment Evasion Tax
 No database. "Data" = the frozen-dataclass contract in `records.py` + the write-once `results/`
 logs (absent until the first GPU run; gatekept by `repro/run_logger.RunLogger`).
 

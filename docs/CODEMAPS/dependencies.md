@@ -1,7 +1,6 @@
 <!-- Generated: 2026-06-05 | Source: pyproject.toml, configs/env/, scripts/ | Token estimate: ~600 -->
 
-# Dependencies — T7
-
+# Dependencies — Embodiment Evasion Tax
 ## Runtime (pyproject, model-free core — Python ≥3.10)
 `numpy` `scipy` `scikit-learn` (ROC/AUC) · `pydantic` v2 (frozen config schema) · `pyyaml` ·
 `matplotlib` (figures) · `huggingface-hub` (fetch OpenVLA stats). Dev: `pytest` `ruff`.
@@ -19,13 +18,13 @@ source on the GPU node — pins in `configs/env/requirements-gpu.txt`; runbook `
 
 ## CLI entry points (`scripts/`) — GPU-marked ones exit non-zero without CUDA (no silent no-op)
 ```
-GPU   run_benign.py        benign LIBERO baseline           → t7.config (load_config, cuda guard)
-GPU   run_attack.py        RoboGCG targeted redirect        → t7.config
-GPU   microbench_gcg.py    GCG timing micro-bench (D4/D7/D8) → t7.config
-GPU   fetch_openvla_stats  download stats + provenance       → t7.policy.openvla_stats
-local calibrate.py         tau from logged benign scores     → t7.detector.calibrate
-local evaluate.py          condition matrix → write-once results.json → t7.eval.harness, RunLogger
-local make_figures.py      regenerate M2 figures from results.json    → t7.eval.figures
+GPU   run_benign.py        benign LIBERO baseline           → evasion_tax.config (load_config, cuda guard)
+GPU   run_attack.py        RoboGCG targeted redirect        → evasion_tax.config
+GPU   microbench_gcg.py    GCG timing micro-bench (D4/D7/D8) → evasion_tax.config
+GPU   fetch_openvla_stats  download stats + provenance       → evasion_tax.policy.openvla_stats
+local calibrate.py         tau from logged benign scores     → evasion_tax.detector.calibrate
+local evaluate.py          condition matrix → write-once results.json → evasion_tax.eval.harness, RunLogger
+local make_figures.py      regenerate M2 figures from results.json    → evasion_tax.eval.figures
       libero_state_smoketest.py   Tier-R privileged-state smoke (no torch)
 ```
 `scripts/_bootstrap.py` puts `src/` on `sys.path` (uv editable `.pth` unreliable on this machine).

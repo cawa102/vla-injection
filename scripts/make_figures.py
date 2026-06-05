@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Regenerate all M2 figures from a logged ``results.json`` (model-free, local).
 
-Thin CLI over :func:`t7.eval.figures.make_figures`: reads the results table a run
+Thin CLI over :func:`evasion_tax.eval.figures.make_figures`: reads the results table a run
 logged and emits, per condition, a ROC curve, a score histogram, and a
 TPR@FPR-with-CI bar (plus a ladder placeholder) — purely from logged arrays, so
 figures are always script-regenerable (an M2 deliverable).
@@ -16,7 +16,7 @@ import argparse
 
 import _bootstrap  # noqa: F401  (import side effect: puts src/ on sys.path)
 
-from t7.eval.figures import make_figures  # noqa: E402
+from evasion_tax.eval.figures import make_figures  # noqa: E402
 
 
 def main(argv: list[str] | None = None) -> int:

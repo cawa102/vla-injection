@@ -1,10 +1,10 @@
 <!-- Generated: 2026-06-05 | Files scanned: 36 src | Token estimate: ~750 -->
 
-# Architecture — T7 (Embodiment Evasion Tax)
+# Architecture — Embodiment Evasion Tax
 
-MSc research code, **not** an app: no HTTP API, no UI, no DB. A Python package `src/t7`
+MSc research code, **not** an app: no HTTP API, no UI, no DB. A Python package `src/evasion_tax`
 (model-free, unit-tested on M1/8 GB) + a thin CLI in `scripts/` (GPU-node-only runs).
-Source of truth = `docs/core/t7-execution-playbook.md`. Siblings: [modules](modules.md) ·
+Source of truth = `docs/core/execution-playbook.md`. Siblings: [modules](modules.md) ·
 [data](data.md) · [dependencies](dependencies.md).
 
 ## What it measures

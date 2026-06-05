@@ -60,7 +60,7 @@ target actions. ASR (%):
 
 ## OpenVLA action codec — verified formula provenance (2026-05-31)
 
-The `t7.policy.action_codec` de-tokenise/un-normalise formula was read from the **OpenVLA source**
+The `evasion_tax.policy.action_codec` de-tokenise/un-normalise formula was read from the **OpenVLA source**
 (not memory — invariant #8). Source: `github.com/openvla/openvla` @ commit
 `c8f03f48af692657d3060c19588038c7220e9af9` (shallow-cloned 2026-05-31; MIT licence per the repo `LICENSE`).
 
@@ -101,8 +101,8 @@ the weights). Fill each `[on download]` cell at M1 before the checkpoint backs a
 Full spec: `configs/env/requirements-gpu.txt`. Confirm CUDA/driver/torch on Kelvin2 and record the real
 `pip freeze` into a run-env row here at M1.
 
-**Why this matters for T7.** RoboGCG shows the borrowed *input-side* defenses have **no usable operating
-point** (PF threshold unknowable a priori; smoothing destroys benign; multimodal PF fails outright). T7's
+**Why this matters for the Embodiment Evasion Tax.** RoboGCG shows the borrowed *input-side* defenses have **no usable operating
+point** (PF threshold unknowable a priori; smoothing destroys benign; multimodal PF fails outright). The project's
 FP-calibrated, benign-cost-measured *behavioral* (goal-action consistency) detector targets exactly that gap.
 The perplexity / text-only filter remains a **baseline to beat**, beatable because (i) the realistic
 multimodal PF fails, (ii) text PF has no settable threshold, (iii) it is blind to fluent / visual / adaptive
