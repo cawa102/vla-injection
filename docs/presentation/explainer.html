@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>T7 — A Friendly Guide to the Embodiment Evasion Tax</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================================
+   T7 — Friendly explainer.  Light · warm · soft · approachable.
+   A study aid, deliberately the opposite of the dark talk deck.
+   ============================================================ */
+:root{
+  --bg:        #fbf7f0;   /* warm cream */
+  --bg-2:      #fffdf9;
+  --surface:   #ffffff;
+  --ink:       #2c2a33;   /* soft near-black */
+  --ink-2:     #5d5a68;
+  --ink-3:     #918d9c;
+  --indigo:    #6c5ce7;   /* friendly primary */
+  --indigo-hi: #8b7df0;
+  --indigo-bg: #efeafc;
+  --teal:      #1aa897;   /* calm secondary / "defence" */
+  --teal-bg:   #e3f5f1;
+  --coral:     #f0805e;   /* used ONLY for the attack / injection */
+  --coral-bg:  #fdeae3;
+  --amber:     #e0a32e;   /* "now / in progress" */
+  --amber-bg:  #fcf2db;
+  --line:      #ece6dc;
+  --line-2:    #ded6c8;
+  --shadow:    0 10px 30px -16px rgba(60,42,80,.28);
+  --shadow-sm: 0 4px 14px -8px rgba(60,42,80,.25);
+
+  --display: "Fraunces","Iowan Old Style",Georgia,serif;
+  --body:    "Hanken Grotesk",system-ui,-apple-system,sans-serif;
+  --mono:    "IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+}
+
+*{ box-sizing:border-box; }
+html{ scroll-behavior:smooth; scroll-padding-top:84px; }
+html,body{ margin:0; padding:0; }
+body{
+  font-family:var(--body);
+  color:var(--ink);
+  line-height:1.62;
+  background:
+    radial-gradient(120% 80% at 100% -10%, #f3ecfb 0%, rgba(243,236,251,0) 50%),
+    radial-gradient(90% 60% at -10% 110%, #e3f5f1 0%, rgba(227,245,241,0) 55%),
+    var(--bg);
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+
+/* ---------- top nav ---------- */
+.nav{
+  position:sticky; top:0; z-index:50;
+  display:flex; align-items:center; gap:18px;
+  padding:12px clamp(16px,4vw,44px);
+  background:rgba(251,247,240,.86);
+  backdrop-filter:saturate(1.4) blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.nav .brand{
+  font:600 1.02rem/1 var(--display);
+  letter-spacing:.01em; color:var(--ink);
+  display:flex; align-items:center; gap:.55em; white-space:nowrap;
+}
+.nav .brand .pip{ width:.7em; height:.7em; border-radius:50%; background:var(--indigo); box-shadow:0 0 0 4px var(--indigo-bg); }
+.nav .links{ display:flex; gap:4px; flex-wrap:wrap; margin-left:auto; }
+.nav a{
+  font:500 .82rem/1 var(--body); text-decoration:none; color:var(--ink-2);
+  padding:7px 11px; border-radius:9px; transition:background .15s,color .15s; white-space:nowrap;
+}
+.nav a:hover{ background:var(--indigo-bg); color:var(--indigo); }
+.nav a.active{ background:var(--indigo); color:#fff; }
+
+/* ---------- layout ---------- */
+main{ max-width:920px; margin:0 auto; padding:0 clamp(18px,5vw,32px) 90px; }
+section{ padding-top:54px; }
+section > .eyebrow{
+  font:600 .72rem/1 var(--mono); letter-spacing:.18em; text-transform:uppercase;
+  color:var(--indigo); margin:0 0 .6em;
+}
+h1{ font:600 clamp(2.1rem,5.4vw,3.2rem)/1.06 var(--display); letter-spacing:-.01em; margin:.1em 0 .25em; }
+h2{ font:600 clamp(1.5rem,3.6vw,2.1rem)/1.15 var(--display); letter-spacing:-.005em; margin:.2em 0 .5em; }
+h3{ font:600 1.12rem/1.3 var(--body); margin:1.4em 0 .4em; color:var(--ink); }
+p{ margin:.55em 0 1em; color:var(--ink-2); }
+p strong, li strong{ color:var(--ink); font-weight:600; }
+a.inline{ color:var(--indigo); text-decoration:none; border-bottom:1.5px solid var(--indigo-bg); }
+a.inline:hover{ border-bottom-color:var(--indigo); }
+code{ font:500 .9em var(--mono); background:#f4eee4; color:#564f73; padding:.12em .4em; border-radius:5px; }
+.lead{ font-size:1.12rem; color:var(--ink-2); }
+
+/* ---------- hero ---------- */
+.hero{ padding-top:46px; }
+.hero .kicker{
+  display:inline-flex; align-items:center; gap:.6em;
+  font:600 .74rem/1 var(--mono); letter-spacing:.14em; text-transform:uppercase;
+  color:var(--teal); background:var(--teal-bg); padding:7px 13px; border-radius:999px;
+}
+.hero .sub{ font-size:1.18rem; max-width:42ch; }
+.status{
+  display:flex; flex-wrap:wrap; gap:10px; margin:22px 0 6px;
+}
+.chip{
+  display:inline-flex; align-items:center; gap:.5em;
+  font:500 .82rem/1.2 var(--body); padding:8px 13px; border-radius:11px;
+  background:var(--surface); border:1px solid var(--line-2); box-shadow:var(--shadow-sm);
+}
+.chip .k{ font:600 .68rem/1 var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); }
+.chip .dot{ width:.6em; height:.6em; border-radius:50%; }
+.dot.green{ background:var(--teal); } .dot.amber{ background:var(--amber); } .dot.grey{ background:var(--ink-3); }
+
+/* ---------- cards & callouts ---------- */
+.card{
+  background:var(--surface); border:1px solid var(--line); border-radius:16px;
+  padding:20px 22px; box-shadow:var(--shadow); margin:18px 0;
+}
+.grid{ display:grid; gap:16px; }
+.grid.two{ grid-template-columns:repeat(2,1fr); }
+.grid.three{ grid-template-columns:repeat(3,1fr); }
+@media (max-width:680px){ .grid.two,.grid.three{ grid-template-columns:1fr; } }
+
+.note{
+  border-left:4px solid var(--indigo); background:var(--indigo-bg);
+  padding:14px 18px; border-radius:0 12px 12px 0; margin:18px 0;
+}
+.note.warn{ border-color:var(--coral); background:var(--coral-bg); }
+.note .t{ font-weight:600; color:var(--ink); display:block; margin-bottom:.2em; }
+.note p{ margin:.3em 0 0; }
+
+.analogy{
+  font-style:italic; color:var(--ink-2);
+  background:var(--amber-bg); border-radius:12px; padding:12px 16px; margin:12px 0;
+  border:1px dashed #e7cf94;
+}
+.analogy::before{ content:"🧩  "; font-style:normal; }
+
+/* ---------- diagrams ---------- */
+.figwrap{ background:var(--bg-2); border:1px solid var(--line); border-radius:16px; padding:20px; margin:18px 0; box-shadow:var(--shadow-sm); }
+.figwrap figcaption{ font-size:.86rem; color:var(--ink-3); margin-top:12px; text-align:center; }
+.flow{ display:flex; align-items:stretch; gap:0; flex-wrap:wrap; justify-content:center; }
+.node{
+  flex:1 1 120px; min-width:108px; text-align:center;
+  border-radius:13px; padding:13px 10px; border:1.5px solid var(--line-2);
+  background:var(--surface); position:relative;
+}
+.node .lbl{ font:600 .92rem/1.2 var(--body); color:var(--ink); }
+.node .desc{ font-size:.74rem; color:var(--ink-3); margin-top:3px; }
+.node.input{ border-color:#cdbef3; background:var(--indigo-bg); }
+.node.model{ border-color:#b9aef0; background:#f3effe; }
+.node.detect{ border-color:#9fd9cf; background:var(--teal-bg); }
+.node.metric{ border-color:#e7cf94; background:var(--amber-bg); }
+.arrow{ display:flex; align-items:center; justify-content:center; color:var(--ink-3); font-size:1.3rem; padding:0 4px; }
+@media (max-width:680px){ .arrow{ transform:rotate(90deg); width:100%; padding:6px 0; } .node{ flex-basis:100%; } }
+.inject{
+  margin-top:14px; text-align:center; font-size:.82rem; color:var(--coral);
+  font-weight:600;
+}
+
+/* layer stack */
+.stack{ display:flex; flex-direction:column; gap:10px; }
+.layer-row{
+  display:grid; grid-template-columns:64px 1fr; gap:14px; align-items:center;
+  border-radius:13px; padding:13px 16px; border:1px solid var(--line-2); background:var(--surface);
+}
+.layer-row .tag{ font:600 1rem/1 var(--mono); text-align:center; padding:10px 0; border-radius:9px; color:#fff; }
+.layer-row.l0 .tag{ background:#b0a8c4; } .layer-row.l1 .tag{ background:var(--indigo); } .layer-row.l2 .tag{ background:var(--teal); }
+.layer-row h4{ margin:0 0 2px; font:600 1rem/1.2 var(--body); }
+.layer-row p{ margin:0; font-size:.9rem; }
+
+/* ---------- claims / honesty ---------- */
+.do-dont{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+@media (max-width:680px){ .do-dont{ grid-template-columns:1fr; } }
+.do-dont .col{ border-radius:14px; padding:16px 18px; border:1px solid var(--line); }
+.do-dont .do{ background:var(--teal-bg); border-color:#bfe5dd; }
+.do-dont .dont{ background:var(--coral-bg); border-color:#f3cbbd; }
+.do-dont h4{ margin:.1em 0 .6em; font:600 1.02rem/1 var(--body); display:flex; align-items:center; gap:.4em; }
+.do-dont ul{ margin:0; padding-left:1.1em; }
+.do-dont li{ margin:.4em 0; font-size:.92rem; color:var(--ink-2); }
+
+.headline-pair{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+@media (max-width:680px){ .headline-pair{ grid-template-columns:1fr; } }
+.headline-pair .h{ border-radius:14px; padding:18px; border:1px solid var(--line); background:var(--surface); box-shadow:var(--shadow-sm); }
+.headline-pair .h .badge{ font:600 .68rem/1 var(--mono); letter-spacing:.08em; text-transform:uppercase; padding:5px 9px; border-radius:7px; display:inline-block; margin-bottom:8px; }
+.headline-pair .h.a .badge{ background:var(--teal-bg); color:var(--teal); }
+.headline-pair .h.d .badge{ background:var(--indigo-bg); color:var(--indigo); }
+.headline-pair .h h4{ margin:.1em 0 .35em; font:600 1.05rem/1.25 var(--body); }
+.headline-pair .h p{ margin:0; font-size:.9rem; }
+
+/* ---------- research background ---------- */
+.stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:16px 0; }
+@media (max-width:680px){ .stats{ grid-template-columns:repeat(2,1fr); } }
+.stat{ background:var(--surface); border:1px solid var(--line); border-radius:13px; padding:14px 16px; box-shadow:var(--shadow-sm); }
+.stat .num{ font:600 1.55rem/1 var(--display); color:var(--coral); letter-spacing:-.01em; }
+.stat .cap{ font-size:.78rem; color:var(--ink-3); margin-top:5px; }
+
+.findings{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:16px 0; }
+@media (max-width:680px){ .findings{ grid-template-columns:1fr; } }
+.finding{ border-radius:14px; padding:16px 18px; border:1px solid var(--line); background:var(--surface); box-shadow:var(--shadow-sm); }
+.finding .verdict{ font:600 .62rem/1 var(--mono); letter-spacing:.07em; text-transform:uppercase; padding:4px 8px; border-radius:6px; display:inline-block; margin-bottom:9px; background:var(--coral-bg); color:#c1502f; }
+.finding h4{ margin:.1em 0 .45em; font:600 1rem/1.25 var(--body); }
+.finding p{ margin:0; font-size:.88rem; }
+.finding .why{ margin-top:.5em; font-size:.84rem; color:var(--ink-3); font-style:italic; }
+
+/* ---------- roadmap ---------- */
+.phases{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:10px 0 24px; }
+.phases .ph{ font:500 .82rem/1 var(--body); padding:8px 12px; border-radius:9px; background:var(--surface); border:1px solid var(--line-2); color:var(--ink-2); }
+.phases .ph.now{ background:var(--amber-bg); border-color:#e7cf94; color:#9a6c08; font-weight:600; }
+.phases .ph.done{ background:var(--teal-bg); border-color:#bfe5dd; color:var(--teal); }
+.phases .sep{ color:var(--ink-3); }
+
+.timeline{ display:flex; flex-direction:column; gap:8px; margin:8px 0; }
+.ms{
+  display:grid; grid-template-columns:54px 1fr; gap:14px; align-items:start;
+  background:var(--surface); border:1px solid var(--line); border-radius:13px; padding:13px 16px;
+}
+.ms .id{ font:600 1rem/1.1 var(--mono); padding:8px 0; text-align:center; border-radius:8px; background:#f4eee4; color:var(--ink-2); }
+.ms.done .id{ background:var(--teal-bg); color:var(--teal); }
+.ms.now .id{ background:var(--amber-bg); color:#9a6c08; }
+.ms .body h4{ margin:0 0 2px; font:600 .98rem/1.25 var(--body); display:flex; gap:.5em; align-items:center; flex-wrap:wrap; }
+.ms .body p{ margin:0; font-size:.88rem; }
+.ms .state{ font:600 .64rem/1 var(--mono); letter-spacing:.06em; text-transform:uppercase; padding:4px 8px; border-radius:6px; }
+.state.s-done{ background:var(--teal-bg); color:var(--teal); }
+.state.s-now{ background:var(--amber-bg); color:#9a6c08; }
+.state.s-next{ background:var(--indigo-bg); color:var(--indigo); }
+.state.s-todo{ background:#f0ece4; color:var(--ink-3); }
+
+.branches{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:8px; }
+@media (max-width:680px){ .branches{ grid-template-columns:1fr; } }
+.branch{ border-radius:13px; padding:15px 17px; border:1px solid var(--line); background:var(--surface); }
+.branch .n{ font:600 1.1rem/1 var(--display); }
+.branch.n .n{ color:var(--teal); } .branch.nm .n{ color:var(--amber); } .branch.f .n{ color:var(--ink-2); }
+.branch p{ margin:.4em 0 0; font-size:.86rem; }
+
+/* ---------- code map ---------- */
+.codegroup{ margin:16px 0; }
+.codegroup > h3{ display:flex; align-items:center; gap:.6em; }
+.codegroup > h3 .path{ font:500 .8rem var(--mono); color:var(--indigo); background:var(--indigo-bg); padding:3px 9px; border-radius:7px; }
+.files{ display:flex; flex-direction:column; gap:0; border:1px solid var(--line); border-radius:13px; overflow:hidden; background:var(--surface); }
+.file{ display:grid; grid-template-columns:minmax(150px,230px) 1fr; gap:14px; padding:11px 16px; border-top:1px solid var(--line); align-items:baseline; }
+.file:first-child{ border-top:none; }
+.file:nth-child(even){ background:#fdfbf7; }
+.file .fp{ font:500 .82rem/1.4 var(--mono); color:#564f73; word-break:break-word; }
+.file .fd{ font-size:.9rem; color:var(--ink-2); }
+@media (max-width:560px){ .file{ grid-template-columns:1fr; gap:3px; } }
+.legend{ display:flex; gap:14px; flex-wrap:wrap; font-size:.82rem; color:var(--ink-3); margin:6px 0 0; }
+.legend .tagdot{ display:inline-flex; align-items:center; gap:.4em; }
+.legend .sq{ width:.7em; height:.7em; border-radius:3px; }
+.sq.gpu{ background:var(--coral); } .sq.local{ background:var(--teal); }
+.gpu-pill,.local-pill{ font:600 .6rem/1 var(--mono); letter-spacing:.05em; padding:3px 6px; border-radius:5px; vertical-align:middle; margin-left:6px; }
+.gpu-pill{ background:var(--coral-bg); color:#c1502f; }
+.local-pill{ background:var(--teal-bg); color:var(--teal); }
+
+/* ---------- glossary ---------- */
+.glossary{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+@media (max-width:680px){ .glossary{ grid-template-columns:1fr; } }
+.term{ background:var(--surface); border:1px solid var(--line); border-radius:13px; padding:15px 17px; box-shadow:var(--shadow-sm); }
+.term .w{ font:600 1.02rem/1.2 var(--body); color:var(--ink); }
+.term .w .full{ font:500 .76rem var(--mono); color:var(--ink-3); margin-left:.4em; }
+.term p{ margin:.4em 0 0; font-size:.88rem; }
+.term .an{ display:block; margin-top:.5em; font-size:.84rem; font-style:italic; color:var(--teal); }
+.term .an::before{ content:"≈ "; font-style:normal; }
+
+/* ---------- footer ---------- */
+footer{ max-width:920px; margin:30px auto 0; padding:26px clamp(18px,5vw,32px) 50px; border-top:1px solid var(--line); color:var(--ink-3); font-size:.86rem; }
+footer code{ font-size:.82em; }
+footer a{ color:var(--indigo); text-decoration:none; }
+
+@media print{
+  .nav{ position:static; } html{ scroll-padding-top:0; }
+  .card,.term,.ms,.figwrap{ box-shadow:none; }
+  body{ background:#fff; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================== NAV ============================== -->
+<nav class="nav">
+  <span class="brand"><span class="pip"></span>T7 · Friendly Guide</span>
+  <span class="links">
+    <a href="#overview">Overview</a>
+    <a href="#background">Background</a>
+    <a href="#how">How it works</a>
+    <a href="#layers">The 3 inspectors</a>
+    <a href="#claims">What we claim</a>
+    <a href="#plan">The plan</a>
+    <a href="#code">Code map</a>
+    <a href="#glossary">Glossary</a>
+  </span>
+</nav>
+
+<main>
+
+<!-- ============================== HERO ============================== -->
+<section id="top" class="hero">
+  <span class="kicker">MSc Cyber Security &amp; AI · Individual Project</span>
+  <h1>The Embodiment<br>Evasion Tax</h1>
+  <p class="lead sub">A friendly guide to what this research is, why it matters, where it's going, and what every piece of code does — no jargon required.</p>
+
+  <div class="status">
+    <span class="chip"><span class="k">Phase</span><span class="dot amber"></span>Design → starting experiments</span>
+    <span class="chip"><span class="k">Code</span><span class="dot green"></span>Local prep done · 362 tests green</span>
+    <span class="chip"><span class="k">Waiting on</span><span class="dot grey"></span>GPU access (Kelvin2)</span>
+    <span class="chip"><span class="k">Updated</span>2026-06-03</span>
+  </div>
+  <p style="font-size:.92rem;color:var(--ink-3);max-width:60ch;margin-top:14px">
+    One question in one sentence: <em>when someone secretly hijacks a robot's instructions,
+    which kind of "inspector" is hardest for the attacker to sneak past — and how much does
+    sneaking past it cost them?</em>
+  </p>
+</section>
+
+<!-- ============================== OVERVIEW ============================== -->
+<section id="overview">
+  <p class="eyebrow">The Big Picture</p>
+  <h2>What this project is about</h2>
+
+  <p>Modern robots can be controlled by a single AI model that looks at a camera image, reads a
+  plain-English instruction, and decides how to move. These are called <strong>VLA models</strong>
+  — <em>Vision-Language-Action</em>. This project studies one called <strong>OpenVLA-7B</strong>,
+  running in a <strong>simulator</strong> (no real robot), on a manipulation benchmark called
+  <strong>LIBERO</strong>.</p>
+
+  <div class="analogy">Think of a VLA model like a very literal kitchen helper: you hand it a
+  photo of the worktop and a sticky note that says "put the red cup on the tray", and it moves its
+  arm to do exactly that.</div>
+
+  <h3>The threat: someone tampers with the instruction</h3>
+  <p>An attacker can secretly add a hidden chunk of text to the instruction — a carefully crafted
+  <strong>adversarial suffix</strong> — that quietly redirects the robot's movements to a target
+  the attacker chose. The published attack we reproduce is called <strong>RoboGCG</strong>, and it
+  works <strong>over 90% of the time</strong>. This is an <em>integrity</em> problem: the robot
+  ends up doing the <em>wrong</em> thing while looking like it's following orders.</p>
+
+  <div class="analogy">It's as if someone scribbled an extra line on your sticky note in invisible
+  ink — the helper now reaches for a different object, even though the note still <em>looks</em>
+  normal to you.</div>
+
+  <h3>What we actually do: measure, don't promise</h3>
+  <p>We add "inspectors" that watch for hijacked behaviour, and we <strong>measure how good each
+  one is</strong> — and, crucially, <strong>how much attack-success an attacker has to give up to
+  fool it</strong>. That give-up cost is the <strong>"Embodiment Evasion Tax"</strong>. The big
+  idea: checking the robot's <em>actual movements</em> may be harder to fool than checking the
+  text or the model's inner signals, because movements are tied to the laws of physics.</p>
+
+  <div class="note">
+    <span class="t">This is a measurement study — not a claim of a perfect defence.</span>
+    <p>The honest result could be "this inspector is hard to fool" <em>or</em> "it's easy to fool".
+    Both are useful, publishable findings. We avoid over-claiming on purpose.</p>
+  </div>
+</section>
+
+<!-- ============================== BACKGROUND ============================== -->
+<section id="background">
+  <p class="eyebrow">Research Background</p>
+  <h2>What prior work has already shown</h2>
+
+  <p>Before adding any inspector, it helps to know what's already been proven — and exactly where
+  today's defences fall short. Our starting point is the published attack we reproduce:
+  <strong>RoboGCG</strong> (Jones et&nbsp;al., 2025 — Gray Swan AI, CMU &amp; UPenn).</p>
+
+  <h3>The attack, in detail</h3>
+  <p>RoboGCG is a <strong>white-box</strong> attack: the attacker can see the model's weights and uses an
+  optimisation algorithm (<strong>GCG</strong>) to search for a short text <strong>suffix</strong> that gets
+  glued onto the instruction <em>once</em>, at the start of the run. The goal isn't vague mischief — it's to
+  force the model to emit one specific, attacker-chosen low-level action (one of <code>256⁷</code> possible
+  7-number moves). They ran it on <strong>OpenVLA-7B fine-tuned for four LIBERO simulation suites</strong>
+  (Goal, Object, Spatial, and the harder long-horizon LIBERO-10).</p>
+
+  <div class="stats">
+    <div class="stat"><div class="num">&gt;90%</div><div class="cap">made the model emit the chosen action — on Goal, Object &amp; Spatial</div></div>
+    <div class="stat"><div class="num">77.4%</div><div class="cap">on the harder long-horizon LIBERO-10</div></div>
+    <div class="stat"><div class="num">3–10&nbsp;min</div><div class="cap">to craft one working attack on an H100 GPU</div></div>
+    <div class="stat"><div class="num">256⁷</div><div class="cap">distinct actions the suffix can steer toward</div></div>
+  </div>
+
+  <div class="note">
+    <span class="t">An honest nuance: this is "control authority", not proven harm.</span>
+    <p>The paper shows the attacker can make the model <em>output the exact action they picked</em> — it does
+    <strong>not</strong> claim the robot then completes a dangerous real-world task. That distinction is one we
+    keep carefully throughout this project too.</p>
+  </div>
+
+  <div class="analogy">Like a master key filed down by trial-and-error until it throws one exact bolt — it
+  doesn't "pick locks in general", it hits the single target the attacker chose.</div>
+
+  <h3>The defences they tried — and why each fell short</h3>
+  <p>The same paper borrowed three defences from the LLM-jailbreak world and tested them against the attack.
+  The result is the gap this whole project is built around: <strong>each one either doesn't work, or only works
+  by becoming unusable</strong>.</p>
+
+  <div class="findings">
+    <div class="finding">
+      <span class="verdict">no effect</span>
+      <h4>Multimodal perplexity filter</h4>
+      <p>Flags inputs that look statistically "weird" across the image and text together. Attack success was
+      essentially <strong>unchanged</strong>.</p>
+      <p class="why">The image embeddings dominate the score, so the odd text suffix is effectively invisible to it.</p>
+    </div>
+    <div class="finding">
+      <span class="verdict">no shippable setting</span>
+      <h4>Text-only perplexity filter</h4>
+      <p>Reads the text alone and can drop attack success to <strong>0%</strong> — but only if you already know
+      the correct threshold.</p>
+      <p class="why">That threshold "cannot be known beforehand in open-world robotics" — so there's no operating point you can actually deploy.</p>
+    </div>
+    <div class="finding">
+      <span class="verdict">breaks the robot</span>
+      <h4>Input smoothing / paraphrase</h4>
+      <p>Scrambles and rewrites the instruction to disrupt the suffix. It also drops attack success to
+      <strong>0%</strong>…</p>
+      <p class="why">…but garbles the real instruction too, so <strong>benign tasks also fall to 0% success</strong>. The cure kills the patient.</p>
+    </div>
+  </div>
+
+  <div class="note">
+    <span class="t">The authors' own conclusion: this is an open problem.</span>
+    <p>They argued the field needs a notion of <em>"VLA refusal"</em> — a way to stop a robot when its control is
+    being subverted. A defence with a <strong>false-alarm rate you can set in advance</strong> and a
+    <strong>measured cost to benign tasks</strong> is exactly the missing piece this project measures. (The L0
+    text filter above becomes our <em>baseline to beat</em>.)</p>
+  </div>
+
+  <p style="font-size:.92rem;color:var(--ink-3);max-width:64ch">And it isn't only robots: a 2025 study
+  (<em>The Attacker Moves Second</em>, Nasr et&nbsp;al.) showed adaptive attackers bypass <strong>12 recent LLM
+  defences more than 90% of the time</strong>. That's why this project <em>measures evasion cost</em> rather than
+  promising an unbreakable fix.</p>
+</section>
+
+<!-- ============================== HOW IT WORKS ============================== -->
+<section id="how">
+  <p class="eyebrow">Under the Hood</p>
+  <h2>How the pieces fit together</h2>
+
+  <p>Here's the full pipeline, from instruction to verdict. The attacker tampers with the
+  <span style="color:var(--coral);font-weight:600">instruction</span> at the very start; everything
+  downstream tries to notice that something went wrong.</p>
+
+  <figure class="figwrap">
+    <div class="flow">
+      <div class="node input"><div class="lbl">Instruction + Image</div><div class="desc">what to do + what it sees</div></div>
+      <div class="arrow">→</div>
+      <div class="node model"><div class="lbl">OpenVLA-7B</div><div class="desc">the robot's "brain"</div></div>
+      <div class="arrow">→</div>
+      <div class="node model"><div class="lbl">Action</div><div class="desc">7 numbers: move + grip</div></div>
+      <div class="arrow">→</div>
+      <div class="node detect"><div class="lbl">Detector</div><div class="desc">L0 / L1 / L2 inspectors</div></div>
+      <div class="arrow">→</div>
+      <div class="node metric"><div class="lbl">Metrics</div><div class="desc">caught it? at what cost?</div></div>
+    </div>
+    <div class="inject">⬑ attacker injects a hidden adversarial suffix into the instruction</div>
+    <figcaption>The data flow. Our code mostly lives in the <em>Detector</em> and <em>Metrics</em> stages.</figcaption>
+  </figure>
+
+  <p>An <strong>action</strong> is just seven numbers each step: six to move the arm and one to open
+  or close the gripper. The model outputs them as discrete "tokens", and our
+  <code>action_codec</code> turns those tokens back into real movement numbers.</p>
+
+  <h3>Three inspectors, judged fairly</h3>
+  <p>We don't use one inspector — we compare three, each looking at a different place in the
+  pipeline. The fairness rule: <strong>every inspector is tuned to the same false-alarm rate</strong>
+  (e.g. it's allowed to wrongly stop an innocent robot only 5% of the time). Only then do we compare
+  how often each one <em>catches the real attack</em>.</p>
+
+  <figure class="figwrap">
+    <div class="stack">
+      <div class="layer-row l0"><div class="tag">L0</div><div><h4>Input filter — reads the text</h4><p>Flags instructions that look statistically weird (high "perplexity"). Cheap, but easy to dodge with fluent wording.</p></div></div>
+      <div class="layer-row l1"><div class="tag">L1</div><div><h4>Internal probe — reads the model's mind</h4><p>Looks at the model's hidden internal signals to spot the tell-tale shift an injection causes.</p></div></div>
+      <div class="layer-row l2"><div class="tag">L2</div><div><h4>Action monitor — watches what it does</h4><p>Checks whether the robot's actual movements match the trusted goal. This is the project's star instrument.</p></div></div>
+    </div>
+    <figcaption>The deeper you inspect (text → mind → behaviour), the harder it should be to fool.</figcaption>
+  </figure>
+</section>
+
+<!-- ============================== LAYERS ============================== -->
+<section id="layers">
+  <p class="eyebrow">The Star Instrument</p>
+  <h2>The L2 action monitor &amp; the "tax" idea</h2>
+
+  <p>The heart of the project is the <strong>L2 goal-action consistency detector</strong>. At each
+  step it asks: <em>"given the trusted goal, do the last few actions make sense?"</em> If the robot
+  is supposed to reach for the tray but its arm keeps drifting somewhere else, that's inconsistent —
+  raise the alarm.</p>
+
+  <div class="grid three">
+    <div class="card"><h3 style="margin-top:0">It's causal</h3><p style="font-size:.9rem">It only looks at past and current actions — never the future, because a real robot can't peek ahead.</p></div>
+    <div class="card"><h3 style="margin-top:0">It uses a window</h3><p style="font-size:.9rem">One action is ambiguous, so it scores a short <em>sequence</em> of recent actions together.</p></div>
+    <div class="card"><h3 style="margin-top:0">It's calibrated</h3><p style="font-size:.9rem">You set its false-alarm budget <em>up front</em> (say 5%) — the missing ingredient older defences lacked.</p></div>
+  </div>
+
+  <h3>So what is the "Evasion Tax"?</h3>
+  <p>To slip past a good inspector, an attacker usually has to make their attack <em>weaker</em> — for
+  example, attack a less ambitious target so the movements look more normal. The <strong>tax</strong>
+  is exactly that loss: <em>how much attack-success must the attacker forfeit to avoid being caught?</em>
+  A higher tax means a stronger inspector.</p>
+
+  <div class="analogy">Like a shoplifter who, to avoid the camera, can only grab the items near the
+  exit — they get away unseen, but they steal far less. The "tax" is everything they had to leave behind.</div>
+
+  <p>The project's bet — to be <em>measured</em>, not assumed — is that the <strong>L2 action
+  monitor charges a higher tax than the L0 text filter or the L1 internal probe</strong>, because
+  physical movements are constrained by the world in a way that text and hidden signals are not.</p>
+</section>
+
+<!-- ============================== CLAIMS ============================== -->
+<section id="claims">
+  <p class="eyebrow">Honesty First</p>
+  <h2>The two headlines &amp; what we won't claim</h2>
+
+  <p>The "tax" actually splits into <strong>two separate findings</strong>. Keeping them apart is a
+  load-bearing rule in this project — mixing them up would be over-claiming.</p>
+
+  <div class="headline-pair">
+    <div class="h a">
+      <span class="badge">H6-A · guaranteed</span>
+      <h4>The oracle frontier</h4>
+      <p>Using a perfect "cheating" inspector that can see the simulator's ground truth, we measure the
+      <em>intrinsic</em> cost physics imposes on an ideal attacker. This is a <strong>floor result we
+      get no matter what</strong> — but it's a best-case lab measurement, <em>not</em> a real deployable defence.</p>
+    </div>
+    <div class="h d">
+      <span class="badge">H6-D · the headline (if affordable)</span>
+      <h4>The deployable cross-layer tax</h4>
+      <p>A <em>realistic</em> inspector (no cheating) vs a <em>realistic</em> adaptive attacker, comparing
+      L1 and L2 fairly. This is the true "tax" headline — but it's expensive, so we only commit to it
+      <strong>if the GPU timing test says it fits the calendar</strong>.</p>
+    </div>
+  </div>
+
+  <div class="note">
+    <span class="t">Why the split matters.</span>
+    <p>Only <strong>H6-D</strong> earns the word "tax". If the budget can't support it, we publish
+    <strong>H6-A</strong> honestly and report the cross-layer tax as <em>unresolved</em> — the title even
+    changes to match. We never let the floor result quietly carry the bigger claim.</p>
+  </div>
+
+  <div class="do-dont">
+    <div class="col do">
+      <h4>✅ What we DO claim</h4>
+      <ul>
+        <li>Goal-action consistency <em>can</em> detect injected actions — measured against a real attack.</li>
+        <li>The detector has a <strong>calibrated, set-in-advance false-alarm rate</strong> (the key novelty).</li>
+        <li>We report operational numbers no VLA benchmark gives: false-abort rate + confidence intervals, detection latency, benign task-success cost.</li>
+        <li>An idealized frontier isolates <em>embodiment</em> as a defensive constraint.</li>
+      </ul>
+    </div>
+    <div class="col dont">
+      <h4>🚫 What we do NOT claim</h4>
+      <ul>
+        <li>That this is an <strong>unbreakable defence</strong> — an adaptive attacker can fight back.</li>
+        <li>That the "runtime VLA-safety" research lane is empty — four 2026 papers already occupy nearby ground; we cite and differentiate.</li>
+        <li>That it's a new defence <em>paradigm</em> — it's a measuring instrument.</li>
+        <li>Anything about real robots, physical/visual attacks, or backdoors — strictly simulation, instruction-channel only.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== PLAN ============================== -->
+<section id="plan">
+  <p class="eyebrow">The Plan</p>
+  <h2>The roadmap, and where we are</h2>
+
+  <p>The project follows a strict order — never skip ahead:</p>
+  <div class="phases">
+    <span class="ph done">Scope</span><span class="sep">→</span>
+    <span class="ph done">Lit review</span><span class="sep">→</span>
+    <span class="ph now">Design (finishing)</span><span class="sep">→</span>
+    <span class="ph">Implement</span><span class="sep">→</span>
+    <span class="ph">Run &amp; analyse</span><span class="sep">→</span>
+    <span class="ph">Write up</span>
+  </div>
+
+  <h3>Milestones M0 → M9</h3>
+  <div class="timeline">
+    <div class="ms done"><div class="id">M0</div><div class="body"><h4>Design lock <span class="state s-done">done</span></h4><p>All key decisions settled; the "Evasion Tax" reframe agreed; this guidebook written. (Supervisor sign-off pending.)</p></div></div>
+    <div class="ms now"><div class="id">M1</div><div class="body"><h4>Environment + viability gate <span class="state s-now">next, needs GPU</span></h4><p>Stand up OpenVLA-7B on the real GPU; reproduce RoboGCG; <strong>run a timing test that picks the compute branch</strong>; go/no-go decision.</p></div></div>
+    <div class="ms"><div class="id">M2</div><div class="body"><h4>Floor detection layer <span class="state s-todo">to do</span></h4><p>Calibrate L0, L1, and the L2-oracle; report catch-rates at matched false-alarm budgets.</p></div></div>
+    <div class="ms"><div class="id">M3</div><div class="body"><h4>Oracle frontier — H6-A <span class="state s-todo">to do</span></h4><p>The idealized attacker vs the oracle → the guaranteed floor result. Delivered in <em>every</em> branch.</p></div></div>
+    <div class="ms"><div class="id">M4</div><div class="body"><h4>Deployable detector + the H6-D tax <span class="state s-todo">budget-gated</span></h4><p>A real, no-cheating detector vs a real adaptive attacker → the headline tax. Only if the branch allows.</p></div></div>
+    <div class="ms"><div class="id">M5</div><div class="body"><h4>Reference ladder + harder attacks <span class="state s-todo">stretch</span></h4><p>Coarser, more realistic goals + a fluent "SABER"-style attack where the text filter dies.</p></div></div>
+    <div class="ms"><div class="id">M6</div><div class="body"><h4>Consolidation + ablations <span class="state s-todo">to do</span></h4><p>Change one variable at a time; freeze results; make every figure script-regenerable.</p></div></div>
+    <div class="ms"><div class="id">M7–M9</div><div class="body"><h4>Analysis, write-up, submit <span class="state s-todo">to do</span></h4><p>Map every claim to evidence, draft the dissertation, polish, and submit (early Sept 2026).</p></div></div>
+  </div>
+
+  <h3>The compute branches (chosen by the M1 timing test)</h3>
+  <p>We don't yet know how fast the attack and probes run on the granted GPU. So we pre-register three
+  honest paths and let the <em>measured</em> speed pick one — no wishful thinking:</p>
+  <div class="branches">
+    <div class="branch n"><div class="n">Branch N</div><p><strong>Full tax.</strong> Everything fits → commit the H6-D headline in full, with room to spare.</p></div>
+    <div class="branch nm"><div class="n">Branch N−</div><p><strong>Scoped tax.</strong> Tight budget → a smaller but still real H6-D, with the gaps reported honestly.</p></div>
+    <div class="branch f"><div class="n">Branch F</div><p><strong>Oracle only.</strong> Too slow → publish H6-A; mark the deployable tax unresolved; title falls back.</p></div>
+  </div>
+  <p style="font-size:.9rem;color:var(--ink-3);margin-top:14px">Hardware: <strong>Kelvin2</strong> (A100/H100 GPUs, NI-HPC at QUB), running OpenVLA-7B in <code>bf16</code>. Reproducibility rule: log the exact card + settings every run, and never compare results across different hardware within one claim.</p>
+</section>
+
+<!-- ============================== CODE MAP ============================== -->
+<section id="code">
+  <p class="eyebrow">Code Map</p>
+  <h2>Every file, in one line</h2>
+  <p>The codebase is the Python package <code>t7</code> (under <code>src/t7/</code>), plus runnable
+  <code>scripts/</code> and <code>configs/</code>. It follows the data flow from earlier: define data →
+  configure → model glue → attack → metrics → detector → baselines → evaluation → reproducibility.
+  Package marker files (<code>__init__.py</code>) are skipped.</p>
+  <p class="legend">
+    <span class="tagdot"><span class="sq local"></span> runs locally (no model needed — pure math/stats)</span>
+    <span class="tagdot"><span class="sq gpu"></span> needs the GPU (real model / simulator)</span>
+  </p>
+
+  <div class="codegroup">
+    <h3>Shared foundation <span class="path">src/t7/</span></h3>
+    <div class="files">
+      <div class="file"><div class="fp">records.py</div><div class="fd">The shared, immutable "vocabulary" of the project: a rollout, a step, a target spec, a score, a decision.</div></div>
+    </div>
+  </div>
+
+  <div class="codegroup">
+    <h3>Configuration <span class="path">src/t7/config/</span></h3>
+    <div class="files">
+      <div class="file"><div class="fp">schema.py</div><div class="fd">Defines &amp; validates a run's settings (model, environment, attack, metric, detector) loaded from a YAML file — and enforces "change one variable at a time".</div></div>
+      <div class="file"><div class="fp">runtime.py</div><div class="fd">A safety gate that checks whether a real GPU is present, so model scripts fail loudly instead of pretending to work.</div></div>
+    </div>
+  </div>
+
+  <div class="codegroup">
+    <h3>Model glue <span class="path">src/t7/policy/</span></h3>
+    <div class="files">
+      <div class="file"><div class="fp">action_codec.py</div><div class="fd">Translates OpenVLA's discrete output tokens into real 7-number robot actions (verified against the model's source).</div></div>
+      <div class="file"><div class="fp">openvla_stats.py</div><div class="fd">Downloads the model's official dataset statistics and records exactly where they came from (provenance).</div></div>
+    </div>
+  </div>
+
+  <div class="codegroup">
+    <h3>The attacker side <span class="path">src/t7/attack/</span></h3>
+    <div class="files">
+      <div class="file"><div class="fp">dynamics.py</div><div class="fd">Turns "an action" into "what happens in the world" — a fast fake version for local tests, plus a real-simulator stub for the GPU.</div></div>
+      <div class="file"><div class="fp">frontier.py</div><div class="fd">Pure geometry for trade-off curves: given many (attack-success, evasion) points, find the best-possible frontier.</div></div>
+      <div class="file"><div class="fp">idealized_frontier.py</div><div class="fd">The "ideal" attacker (M-b): searches movement sequences to hit its target while dodging the L2 score — traces the H6-A frontier.</div></div>
+    </div>
+  </div>
+
+  <div class="codegroup">
+    <h3>The inspectors' brains <span class="path">src/t7/metric/</span></h3>
+    <div class="files">
+      <div class="file"><div class="fp">state.py</div><div class="fd">A clean adapter for the simulator's "privileged" ground truth (where the arm, gripper, and objects really are).</div></div>
+      <div class="file"><div class="fp">consistency_a.py</div><div class="fd">The L2-oracle metric (A): scores how well recent actions match the goal, using ground truth — the "ceiling" inspector.</div></div>
+      <div class="file"><div class="fp">coverage.py</div><div class="fd">Records which goal types metric A can honestly handle, so the attacker can't win by exploiting a blind spot.</div></div>
+      <div class="file"><div class="fp">probe_internal.py</div><div class="fd">The L1 inspector: a small classifier reading the model's hidden activations to spot an injection.</div></div>
+      <div class="file"><div class="fp">probe_confounds.py</div><div class="fd">Sanity checks for L1 (e.g. shuffle the labels — it should drop to chance) so a "win" isn't an accident.</div></div>
+    </div>
+  </div>
+
+  <div class="codegroup">
+    <h3>The decision maker <span class="path">src/t7/detector/</span></h3>
+    <div class="files">
+      <div class="file"><div class="fp">calibrate.py</div><div class="fd">Sets the alarm threshold so the false-alarm rate matches a chosen budget (e.g. 5%), measured on a calibration set.</div></div>
+      <div class="file"><div class="fp">decide.py</div><div class="fd">Makes the causal stop/allow call step-by-step, and measures detection latency (how late the alarm fired).</div></div>
+    </div>
+  </div>
+
+  <div class="codegroup">
+    <h3>Comparison baselines <span class="path">src/t7/baselines/</span></h3>
+    <div class="files">
+      <div class="file"><div class="fp">anomaly.py</div><div class="fd">A goal-blind "is this movement unusual?" detector our method must beat — proving goal-awareness actually helps.</div></div>
+      <div class="file"><div class="fp">perplexity.py</div><div class="fd">The L0 text-only filter: flags instructions whose wording looks statistically odd.</div></div>
+    </div>
+  </div>
+
+  <div class="codegroup">
+    <h3>Scoring &amp; evidence <span class="path">src/t7/eval/</span></h3>
+    <div class="files">
+      <div class="file"><div class="fp">harness.py</div><div class="fd">Runs the whole comparison grid and guarantees no cheating (tune on one split, report on a disjoint one).</div></div>
+      <div class="file"><div class="fp">metrics.py</div><div class="fd">The statistics toolbox: ROC/AUC, catch-rate at a fixed false-alarm rate, and proper confidence intervals.</div></div>
+      <div class="file"><div class="fp">cross_layer.py</div><div class="fd">Compares L0/L1/L2 head-to-head and computes the headline "tax" number (ΔASR) with bootstrap confidence intervals.</div></div>
+      <div class="file"><div class="fp">splits.py</div><div class="fd">Enforces that the calibration and test sets never share tasks, scenes, or seeds.</div></div>
+      <div class="file"><div class="fp">power.py</div><div class="fd">Checks we have enough data to make a claim (e.g. you need ~300 benign runs to honestly report a 1% false-alarm rate).</div></div>
+      <div class="file"><div class="fp">figures.py</div><div class="fd">Regenerates every chart purely from the logged results file — so figures are always reproducible.</div></div>
+    </div>
+  </div>
+
+  <div class="codegroup">
+    <h3>Reproducibility plumbing <span class="path">src/t7/repro/</span></h3>
+    <div class="files">
+      <div class="file"><div class="fp">seeds.py</div><div class="fd">Seeds every random-number generator so a run can be repeated exactly.</div></div>
+      <div class="file"><div class="fp">env_capture.py</div><div class="fd">Snapshots the exact environment (Python, packages, git commit, GPU driver) for the run log.</div></div>
+      <div class="file"><div class="fp">run_logger.py</div><div class="fd">A write-once logger that refuses to overwrite results — protecting the integrity of recorded experiments.</div></div>
+      <div class="file"><div class="fp">provenance.py</div><div class="fd">Hashes every downloaded file (SHA-256) and records where it came from.</div></div>
+    </div>
+  </div>
+
+  <div class="codegroup">
+    <h3>Runnable scripts <span class="path">scripts/</span></h3>
+    <div class="files">
+      <div class="file"><div class="fp">run_benign.py <span class="gpu-pill">GPU</span></div><div class="fd">Runs normal (un-attacked) robot rollouts in the simulator to get a baseline.</div></div>
+      <div class="file"><div class="fp">run_attack.py <span class="gpu-pill">GPU</span></div><div class="fd">Reproduces the RoboGCG attack and quarantines the adversarial output under <code>artifacts/untrusted/</code>.</div></div>
+      <div class="file"><div class="fp">microbench_gcg.py <span class="gpu-pill">GPU</span></div><div class="fd">Times how long one attack takes — the key measurement that picks the compute branch.</div></div>
+      <div class="file"><div class="fp">fetch_openvla_stats.py <span class="gpu-pill">GPU</span></div><div class="fd">Downloads the OpenVLA checkpoint statistics (needs the internet + model tooling).</div></div>
+      <div class="file"><div class="fp">calibrate.py <span class="local-pill">LOCAL</span></div><div class="fd">Sets the detector threshold from logged benign scores.</div></div>
+      <div class="file"><div class="fp">evaluate.py <span class="local-pill">LOCAL</span></div><div class="fd">Turns logged scores into the results file (catch-rates, AUC, intervals).</div></div>
+      <div class="file"><div class="fp">make_figures.py <span class="local-pill">LOCAL</span></div><div class="fd">Regenerates all charts from the results file.</div></div>
+      <div class="file"><div class="fp">libero_state_smoketest.py <span class="local-pill">LOCAL</span></div><div class="fd">A quick check that the simulator's ground-truth fits our expected data shape.</div></div>
+      <div class="file"><div class="fp">_bootstrap.py <span class="local-pill">LOCAL</span></div><div class="fd">A tiny helper so standalone scripts can import the <code>t7</code> package.</div></div>
+    </div>
+  </div>
+
+  <div class="codegroup">
+    <h3>Configuration files <span class="path">configs/</span></h3>
+    <div class="files">
+      <div class="file"><div class="fp">example_m2.yaml</div><div class="fd">An example run configuration showing every setting (seeds, model, attack, detector, splits).</div></div>
+      <div class="file"><div class="fp">env/requirements-gpu.txt</div><div class="fd">The pinned package list for the GPU machine (OpenVLA + simulator).</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== GLOSSARY ============================== -->
+<section id="glossary">
+  <p class="eyebrow">Plain-English Dictionary</p>
+  <h2>Glossary, with analogies</h2>
+
+  <div class="glossary">
+    <div class="term"><div class="w">VLA model <span class="full">Vision-Language-Action</span></div><p>An AI that takes a camera image + a text instruction and outputs robot actions.</p><span class="an">a kitchen helper that acts on a photo plus a sticky note.</span></div>
+    <div class="term"><div class="w">OpenVLA-7B</div><p>The specific open-source VLA model we study, with 7 billion parameters.</p><span class="an">the particular "brain" we put under the microscope.</span></div>
+    <div class="term"><div class="w">bf16 <span class="full">bfloat16</span></div><p>A compact number format that lets the big model fit on one GPU without losing much accuracy.</p><span class="an">packing a suitcase efficiently so everything still fits.</span></div>
+    <div class="term"><div class="w">Instruction injection</div><p>Sneaking hidden text into the instruction to redirect the robot's behaviour.</p><span class="an">a forged extra line on the sticky note.</span></div>
+    <div class="term"><div class="w">GCG / RoboGCG</div><p>An algorithm that searches for an adversarial text suffix; RoboGCG is its robot version (&gt;90% success).</p><span class="an">a lock-pick tuned by trial-and-error until the lock opens.</span></div>
+    <div class="term"><div class="w">LIBERO</div><p>The robot manipulation simulator and task set we run everything in — no real hardware.</p><span class="an">a flight simulator, but for a robot arm.</span></div>
+    <div class="term"><div class="w">Oracle</div><p>A "cheating" inspector allowed to see the simulator's hidden ground truth. Great for measuring limits; not deployable.</p><span class="an">an exam marked by someone holding the answer key.</span></div>
+    <div class="term"><div class="w">FPR / TPR</div><p>False-Positive Rate = how often it wrongly stops an innocent robot. True-Positive Rate = how often it catches a real attack.</p><span class="an">a smoke alarm: don't beep at toast (FPR), do beep at fire (TPR).</span></div>
+    <div class="term"><div class="w">Calibration</div><p>Tuning the alarm threshold in advance so the false-alarm rate equals a chosen budget — the key novelty here.</p><span class="an">setting a thermostat to a target before the room heats up.</span></div>
+    <div class="term"><div class="w">Pareto frontier</div><p>The curve of best possible trade-offs — here, attack-success vs. avoiding detection.</p><span class="an">the menu of "best deals" where you can't improve one thing without sacrificing another.</span></div>
+    <div class="term"><div class="w">Evasion tax</div><p>How much attack-success an attacker must give up to avoid being caught. Bigger = stronger inspector.</p><span class="an">what the shoplifter leaves behind to dodge the camera.</span></div>
+    <div class="term"><div class="w">L0 / L1 / L2</div><p>The three inspectors: text filter (L0), internal-signal probe (L1), and action monitor (L2).</p><span class="an">checking the note, the helper's thoughts, and its actual hands.</span></div>
+    <div class="term"><div class="w">ASR <span class="full">Attack Success Rate</span></div><p>How often the attack achieves its target.</p><span class="an">the lock-pick's batting average.</span></div>
+    <div class="term"><div class="w">SABER</div><p>A stealthier, fluent-sounding attack (low perplexity) that the L0 text filter struggles to catch — a possible later arm.</p><span class="an">a forged note in perfect handwriting.</span></div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p><strong>About this page.</strong> A friendly, high-level summary written to help build understanding
+  before the GPU experiments begin. It is a simplification — the authoritative sources of truth live in the repo:</p>
+  <p>
+    • Status, roadmap &amp; decisions → <code>docs/core/t7-execution-playbook.md</code><br>
+    • What &amp; why (threat model, design) → <code>docs/core/t7-goal-action-consistency-detector.md</code><br>
+    • Verified external facts → <code>docs/references/README.md</code> &nbsp;·&nbsp; Code → <code>src/t7/</code>
+  </p>
+  <p>Generated 2026-06-03 · MSc Cyber Security &amp; AI individual research project · simulation only, defensive research.</p>
+</footer>
+
+<script>
+/* Scroll-spy: highlight the nav link for the section in view. */
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll('.nav a'));
+  var map = {};
+  links.forEach(function (a) {
+    var id = a.getAttribute('href').slice(1);
+    var sec = document.getElementById(id);
+    if (sec) map[id] = a;
+  });
+  var sections = Object.keys(map).map(function (id) { return document.getElementById(id); });
+
+  var obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) {
+        links.forEach(function (a) { a.classList.remove('active'); });
+        var a = map[e.target.id];
+        if (a) a.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-45% 0px -50% 0px', threshold: 0 });
+
+  sections.forEach(function (s) { obs.observe(s); });
+})();
+</script>
+
+</body>
+</html>
