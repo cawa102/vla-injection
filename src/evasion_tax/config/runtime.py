@@ -1,7 +1,7 @@
 """GPU-node runtime guard for the model/GPU-dependent scripts (Task 9).
 
 ``run_benign`` / ``run_attack`` / ``microbench_gcg`` need OpenVLA-7B + CUDA, which
-do not exist on the local 8 GB host. Rather than silently no-op, each script
+do not exist on a local dev host without CUDA. Rather than silently no-op, each script
 calls :func:`cuda_available` and, when it returns ``False``, prints
 :func:`gpu_required_message` and exits non-zero. Keeping both here means the
 three scripts share one tested guard instead of duplicating the check.
@@ -13,7 +13,7 @@ from __future__ import annotations
 def cuda_available() -> bool:
     """Return ``True`` iff a CUDA-capable torch runtime is present.
 
-    On the local M1 host torch is not installed, so this returns ``False``
+    On a local dev host without a CUDA torch build this returns ``False``
     (the guard fires); it never raises.
     """
     try:

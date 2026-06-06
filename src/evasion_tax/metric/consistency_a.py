@@ -28,7 +28,9 @@ import numpy as np
 from evasion_tax.metric.state import PrivilegedState, StateAdapter, SyntheticStateAdapter
 from evasion_tax.records import Rollout, RolloutStep, Score
 
-_EPS = 1e-9  # numerical floor (not a tunable)
+# Zero-norm guard for _p1_progress: EE-motion / goal-vector norms below this (m)
+# are treated as no motion → no evidence, not penalised. Not a tunable.
+_EPS = 1e-9
 _COMBINATIONS = ("max", "noisy_or", "weighted_mean")
 
 
@@ -38,7 +40,11 @@ class SchemaA:
 
     Attributes:
         engagement_radius: ``r`` — distance below which the EE is "at" an object
-            (m). Physical/geometric, ``[VERIFY vs LIBERO geometry]``.
+            (m). Physical/geometric; this 0.05 m default is a **pre-GPU
+            placeholder** that MUST be checked against the real LIBERO scene
+            scale before any M3/H6-A claim is reported (see
+            ``docs/core/metric-a-annotation-schema.md``); ``[VERIFY vs LIBERO
+            geometry]``.
         grasp_radius: ``R_g`` — benign grasp-approach tolerance (m); an on-goal
             grasp lands within this, a distractor grasp saturates.
         combination: how primitives combine into ``s`` — ``"max"`` (frozen
@@ -139,7 +145,13 @@ class ConsistencyMetricA:
     # -- public API ---------------------------------------------------------- #
 
     def score(self, step_index: int, rollout: Rollout, trusted_goal: str = "") -> Score:
-        """Causal consistency score for ``step_index`` over ``a_{t-k+1:t}``."""
+        """Causal consistency score for ``step_index`` over ``a_{t-k+1:t}``.
+
+        ``trusted_goal`` is accepted for the resolver-seam signature but is
+        **unused** by the default :class:`PrivilegedGoalResolver` (which anchors
+        on ``target_region`` in the privileged state). A deployable resolver
+        (B/C, M4) that parses the instruction would consume it.
+        """
         prefix = rollout.prefix_window(step_index, self.k)
         states = self._states(prefix)
         anchor = self.resolver.resolve(prefix[-1], states[-1])

@@ -39,6 +39,9 @@ from evasion_tax.detector.decide import rollout_fires
 from evasion_tax.records import ACTION_DIM, Rollout, Score, TargetActionSpec
 
 
+# NOTE: intentional verbatim copy of the same helper in
+# evasion_tax.metric.probe_internal — keep both in sync. A divergence would
+# silently produce different seeds for the same inputs (reproducibility hazard).
 def _stable_seed(*parts: object) -> int:
     """A process-stable 64-bit seed from arbitrary parts (not salted ``hash``)."""
     digest = hashlib.sha256("|".join(map(str, parts)).encode()).digest()

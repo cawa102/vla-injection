@@ -9,7 +9,7 @@ an in-experiment handicap, so here the filter is calibrated like everything else
 Structure (Dependency Inversion, mirroring the metric's resolver seam):
 
 * :class:`PerplexityScorer` — the swappable perplexity backend.
-* :class:`MockPerplexityScorer` — deterministic, no LM (8 GB host); a table for
+* :class:`MockPerplexityScorer` — deterministic, no LM (local dev host); a table for
   exact tests plus a crude symbol-density surrogate so it is self-contained.
 * :class:`RealPerplexityScorer` — the LM-perplexity backend, a GPU-only stub.
 * :class:`PerplexityFilter` — emits one ``Score`` per rollout from the rollout's
@@ -73,7 +73,8 @@ class RealPerplexityScorer:
     def score_perplexity(self, instruction: str) -> float:
         raise NotImplementedError(
             "GPU: the real LM-perplexity backend requires the model and is not "
-            "available on the local 8 GB host; use MockPerplexityScorer for tests."
+            "available on a local dev host without CUDA; use MockPerplexityScorer "
+            "for tests."
         )
 
 

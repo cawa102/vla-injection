@@ -70,6 +70,8 @@ def pareto_frontier(points: Sequence[FrontierPoint]) -> tuple[FrontierPoint, ...
     unique = list(best.values())
 
     kept = [p for p in unique if not any(_dominates(q, p) for q in unique if q is not p)]
+    # `asr` is an inert tiebreak: in a deduplicated non-dominated set, equal
+    # evasion implies equal asr, so this sorts effectively by evasion alone.
     return tuple(sorted(kept, key=lambda p: (p.evasion, p.asr)))
 
 

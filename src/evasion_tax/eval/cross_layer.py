@@ -215,6 +215,9 @@ def bootstrap_delta_asr(
         except ValueError:
             # A degenerate replicate (a layer absent in the resample) is skipped
             # and surfaced via n_effective, never silently counted as the point.
+            # Watch the n_effective/n_boot ratio: a large shortfall (rule of
+            # thumb < ~0.9) means a sparse population thinned the bootstrap, so
+            # the CI is wide/unreliable and should be flagged in the results table.
             continue
 
     if not deltas:

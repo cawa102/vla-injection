@@ -2,7 +2,7 @@
 
 The non-negotiable reproducibility layer (CLAUDE.md): deterministic seeding,
 environment capture, data/checkpoint provenance, and a write-once run logger.
-Pure Python + NumPy; torch is soft-imported and absent on the local M1 machine.
+Pure Python + NumPy; torch is soft-imported and absent on a local dev host without CUDA.
 """
 
 from evasion_tax.repro.env_capture import capture_env

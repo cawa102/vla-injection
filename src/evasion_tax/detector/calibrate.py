@@ -106,7 +106,8 @@ def calibrate(
         # Nothing may fire: tau at the global max → strict `>` excludes everything.
         tau = float(units.max())
     elif p == 1.0:
-        # (Almost) everything fires: tau just below the global min.
+        # Everything fires: tau just below the global min, so strict `>` fires
+        # on every unit (all scores are >= the min).
         tau = float(np.nextafter(units.min(), -np.inf))
     else:
         # Conservative quantile: `higher` snaps tau onto a benign unit, which

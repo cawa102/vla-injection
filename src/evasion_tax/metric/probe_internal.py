@@ -41,6 +41,9 @@ from evasion_tax.records import Rollout, Score
 _DIRECTION_SEED = 20260603
 
 
+# NOTE: intentional verbatim copy of the same helper in
+# evasion_tax.attack.idealized_frontier — keep both in sync. A divergence would
+# silently produce different seeds for the same inputs (reproducibility hazard).
 def _stable_seed(*parts: object) -> int:
     """A process-stable 64-bit seed from arbitrary parts (not salted ``hash``)."""
     digest = hashlib.sha256("|".join(map(str, parts)).encode()).digest()
@@ -100,7 +103,7 @@ class SyntheticActivationExtractor:
 
     A test stand-in only — like :class:`~evasion_tax.baselines.perplexity.MockPerplexityScorer`,
     it *fabricates* a class-correlated signal so the probe's mechanics are
-    exercisable on the 8 GB host. Per-rollout noise is seeded from
+    exercisable on the local dev host. Per-rollout noise is seeded from
     ``(run_id, task_id, seed)`` (process-stable), so a given rollout always yields
     the same features; an injected rollout (``steps[0].attacked``) is shifted by
     ``signal`` along a fixed direction. ``signal = 0`` makes the classes
@@ -142,8 +145,8 @@ class RealActivationExtractor:
     def extract(self, rollout: Rollout) -> ActivationFeatures:
         raise NotImplementedError(
             "GPU: the real OpenVLA activation extractor requires the model and is "
-            "not available on the local 8 GB host; use SyntheticActivationExtractor "
-            "for tests."
+            "not available on a local dev host without CUDA; use "
+            "SyntheticActivationExtractor for tests."
         )
 
 
@@ -204,8 +207,8 @@ class InternalProbe:
         n_features = len(features[0].activation_delta)
         x = _feature_matrix(features, n_features=n_features)
         # `random_state` is inert under the default `lbfgs` solver (deterministic);
-        # `seed` is recorded on the probe for provenance and stays meaningful if M2
-        # swaps to a stochastic solver (saga/liblinear) that consumes it.
+        # `seed` is recorded on the probe for provenance and stays meaningful for
+        # any future variant whose solver/head consumes `random_state`.
         model = LogisticRegression(C=C, max_iter=1000, random_state=seed).fit(x, y)
         return cls(model=model, n_features=n_features, seed=seed)
 

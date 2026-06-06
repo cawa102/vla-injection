@@ -1,8 +1,8 @@
 """Deterministic seeding across Python ``random``, NumPy, and (optionally) torch.
 
 Seeding is the first reproducibility invariant (CLAUDE.md): every run pins and
-records its seed. ``torch`` is soft-imported so this module works on the local M1
-machine where torch is not installed.
+records its seed. ``torch`` is soft-imported so this module works on a local dev
+host where torch is not installed.
 """
 
 from __future__ import annotations
@@ -31,7 +31,7 @@ def seed_everything(seed: int) -> dict:
     seeded.append("numpy")
 
     try:
-        # Optional/soft import by design: torch is absent on the local M1 machine.
+        # Optional/soft import by design: torch is absent on a local dev host without CUDA.
         import torch  # type: ignore[import-not-found]
     except ImportError:
         torch = None

@@ -1,7 +1,7 @@
 """Embodiment Evasion Tax — goal-action consistency detection for instruction-injected VLA policies.
 
-This package holds the **model-free** components that can be built and unit-tested on the
-local M1 (8 GB) machine: reproducibility infrastructure, the privileged-state consistency
+This package holds the **model-free** components that can be built and unit-tested on a
+local dev host without CUDA: reproducibility infrastructure, the privileged-state consistency
 metric (A), the FP-calibrated detector, evaluation statistics, the OpenVLA action codec,
 and baselines.
 

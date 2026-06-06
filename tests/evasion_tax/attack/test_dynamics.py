@@ -140,7 +140,7 @@ def test_ee_pos_integrates_position_deltas_cumulatively():
 
 
 def test_gripper_open_maps_from_gripper_dim():
-    dyn = SyntheticDynamics(gripper_close_threshold=0.0)
+    dyn = SyntheticDynamics(gripper_open_threshold=0.0)
     s = make_scenario(n_steps=2)
     # step 0 gripper dim = +1 (open), step 1 gripper dim = -1 (closed).
     actions = np.array(

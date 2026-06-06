@@ -26,7 +26,7 @@ import matplotlib.pyplot as plt
 from evasion_tax.eval.harness import ResultsTable
 from evasion_tax.eval.metrics import roc_auc
 
-# Headless backend so figures render without a display (CI / 8 GB host).
+# Headless backend so figures render without a display (CI / local dev host).
 plt.switch_backend("Agg")
 
 StrPath = str | PathLike[str]
@@ -163,5 +163,8 @@ def make_figures(results_dir: StrPath, out_dir: StrPath) -> list[Path]:
         written.append(
             _tpr_at_fpr_figure(name, cond.get("operating_points", []), out_dir)
         )
+    # M3 TODO: replace this static stub with the real trusted-reference ladder
+    # call when the M3 rung ladder lands — do not silently keep emitting the
+    # placeholder alongside the real figure.
     written.append(_ladder_placeholder_figure(out_dir))
     return written

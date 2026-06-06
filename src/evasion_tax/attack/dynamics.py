@@ -9,7 +9,7 @@ to a :class:`~evasion_tax.records.Rollout`. This is the deferred-to-GPU swap poi
 * :class:`SyntheticDynamics` — a deterministic kinematic integrator for local
   tests; emits ``privileged_state`` dicts matching the
   :class:`~evasion_tax.metric.state.SyntheticStateAdapter` schema so metric A scores them
-  on the 8 GB host. Reachability is the per-dim action bound only.
+  on the local dev host. Reachability is the per-dim action bound only.
 * :class:`RealDynamics` — the LIBERO-sim backend on the GPU node (real
   reachability + ground-truth state); a stub that raises here.
 
@@ -126,19 +126,19 @@ class SyntheticDynamics:
 
     The end-effector integrates the position-delta action dims cumulatively
     (``ee[t] = init + pos_scale * cumsum(actions[:t+1, 0:3])``); the gripper is
-    open at step ``t`` iff ``actions[t, gripper_dim] >= gripper_close_threshold``;
+    open at step ``t`` iff ``actions[t, gripper_dim] >= gripper_open_threshold``;
     objects are static. Emits one :class:`RolloutStep` per step with a
     ``privileged_state`` dict the :class:`~evasion_tax.metric.state.SyntheticStateAdapter`
     accepts. The real backend replaces this on the GPU.
 
     Args:
         pos_scale: metres of EE motion per unit position-delta action.
-        gripper_close_threshold: gripper-dim value at/above which the gripper is
-            reported open.
+        gripper_open_threshold: gripper-dim value at/above which the gripper is
+            reported open (closed below).
     """
 
     pos_scale: float = 0.05
-    gripper_close_threshold: float = 0.0
+    gripper_open_threshold: float = 0.0
 
     def rollout(
         self, scenario: AttackScenario, actions: np.ndarray, *, attacked: bool = True
@@ -168,7 +168,7 @@ class SyntheticDynamics:
                 action=tuple(float(x) for x in arr[t]),
                 privileged_state={
                     "ee_pos": (float(ee[t, 0]), float(ee[t, 1]), float(ee[t, 2])),
-                    "gripper_open": bool(arr[t, _GRIPPER_DIM] >= self.gripper_close_threshold),
+                    "gripper_open": bool(arr[t, _GRIPPER_DIM] >= self.gripper_open_threshold),
                     "object_poses": dict(scenario.object_poses),
                     "target_region": scenario.target_region,
                 },

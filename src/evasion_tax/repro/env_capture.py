@@ -2,8 +2,8 @@
 
 Records platform, Python version, an installed-dependency snapshot, the git
 commit, and torch/CUDA/driver versions when present. Every field degrades
-gracefully (to ``None``) rather than raising, so the same call works on the
-local M1 machine (no torch, no CUDA) and on the GPU node (A100/H100).
+gracefully (to ``None``) rather than raising, so the same call works on a
+local dev host (no torch, no CUDA) and on the GPU node (A100/H100).
 """
 
 from __future__ import annotations
@@ -47,10 +47,10 @@ def _dependency_snapshot() -> dict[str, str]:
 def _torch_versions() -> tuple[str | None, str | None, str | None]:
     """Return ``(torch_version, cuda_version, driver_version)``.
 
-    All three are ``None`` when torch is not importable (the M1 case).
+    All three are ``None`` when torch is not importable (the no-CUDA dev-host case).
     """
     try:
-        # Optional/soft import by design: torch is absent on the local M1 machine.
+        # Optional/soft import by design: torch is absent on a local dev host without CUDA.
         import torch  # type: ignore[import-not-found]
     except ImportError:
         return None, None, None
