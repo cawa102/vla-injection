@@ -25,7 +25,6 @@ this module supplies only the single-frontier geometry.
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import Protocol, runtime_checkable
@@ -37,15 +36,7 @@ from evasion_tax.attack.frontier import Frontier, FrontierPoint, pareto_frontier
 from evasion_tax.detector.calibrate import Threshold
 from evasion_tax.detector.decide import rollout_fires
 from evasion_tax.records import ACTION_DIM, Rollout, Score, TargetActionSpec
-
-
-# NOTE: intentional verbatim copy of the same helper in
-# evasion_tax.metric.probe_internal — keep both in sync. A divergence would
-# silently produce different seeds for the same inputs (reproducibility hazard).
-def _stable_seed(*parts: object) -> int:
-    """A process-stable 64-bit seed from arbitrary parts (not salted ``hash``)."""
-    digest = hashlib.sha256("|".join(map(str, parts)).encode()).digest()
-    return int.from_bytes(digest[:8], "big")
+from evasion_tax.repro import stable_seed
 
 
 @runtime_checkable
@@ -135,7 +126,7 @@ class IdealizedActionAttacker:
     def _candidates(self, scenario: AttackScenario, target: TargetActionSpec, *, tradeoff: float):
         """Sustained (constant-per-candidate) action commands to search over."""
         rng = np.random.default_rng(
-            _stable_seed(scenario.task_id, scenario.seed, tradeoff, self.n_candidates)
+            stable_seed(scenario.task_id, scenario.seed, tradeoff, self.n_candidates)
         )
         lo, hi = scenario.action_low, scenario.action_high
         commands = rng.uniform(lo, hi, size=(self.n_candidates, ACTION_DIM))

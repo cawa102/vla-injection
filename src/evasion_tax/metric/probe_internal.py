@@ -26,7 +26,6 @@ feature record + adds an MLP head then, and is intentionally **not** built here.
 
 from __future__ import annotations
 
-import hashlib
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Protocol, runtime_checkable
@@ -35,19 +34,11 @@ import numpy as np
 from sklearn.linear_model import LogisticRegression
 
 from evasion_tax.records import Rollout, Score
+from evasion_tax.repro import stable_seed
 
 # Fixed seed for the synthetic class-signal direction: stable across processes
 # and runs (reproducibility — never the salted built-in hash()).
 _DIRECTION_SEED = 20260603
-
-
-# NOTE: intentional verbatim copy of the same helper in
-# evasion_tax.attack.idealized_frontier — keep both in sync. A divergence would
-# silently produce different seeds for the same inputs (reproducibility hazard).
-def _stable_seed(*parts: object) -> int:
-    """A process-stable 64-bit seed from arbitrary parts (not salted ``hash``)."""
-    digest = hashlib.sha256("|".join(map(str, parts)).encode()).digest()
-    return int.from_bytes(digest[:8], "big")
 
 
 @dataclass(frozen=True)
@@ -127,7 +118,7 @@ class SyntheticActivationExtractor:
         if len(rollout.steps) == 0:
             raise ValueError("cannot extract features from an empty rollout")
         step = rollout.steps[0]
-        rng = np.random.default_rng(_stable_seed(step.run_id, step.task_id, step.seed))
+        rng = np.random.default_rng(stable_seed(step.run_id, step.task_id, step.seed))
         vec = rng.standard_normal(self._dim)
         if step.attacked:
             vec = vec + self._signal * self._direction

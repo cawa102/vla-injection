@@ -2,14 +2,28 @@
 
 Seeding is the first reproducibility invariant (CLAUDE.md): every run pins and
 records its seed. ``torch`` is soft-imported so this module works on a local dev
-host where torch is not installed.
+host where torch is not installed. Also exposes :func:`stable_seed`, a
+process-stable seed derived from arbitrary parts (never the salted built-in
+``hash``).
 """
 
 from __future__ import annotations
 
+import hashlib
 import random
 
 import numpy as np
+
+
+def stable_seed(*parts: object) -> int:
+    """A process-stable 64-bit seed derived from arbitrary parts.
+
+    Hashes ``"|".join(map(str, parts))`` with SHA-256 and takes the first 8
+    bytes, so identical parts always yield the same seed across processes and
+    runs — never the salted built-in ``hash`` (reproducibility invariant).
+    """
+    digest = hashlib.sha256("|".join(map(str, parts)).encode()).digest()
+    return int.from_bytes(digest[:8], "big")
 
 
 def seed_everything(seed: int) -> dict:

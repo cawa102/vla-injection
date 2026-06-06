@@ -8,7 +8,7 @@ Pure Python + NumPy; torch is soft-imported and absent on a local dev host witho
 from evasion_tax.repro.env_capture import capture_env
 from evasion_tax.repro.provenance import record_provenance, sha256_file
 from evasion_tax.repro.run_logger import RunHandle, RunLogger
-from evasion_tax.repro.seeds import seed_everything
+from evasion_tax.repro.seeds import seed_everything, stable_seed
 
 __all__ = [
     "RunHandle",
@@ -17,4 +17,5 @@ __all__ = [
     "record_provenance",
     "seed_everything",
     "sha256_file",
+    "stable_seed",
 ]
