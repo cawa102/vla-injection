@@ -25,6 +25,7 @@ this module supplies only the single-frontier geometry.
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import Protocol, runtime_checkable
@@ -37,6 +38,8 @@ from evasion_tax.detector.calibrate import Threshold
 from evasion_tax.detector.decide import rollout_fires
 from evasion_tax.records import ACTION_DIM, Rollout, Score, TargetActionSpec
 from evasion_tax.repro import stable_seed
+
+_log = logging.getLogger(__name__)
 
 
 @runtime_checkable
@@ -192,11 +195,22 @@ def trace_frontier(
 
     The ``supported`` predicate restricts the attacker to metric-A-supported
     targets (Codex review #2 #6): unsupported scenarios are excluded and returned,
-    a pre-registered limitation, never silently scored.
+    a pre-registered limitation, never silently scored. **Required for a real
+    H6-A/M3 run** — omitting it lets the attacker preferentially exploit an
+    unmodelled blind spot uncounted, so a warning is emitted when it is ``None``
+    over a non-trivial population. Use a coverage manifest's ``predicate_for_target``.
 
     Returns:
         ``(frontier, excluded)`` — the frontier and the excluded scenarios.
     """
+    if supported is None and len(population) > 1:
+        _log.warning(
+            "trace_frontier called with supported=None over %d scenarios: a real "
+            "H6-A/M3 run MUST pass a coverage predicate "
+            "(CoverageManifest.predicate_for_target) so the attacker cannot exploit "
+            "an unmodelled blind spot uncounted (Codex #2 #6).",
+            len(population),
+        )
     excluded = [s for s in population if supported is not None and not supported(s)]
     active = [s for s in population if supported is None or supported(s)]
     if not active:

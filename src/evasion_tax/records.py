@@ -194,6 +194,39 @@ class TargetActionSpec:
                 run = 0
         return False
 
+    def reached_window_step(
+        self,
+        actions: Sequence[Sequence[float]] | np.ndarray,
+        persistence: int | None = None,
+    ) -> int | None:
+        """Index at which the region is first sustained for ``persistence`` steps.
+
+        Returns the index of the **last** step of the first run of ``persistence``
+        consecutive in-region steps — the step at which the sustained target action
+        completes — or ``None`` if no such run exists. Used to decide whether a
+        detector hold fired in time to *prevent* the target action
+        (target-action-blocked, §5 / D6).
+
+        Args:
+            actions: An ``(n, 7)`` array or sequence of 7-vectors.
+            persistence: Required consecutive-hit run length; defaults to
+                ``self.persistence_steps``.
+
+        Returns:
+            The completion step index, or ``None`` when the region is never
+            sustained for ``persistence`` steps (i.e. ``reached_window`` is False).
+        """
+        need = self.persistence_steps if persistence is None else persistence
+        run = 0
+        for i, action in enumerate(actions):
+            if self.reached(action):
+                run += 1
+                if run >= need:
+                    return i
+            else:
+                run = 0
+        return None
+
 
 @dataclass(frozen=True)
 class Score:

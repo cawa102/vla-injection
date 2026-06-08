@@ -236,6 +236,44 @@ def test_target_spec_reached_window_accepts_numpy_array():
     assert spec.reached_window(actions) is True
 
 
+def test_target_spec_reached_window_step_returns_completion_index():
+    spec = TargetActionSpec(dims=(0,), low=(0.0,), high=(1.0,), persistence_steps=3)
+    in_region = (0.5,) + (0.0,) * 6
+    out_region = (5.0,) + (0.0,) * 6
+    # First run of 3 completes at index 2.
+    actions = [in_region, in_region, in_region, out_region, in_region]
+    assert spec.reached_window_step(actions) == 2
+
+
+def test_target_spec_reached_window_step_first_completion_after_reset():
+    spec = TargetActionSpec(dims=(0,), low=(0.0,), high=(1.0,), persistence_steps=2)
+    in_region = (0.5,) + (0.0,) * 6
+    out_region = (5.0,) + (0.0,) * 6
+    # Run resets at index 1; the first run of 2 completes at index 3.
+    actions = [in_region, out_region, in_region, in_region, in_region]
+    assert spec.reached_window_step(actions) == 3
+
+
+def test_target_spec_reached_window_step_none_when_never_sustained():
+    spec = TargetActionSpec(dims=(0,), low=(0.0,), high=(1.0,), persistence_steps=3)
+    in_region = (0.5,) + (0.0,) * 6
+    out_region = (5.0,) + (0.0,) * 6
+    actions = [in_region, in_region, out_region, in_region, out_region]
+    assert spec.reached_window_step(actions) is None
+
+
+def test_target_spec_reached_window_step_agrees_with_reached_window():
+    spec = TargetActionSpec(dims=(0,), low=(0.0,), high=(1.0,), persistence_steps=2)
+    in_region = (0.5,) + (0.0,) * 6
+    out_region = (5.0,) + (0.0,) * 6
+    for actions in (
+        [in_region, in_region],
+        [in_region, out_region, in_region],
+        [out_region, out_region],
+    ):
+        assert (spec.reached_window_step(actions) is not None) == spec.reached_window(actions)
+
+
 def test_target_spec_mismatched_low_high_dims_lengths_raise():
     with pytest.raises(ValueError, match="same length"):
         TargetActionSpec(dims=(0, 1), low=(0.0,), high=(1.0, 1.0), persistence_steps=1)

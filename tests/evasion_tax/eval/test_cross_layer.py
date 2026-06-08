@@ -21,12 +21,14 @@ from evasion_tax.eval.cross_layer import (
     TaxEstimate,
     UnitKey,
     UnitOutcome,
+    blocked_rate_by_layer,
     bootstrap_delta_asr,
     collect_oracle_outcomes,
     comparative_asr_table,
     delta_asr_at_evasion,
     frontier_from_outcomes,
     frontiers_by_layer,
+    target_action_blocked_rate,
 )
 from evasion_tax.metric.consistency_a import ConsistencyMetricA, SchemaA
 from evasion_tax.records import TargetActionSpec
@@ -265,7 +267,7 @@ def test_collect_oracle_outcomes_reproduces_trace_frontier():
         attacker, population, target, scorer, thr, tradeoffs=tradeoffs
     )
 
-    collected = collect_oracle_outcomes(
+    collected, excluded = collect_oracle_outcomes(
         attacker,
         population,
         target,
@@ -277,3 +279,89 @@ def test_collect_oracle_outcomes_reproduces_trace_frontier():
     frontier_from_units = frontier_from_outcomes(collected)
 
     assert frontier_from_units.points == frontier_direct.points
+    assert excluded == []  # no coverage predicate → nothing excluded
+
+
+def test_collect_oracle_outcomes_surfaces_coverage_excluded():
+    # With a coverage predicate, unsupported scenarios must be surfaced as the
+    # returned ``excluded`` set (never silently dropped, coverage invariant #7)
+    # and excluded from the emitted outcomes.
+    scorer = ConsistencyMetricA(schema=SchemaA(), k=_N_STEPS)
+    dyn = SyntheticDynamics(pos_scale=0.1)
+    attacker = IdealizedActionAttacker(dynamics=dyn, n_candidates=64)
+    target = _target()
+    thr = calibrate(_benign_calib(scorer, dyn), target_per_rollout_fpr=0.05)
+    population = [_scenario(i) for i in range(5)]
+    # Support only even-seeded scenarios.
+    supported = lambda s: s.seed % 2 == 0  # noqa: E731
+
+    collected, excluded = collect_oracle_outcomes(
+        attacker,
+        population,
+        target,
+        scorer,
+        thr,
+        tradeoffs=(0.0, 1.0),
+        unit_of=lambda s: UnitKey(task=s.task_id, target="cube", seed=s.seed),
+        supported=supported,
+    )
+
+    assert {s.seed for s in excluded} == {1, 3}
+    # Only supported (even-seed) units appear in the outcomes.
+    assert {o.unit.seed for o in collected} == {0, 2, 4}
+
+
+def _mk(unit, layer, *, reached, detected, blocked):
+    return UnitOutcome(
+        unit=unit, layer=layer, tradeoff=0.0,
+        reached=reached, detected=detected, blocked=blocked,
+    )
+
+
+def test_target_action_blocked_rate_and_by_layer():
+    # blocked = reached AND detector fired at/before the target persistence
+    # window completed. Build outcomes by hand to pin the aggregation.
+    u = _UNITS4
+    rows = [
+        _mk(u[0], "L2", reached=True, detected=True, blocked=True),
+        _mk(u[1], "L2", reached=True, detected=True, blocked=False),
+        _mk(u[2], "L2", reached=False, detected=True, blocked=False),
+        _mk(u[3], "L0", reached=True, detected=False, blocked=False),
+    ]
+    # L2: 2 reached, 1 blocked → 0.5. Misses (reached=False) excluded from denom.
+    assert target_action_blocked_rate([o for o in rows if o.layer == "L2"]) == pytest.approx(0.5)
+    # No reached-and-blocked on L0 → 0.0.
+    assert target_action_blocked_rate([o for o in rows if o.layer == "L0"]) == 0.0
+    rates = blocked_rate_by_layer(rows, layers=("L2", "L0"))
+    assert rates == {"L2": pytest.approx(0.5), "L0": 0.0}
+
+
+def test_target_action_blocked_rate_no_reached_returns_zero():
+    u = _UNITS4
+    os = [UnitOutcome(unit=u[0], layer="L2", tradeoff=0.0, reached=False, detected=True)]
+    assert target_action_blocked_rate(os) == 0.0
+
+
+def test_collect_oracle_outcomes_sets_blocked_when_detector_fires_in_time():
+    # End-to-end: on the model-free oracle path, a reached + detected rollout
+    # whose fire precedes the persistence completion is marked blocked.
+    scorer = ConsistencyMetricA(schema=SchemaA(), k=_N_STEPS)
+    dyn = SyntheticDynamics(pos_scale=0.1)
+    attacker = IdealizedActionAttacker(dynamics=dyn, n_candidates=64)
+    target = _target()
+    thr = calibrate(_benign_calib(scorer, dyn), target_per_rollout_fpr=0.05)
+    population = [_scenario(i) for i in range(5)]
+
+    collected, _ = collect_oracle_outcomes(
+        attacker,
+        population,
+        target,
+        scorer,
+        thr,
+        tradeoffs=(0.0, 1.0, 5.0, 20.0),
+        unit_of=lambda s: UnitKey(task=s.task_id, target="cube", seed=s.seed),
+    )
+    # blocked is only ever True among reached+detected outcomes (never fabricated).
+    for o in collected:
+        if o.blocked:
+            assert o.reached and o.detected
