@@ -285,10 +285,15 @@ def abort_rate(n_aborted: int, n_total: int) -> float:
     """Fraction of rollouts aborted by the detector.
 
     Raises:
-        ValueError: If ``n_total <= 0``.
+        ValueError: If ``n_total <= 0``, or ``n_aborted`` is outside ``[0,
+            n_total]`` — a bad upstream count would otherwise silently yield a
+            rate > 1 (or < 0) and mask the counting bug (mirrors
+            :func:`proportion_ci`'s bounds check).
     """
     if n_total <= 0:
         raise ValueError(f"n_total must be > 0, got {n_total}")
+    if not (0 <= n_aborted <= n_total):
+        raise ValueError(f"n_aborted must be in [0, {n_total}], got {n_aborted}")
     return n_aborted / n_total
 
 

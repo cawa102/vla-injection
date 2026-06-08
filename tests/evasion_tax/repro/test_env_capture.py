@@ -1,6 +1,10 @@
 """Tests for the environment-capture helper."""
 
+import sys
+import types
+
 from evasion_tax.repro import capture_env
+from evasion_tax.repro.env_capture import _torch_versions
 
 REQUIRED_KEYS = {
     "platform",
@@ -57,3 +61,32 @@ def test_git_commit_is_resolved_in_this_repo():
     assert isinstance(commit, str)
     assert len(commit) == 40
     int(commit, 16)  # hex-decodable
+
+
+def _fake_torch(*, available: bool, raw_driver: int = 0) -> types.SimpleNamespace:
+    # A stand-in for the `torch` module (SimpleNamespace, not ModuleType, so it
+    # accepts arbitrary attributes); injected via sys.modules so the soft
+    # ``import torch`` inside _torch_versions picks it up.
+    return types.SimpleNamespace(
+        __version__="2.2.2",
+        version=types.SimpleNamespace(cuda="12.4" if available else None),
+        cuda=types.SimpleNamespace(is_available=lambda: available),
+        _C=types.SimpleNamespace(_cuda_getDriverVersion=lambda: raw_driver),
+    )
+
+
+def test_driver_version_resolves_with_mocked_cuda_torch(monkeypatch):
+    # C1: on a GPU node, the packed-int driver version must resolve (the old
+    # torch.cuda.driver_version() does not exist and silently yielded None).
+    monkeypatch.setitem(sys.modules, "torch", _fake_torch(available=True, raw_driver=12040))
+    torch_v, cuda_v, driver_v = _torch_versions()
+    assert torch_v == "2.2.2"
+    assert cuda_v == "12.4"
+    assert driver_v == "12.4"  # 12040 → major 12, minor 4
+
+
+def test_driver_version_none_when_cuda_unavailable(monkeypatch):
+    monkeypatch.setitem(sys.modules, "torch", _fake_torch(available=False))
+    torch_v, _, driver_v = _torch_versions()
+    assert torch_v == "2.2.2"
+    assert driver_v is None

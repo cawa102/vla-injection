@@ -306,6 +306,17 @@ def test_abort_rate_rejects_zero_total():
         abort_rate(0, 0)
 
 
+def test_abort_rate_rejects_count_above_total():
+    # A bad upstream count must fail loudly, not silently yield a rate > 1 (C2).
+    with pytest.raises(ValueError):
+        abort_rate(13, 12)
+
+
+def test_abort_rate_rejects_negative_count():
+    with pytest.raises(ValueError):
+        abort_rate(-1, 12)
+
+
 def test_detection_latency_summary_filters_none():
     latencies = [0, 2, 5, None, None, 3]
     summary = detection_latency_summary(latencies)

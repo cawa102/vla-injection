@@ -61,8 +61,11 @@ def _torch_versions() -> tuple[str | None, str | None, str | None]:
     driver_version: str | None = None
     try:
         if torch.cuda.is_available():
-            major, minor = torch.cuda.driver_version()  # type: ignore[attr-defined]
-            driver_version = f"{major}.{minor}"
+            # torch.cuda exposes no public driver_version(); the runtime CUDA
+            # driver version comes from the private binding as a packed int
+            # (e.g. 12040 → "12.4": major = raw // 1000, minor = (raw % 1000) // 10).
+            raw = torch._C._cuda_getDriverVersion()  # type: ignore[attr-defined]
+            driver_version = f"{raw // 1000}.{(raw % 1000) // 10}"
     except (AttributeError, RuntimeError, ValueError, TypeError):
         driver_version = None
 
