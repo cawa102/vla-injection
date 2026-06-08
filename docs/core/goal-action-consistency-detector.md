@@ -182,8 +182,9 @@ calibration as the headline result.
 5. **Baselines** — benign-instruction success; RoboGCG published numbers; and a naive baseline detector
    (e.g. perplexity/text-only filter) to beat. Position vs `actalign` conceptually.
 6. **Metrics** — ROC/AUC of the consistency score; **TPR @ fixed benign FPR** (on a **held-out** split);
-   **benign task-success degradation**, **attack detection rate**, **unsafe-action-blocked rate**, and
-   **abort rate / latency**. *(NOT "recovered task-success": a hold/abort fallback prevents the unsafe action
+   **benign task-success degradation**, **attack detection rate**, **target-action-blocked rate** (invariant
+   #9: the target is a low-level action until a semantic-redirect arm lands — not "unsafe-action-blocked"), and
+   **abort rate / latency**. *(NOT "recovered task-success": a hold/abort fallback prevents the target action
    but does not complete the task — only measure recovery if you also build replan / clean-instruction
    re-execution.)* Report degradation **across the trusted-reference ladder**.
 7. **Compute budget** — GCG sweep cost (we now run on A100/H100, so the published H100 GCG timings should ≈

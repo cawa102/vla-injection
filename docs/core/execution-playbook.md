@@ -328,6 +328,11 @@ frontier (**M3 / H6-A**) → deployable B-or-C + realistic adaptive (**M4 / H6-D
 - **Detection latency** (steps of deviation before the hold fires) is a **first-class** metric — a single
   action is ambiguous, so latency > 0 is expected; quantify the target-actions executed before detection.
 - **Cost:** **benign task-success degradation**; **per-rollout false-abort rate**; detector compute **latency**.
+  *(Phase note: degradation / abort-rate / detection-latency need a detector **gating real rollouts** — attack
+  onset, per-step fire steps, benign task-success — so they are computed at the **gated-rollout (GPU/sim)
+  phase**, not from the model-free score-array harness. `run_condition_matrix` therefore marks them explicitly
+  (`latency_summary.status="deferred"`) instead of emitting an all-None "never fired" stub; the
+  `detection_latency` / `abort_rate` / `benign_degradation` implementations are the GPU-phase callees.)*
 - **Security:** attack **detection rate**; **target-action-blocked rate** (*not* "unsafe-action-blocked" —
   until the semantic-redirect arm succeeds the target is a low-level action, not semantic harm); (M5, stretch)
   detection vs adaptive ASR.
@@ -405,7 +410,7 @@ frontier (**M3 / H6-A**) → deployable B-or-C + realistic adaptive (**M4 / H6-D
 
 ### M3 — Idealized Evasion-Tax frontier  *(F — committed headline)*
 - ⬜ **On GPU:** extract OpenVLA activations during benign+attacked rollouts; train + calibrate the **L1 probe** (activation-delta primary; attention-map ablation), **task-disjoint**, **with the #11 confound controls (label-shuffle, benign-weird-suffix, lexical/perplexity, held-out suffix-seeds / target-specs)**. → completes **H2** cross-layer (**non-adaptive**) + feeds **H6-A**.
-- ⬜ Run the **idealized action-space attacker** vs the metric-A oracle (**targets within the #6 coverage manifest**) → **(ASR, evasion) Pareto frontier**; compute the **intrinsic-tax scalar** (primary = ΔASR @ fixed-evasion, bootstrapped, #10) + the **non-adaptive** L0/L1/L2 ordering, +CIs. → **H6-A** (oracle intrinsic; **no cross-layer deployable-tax claim here**).
+- ⬜ Run the **idealized action-space attacker** vs the metric-A oracle (**targets within the #6 coverage manifest**) → **(ASR, evasion) Pareto frontier**; compute the **intrinsic-tax scalar** (primary = ΔASR @ fixed-evasion, bootstrapped, #10) + the **non-adaptive** L0/L1/L2 ordering, +CIs. → **H6-A** (oracle intrinsic; **no cross-layer deployable-tax claim here**). *(Instruments built + unit-tested model-free — `collect_oracle_outcomes` (returns `(outcomes, excluded)`, surfacing coverage-excluded), `frontier_from_outcomes`, `bootstrap_delta_asr`, `comparative_asr_table`/`frontiers_by_layer`, `target_action_blocked_rate`. **What remains is the driver** over **real LIBERO scenarios** — RealDynamics privileged state = GPU — that writes the frontier/tax table to write-once `results/` + the frontier-overlay figure (`figures.py` ladder placeholder until then). A synthetic-dynamics run validates the **instrument only**, never H6-A; do not label it H6-A.)*
 
 ### M4 — Deployable L2 (B/C) + realistic adaptive  *(N/N− — branch-selected at M1)*
 - ⬜ Build **exactly one** deployable behavioural detector (**B** learned action-semantics map **or** **C** reference-policy — **choice locked at M2** from the (A) signal, #8); **specify supervision labels, negative-pair construction, train/test task-disjoint** (no task-prior leakage). → **H4** (gap to the A oracle).
