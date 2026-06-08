@@ -109,6 +109,34 @@ cat "$RUN/attack_outcome.json"
 
 ---
 
+## 3b. H1 dry-run — metric-(A) benign-vs-attacked separation
+
+[`scripts/demo_metric_separation.py`](../../scripts/demo_metric_separation.py) takes the
+benign and attacked rollouts, runs them through the **real** non-deployable consistency
+metric (A) and the **real** eval statistics (`roc_auc`, `tpr_at_fpr`), and reports the
+benign-vs-attacked separation the GPU viability gate (H1) tests for real.
+
+```bash
+# zero-setup (synthetic rollouts, runs entirely in the core .venv — has scipy/sklearn):
+PYTHONPATH=src .venv/bin/python scripts/demo_metric_separation.py --n 16
+
+# real MuJoCo ground truth (the eval layer adds scipy+sklearn+matplotlib to the sim venv):
+"$SMOKE/venv/bin/python" -m pip install "scipy>=1.11" "scikit-learn>=1.3" "matplotlib>=3.8"
+PYTHONPATH=src "$SMOKE/venv/bin/python" scripts/demo_metric_separation.py --backend robosuite --n 16
+```
+
+It prints score histograms, the **ROC AUC**, and calibrated **TPR@{1%,5%} FPR** operating
+points (τ set on a benign calibration split, FPR reported on a *disjoint* held-out split —
+invariant #3), and writes `separation_report.json`. Benign and attacked rollouts share the
+same per-seed policy jitter; the only difference is the injected redirect (one variable).
+
+> ⚠️ **This is the plumbing of H1, not H1.** The attack is a hand-built action redirect
+> (the placeholder policy pushed away from the goal), so a high AUC is **expected by
+> construction** and says nothing about RoboGCG. The real H1 runs OpenVLA-7B under RoboGCG
+> on LIBERO, where separation is an open empirical question (`gpu-runbook.md` Step 6).
+> With small `--n` the calibration split is tiny, so τ is coarse and the held-out FPR can
+> overshoot its target — that is the honest small-sample behaviour, not a bug.
+
 ## 4. Where this sits in the real pipeline
 
 ```
