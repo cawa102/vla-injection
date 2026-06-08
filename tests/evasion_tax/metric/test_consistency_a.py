@@ -141,6 +141,26 @@ def test_resolver_unresolvable_returns_none(bad_target):
     assert PrivilegedGoalResolver().resolve(_step((0, 0, 0), step=0), state) is None
 
 
+def test_score_logs_warning_on_runtime_abstain(caplog):
+    # An unresolvable anchor at runtime must surface a warning and score 0.0 —
+    # never a silent abstain (schema §2 / invariant #7).
+    metric = _metric()
+    rollout = _rollout([_step((0.0, 0.0, 0.0), step=0, target_region=None)])
+    with caplog.at_level("WARNING"):
+        score = metric.score(0, rollout)
+    assert score.value == 0.0
+    assert "abstain" in caplog.text.lower()
+    assert "unresolvable" in caplog.text.lower()
+
+
+def test_score_does_not_warn_when_anchor_resolves(caplog):
+    metric = _metric()
+    rollout = _rollout([_step((0.0, 0.0, 0.0), step=0)])  # default target_region=GOAL
+    with caplog.at_level("WARNING"):
+        metric.score(0, rollout)
+    assert "abstain" not in caplog.text.lower()
+
+
 # ============================================================================ #
 # P1 — progress / directional alignment                                        #
 # ============================================================================ #

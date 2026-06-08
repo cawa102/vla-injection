@@ -18,6 +18,7 @@ is exposed and unit-tested in isolation so it cannot silently become the detecto
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from math import prod
@@ -27,6 +28,8 @@ import numpy as np
 
 from evasion_tax.metric.state import PrivilegedState, StateAdapter, SyntheticStateAdapter
 from evasion_tax.records import Rollout, RolloutStep, Score
+
+_log = logging.getLogger(__name__)
 
 # Zero-norm guard for _p1_progress: EE-motion / goal-vector norms below this (m)
 # are treated as no motion → no evidence, not penalised. Not a tunable.
@@ -155,6 +158,19 @@ class ConsistencyMetricA:
         prefix = rollout.prefix_window(step_index, self.k)
         states = self._states(prefix)
         anchor = self.resolver.resolve(prefix[-1], states[-1])
+        if anchor is None:
+            # Runtime abstain (schema §2): the goal anchor is unresolvable, so the
+            # metric scores 0.0. ``target_region`` is fixed at scene setup and
+            # invariant within a rollout, and the coverage manifest excludes
+            # unresolvable cells pre-run — so an abstain here is a *surfaced anomaly*
+            # (a coverage-manifest bypass), never a silent 0.0 (invariant #7 /
+            # schema §2/§6 "never a silent abstain").
+            _log.warning(
+                "metric-A abstain at step %d: goal anchor unresolvable (resolver "
+                "returned None) — scoring 0.0; expected only on an "
+                "uncovered/abstained cell that bypassed the coverage manifest.",
+                step_index,
+            )
         sem = self._semantics(states, anchor)
         return Score(value=self._combine(sem), window_end=step_index)
 

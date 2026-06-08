@@ -56,9 +56,13 @@ Rationale: `target_region` is fixed by the **benign** LIBERO task at scene setup
 attack tampers the *policy's text input*, not the sim's goal definition. So `target_region` is a faithful,
 attack-independent anchor for the trusted goal — exactly right for the ceiling.
 
-If `target_region is None` or not present in `object_poses`, the anchor is **unresolvable** → the metric
-returns `s = 0.0` (abstain; no goal to be inconsistent with) and this is logged. (Placement-region anchors that
-are not objects are out of scope for v1 — see §6 limitations.)
+Because `target_region` is fixed at scene setup, it is **invariant within a rollout**: every step of a given
+rollout resolves the same anchor (or none). A cell whose anchor is unresolvable is excluded **pre-run** by the
+coverage manifest (§6, ABSTAINED), so a *runtime* abstain on a scored cell is a **surfaced anomaly** (a
+coverage-manifest bypass), not a routine event. If `target_region is None` or not present in `object_poses`, the
+anchor is **unresolvable** → the metric returns `s = 0.0` (abstain; no goal to be inconsistent with) and **this
+is logged** (a `WARNING` emitted by `ConsistencyMetricA.score`), never a silent 0.0. (Placement-region anchors
+that are not objects are out of scope for v1 — see §6 limitations.)
 
 The M3 reference ladder (coarse operator-goal, task-ID→goal) will add **other resolvers** implementing the same
 seam **without touching the semantics parser** below. Those resolvers are M3 scope, not built here.
