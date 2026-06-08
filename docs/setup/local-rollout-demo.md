@@ -137,17 +137,47 @@ same per-seed policy jitter; the only difference is the injected redirect (one v
 > With small `--n` the calibration split is tiny, so τ is coarse and the held-out FPR can
 > overshoot its target — that is the honest small-sample behaviour, not a bug.
 
+## 3c. Figure-regeneration dry-run
+
+[`scripts/demo_figures.py`](../../scripts/demo_figures.py) runs the **real M2 figure
+pipeline** end to end: demo rollouts → metric (A) → the real eval harness
+(`run_condition_matrix`) → the same `results.json` the GPU eval writes
+(`results_table_to_dict`) → the same `make_figures`. This is the reproducibility
+principle in action — *figures regenerable purely from logged data by a script*.
+
+```bash
+# synthetic (core .venv):
+PYTHONPATH=src .venv/bin/python scripts/demo_figures.py --n 16
+# real MuJoCo ground truth (isolated sim venv with scipy+sklearn+matplotlib):
+PYTHONPATH=src "$SMOKE/venv/bin/python" scripts/demo_figures.py --backend robosuite --n 16
+```
+
+Writes a logged `results.json` plus, under `figures/`, four PNGs per run:
+`<cond>_roc.png` (ROC + AUC), `<cond>_score_hist.png` (benign-vs-attacked
+distribution), `<cond>_tpr_at_fpr.png` (TPR bars with 95% CIs; a `*` and a title note
+flag any point whose held-out benign N is below the rule-of-three power floor —
+invariant #5), and `ladder_placeholder.png` (the M3 trusted-reference ladder stub).
+
+On the GPU node the *only* change is the data source: the same `make_figures` renders
+the real OpenVLA/RoboGCG/LIBERO `results.json`. Inspect them:
+```bash
+RUN=$(ls -dt results/_demo/*demo-figures-*/ | head -1); open "$RUN"figures/*.png   # macOS
+```
+
 ## 4. Where this sits in the real pipeline
 
 ```
-[ policy ] --actions--> [ dynamics/env ] --rollout--> [ RolloutStep records ] --> [ metric A ] --> [ detector ] --> [ eval ]
-   ^OpenVLA (GPU)            ^LIBERO (GPU)                 ^THIS DEMO produces these          (already unit-tested, model-free)
-   demo: placeholder         demo: robosuite
+[ policy ] --actions--> [ dynamics/env ] --rollout--> [ RolloutStep records ] --> [ metric A ] --> [ eval ] --> [ figures ]
+   ^OpenVLA (GPU)            ^LIBERO (GPU)                 §2/§3                        §3b           §3b          §3c
+   demo: placeholder         demo: robosuite          (records)                  (separation)   (AUC/FPR)   (PNG regen)
 ```
 
-This demo exercises the **left half** (policy → env → records). The right half — metric (A)
-scoring, FP-calibrated detection, ROC/AUC + TPR@FPR evaluation — already runs model-free and
-is unit-tested (`tests/`); it consumes exactly these `Rollout` records.
+The three demo scripts now exercise the **whole** model-free pipeline end to end: §2/§3
+(`demo_rollout.py`) produces the records; §3b (`demo_metric_separation.py`) scores them with
+the real metric (A) and reports AUC/TPR@FPR; §3c (`demo_figures.py`) regenerates the figures
+through the real eval harness. The only GPU-only pieces are the two seams the policy and env
+stand-ins replace. FP-calibrated detection (`detector/`) is unit-tested (`tests/`) and
+consumes exactly these `Rollout` records.
 
 ---
 

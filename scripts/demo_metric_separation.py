@@ -86,6 +86,24 @@ def _generate(
     return benign, attacked
 
 
+def generate_scored(
+    backend: str, n: int, steps: int, seed: int, policy: str
+) -> tuple[list[list[Score]], list[list[Score]]]:
+    """Generate ``n`` benign + ``n`` attacked rollouts and score each with metric (A).
+
+    Returns ``(benign_scored, attacked_scored)`` where each element is a list of
+    per-step :class:`Score` (one list per rollout). Shared by the separation report
+    and the figure-regeneration demo (DRY); uses the real, frozen metric (A) with a
+    whole-prefix causal window (``k = steps``).
+    """
+    benign, attacked = _generate(backend, n, steps, seed, policy)
+    metric = ConsistencyMetricA(schema=SchemaA(), k=steps)
+    return (
+        [metric.score_rollout(r) for r in benign],
+        [metric.score_rollout(r) for r in attacked],
+    )
+
+
 def _max_score(scores: list[Score]) -> float:
     """Per-rollout score = max per-step inconsistency (matches the eval convention)."""
     return max(score_value(s) for s in scores)
@@ -149,12 +167,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.n < 4 or args.steps < 4:
         parser.error("--n and --steps must both be >= 4")
 
-    benign, attacked = _generate(args.backend, args.n, args.steps, args.seed, args.policy)
-
-    # The real, frozen metric (A); whole-prefix causal window (k = rollout length).
-    metric = ConsistencyMetricA(schema=SchemaA(), k=args.steps)
-    benign_scored = [metric.score_rollout(r) for r in benign]
-    attacked_scored = [metric.score_rollout(r) for r in attacked]
+    benign_scored, attacked_scored = generate_scored(
+        args.backend, args.n, args.steps, args.seed, args.policy
+    )
 
     benign_max = [_max_score(s) for s in benign_scored]
     attacked_max = [_max_score(s) for s in attacked_scored]
