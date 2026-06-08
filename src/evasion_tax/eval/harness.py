@@ -22,10 +22,10 @@ from evasion_tax.detector.calibrate import ScoreLike
 from evasion_tax.eval.metrics import (
     OperatingPoint,
     _per_rollout_scores,
-    detection_latency_summary,
     roc_auc,
     tpr_at_fpr,
 )
+from evasion_tax.eval.power import PowerStatus, annotate_operating_points
 
 # A condition supplies three splits, each a sequence of per-rollout scores
 # (a scalar/Score value, or a sequence of per-step values reduced by max).
@@ -33,6 +33,17 @@ RolloutScore = ScoreLike | Sequence[ScoreLike]
 ConditionSplits = Mapping[str, Sequence[RolloutScore]]
 
 _DEFAULT_FPR_TARGETS = (0.01, 0.05)
+_DEFAULT_PRIMARY_FPR = 0.05
+
+# Cost metrics (detection latency / abort rate / benign task-success degradation)
+# require a detector gating *real rollouts* — attack onset, per-step fire steps and
+# benign task-success — which this per-rollout-score path does not carry. They are
+# computed at the gated-rollout (GPU/sim) phase (playbook §5); here the absence is
+# marked explicitly rather than emitting a misleading all-None "never fired" summary.
+_DEFERRED_LATENCY_SUMMARY = {
+    "status": "deferred",
+    "reason": "cost metrics require gated rollouts (GPU/sim phase)",
+}
 
 
 @dataclass(frozen=True)
@@ -42,6 +53,7 @@ class ConditionRow:
     condition: str
     auc: float
     operating_points: tuple[OperatingPoint, ...]
+    power_status: tuple[PowerStatus, ...]
     latency_summary: dict
 
 
@@ -63,6 +75,8 @@ def run_condition_matrix(
     conditions: Mapping[str, ConditionSplits],
     *,
     ci_method: str = "wilson",
+    fpr_targets: Sequence[float] = _DEFAULT_FPR_TARGETS,
+    primary_fpr: float = _DEFAULT_PRIMARY_FPR,
 ) -> ResultsTable:
     """Evaluate every condition: calibrate on calib, score on disjoint test.
 
@@ -71,6 +85,12 @@ def run_condition_matrix(
             ``"benign_calib"``, ``"benign_test"`` and ``"attacked_test"``, each
             a sequence of per-rollout scores.
         ci_method: CI method passed to :func:`tpr_at_fpr`.
+        fpr_targets: The benign false-abort budgets to evaluate. Thread the
+            config's ``detector.fpr_targets`` so ``primary_fpr`` is actually one
+            of the evaluated points (the default 1%/5% covers the standard case).
+        primary_fpr: The pre-registered primary operating point; each point's
+            :class:`~evasion_tax.eval.power.PowerStatus` is classified against
+            the rule-of-three floor relative to this (invariant #5).
 
     Returns:
         A :class:`ResultsTable`. ``tau`` is calibrated on ``benign_calib`` only
@@ -96,17 +116,22 @@ def run_condition_matrix(
             benign_calib,
             attacked_test,
             benign_eval_scores=benign_test,
-            fpr_targets=_DEFAULT_FPR_TARGETS,
+            fpr_targets=fpr_targets,
             ci_method=ci_method,
         )
+        # Power gate (invariant #5): flag any operating point whose held-out
+        # benign N is below the rule-of-three floor so an underpowered tight
+        # point can never be reported as a headline number.
+        power_status = annotate_operating_points(operating_points, primary_fpr=primary_fpr)
 
         rows.append(
             ConditionRow(
                 condition=name,
                 auc=auc,
                 operating_points=tuple(operating_points),
-                # No rollouts run here, so no detection latencies to summarise.
-                latency_summary=detection_latency_summary([]),
+                power_status=tuple(power_status),
+                # Cost metrics are a gated-rollout product (see module note).
+                latency_summary=dict(_DEFERRED_LATENCY_SUMMARY),
             )
         )
         score_arrays[name] = {

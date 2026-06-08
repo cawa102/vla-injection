@@ -141,3 +141,21 @@ def test_serialised_table_round_trips_into_make_figures(tmp_path):
     (results_dir / "results.json").write_text(json.dumps(serialised))
     make_figures(results_dir, tmp_path / "figs")
     assert (tmp_path / "figs" / "gcg_roc.png").exists()
+
+
+def test_serialised_table_carries_power_block_flagging_underpowered_points():
+    # The reporting power gate (invariant #5) must reach the on-disk schema so
+    # figures/tables can flag an underpowered tight point.
+    rng = np.random.default_rng(1)
+    condition = {
+        "benign_calib": [list(rng.uniform(0.0, 0.3, 6)) for _ in range(50)],
+        "benign_test": [list(rng.uniform(0.0, 0.3, 6)) for _ in range(50)],
+        "attacked_test": [list(rng.uniform(0.6, 1.0, 6)) for _ in range(50)],
+    }
+    table = run_condition_matrix({"gcg": condition})  # 50 held-out benign rollouts
+    gcg = results_table_to_dict(table)["conditions"]["gcg"]
+    assert len(gcg["power"]) == len(gcg["operating_points"])
+    by_target = {p["fpr_target"]: p for p in gcg["power"]}
+    # 50 held-out benign clears neither floor (1% needs 300, 5% needs 60).
+    assert by_target[0.01]["is_powered"] is False
+    assert by_target[0.05]["is_powered"] is False

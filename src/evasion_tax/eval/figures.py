@@ -44,14 +44,17 @@ def results_table_to_dict(table: ResultsTable) -> dict:
         table: The evaluated results table.
 
     Returns:
-        ``{"conditions": {name: {auc, operating_points, latency_summary,
-        score_arrays}}}`` — JSON-serialisable.
+        ``{"conditions": {name: {auc, operating_points, power, latency_summary,
+        score_arrays}}}`` — JSON-serialisable. ``power`` carries one
+        :class:`~evasion_tax.eval.power.PowerStatus` per operating point so an
+        underpowered tight point is visible to the figures/tables (invariant #5).
     """
     conditions: dict = {}
     for row in table.rows:
         conditions[row.condition] = {
             "auc": row.auc,
             "operating_points": [asdict(op) for op in row.operating_points],
+            "power": [asdict(ps) for ps in row.power_status],
             "latency_summary": row.latency_summary,
             "score_arrays": table.score_arrays.get(row.condition, {}),
         }
@@ -102,9 +105,21 @@ def _score_hist_figure(name: str, arrays: dict, out_dir: Path) -> Path:
     return target
 
 
-def _tpr_at_fpr_figure(name: str, operating_points: list[dict], out_dir: Path) -> Path:
-    labels = [f"{op['fpr_target']:.0%}" for op in operating_points]
+def _tpr_at_fpr_figure(
+    name: str, operating_points: list[dict], power: list[dict], out_dir: Path
+) -> Path:
     tprs = [op["tpr"] for op in operating_points]
+    # Power gate (invariant #5): mark any point whose held-out benign N is below
+    # the rule-of-three floor with a trailing '*' so it cannot be read as a
+    # headline number. ``power`` is parallel to ``operating_points`` (same order);
+    # absent/short ``power`` (legacy results.json) is treated as powered.
+    powered = [p.get("is_powered", True) for p in power]
+    if len(powered) != len(operating_points):
+        powered = [True] * len(operating_points)
+    labels = [
+        f"{op['fpr_target']:.0%}" + ("" if ok else "*")
+        for op, ok in zip(operating_points, powered, strict=True)
+    ]
     # CI half-widths for asymmetric error bars (lower, upper) around each TPR.
     lower = [tpr - op["tpr_ci"][0] for tpr, op in zip(tprs, operating_points, strict=True)]
     upper = [op["tpr_ci"][1] - tpr for tpr, op in zip(tprs, operating_points, strict=True)]
@@ -113,7 +128,10 @@ def _tpr_at_fpr_figure(name: str, operating_points: list[dict], out_dir: Path) -
     ax.set_ylim(0.0, 1.0)
     ax.set_xlabel("target benign false-abort rate")
     ax.set_ylabel("TPR (with 95% CI)")
-    ax.set_title(f"{name} TPR @ FPR")
+    title = f"{name} TPR @ FPR"
+    if not all(powered):
+        title += "  (* underpowered: held-out N < rule-of-three floor)"
+    ax.set_title(title)
     target = out_dir / f"{name}_tpr_at_fpr.png"
     fig.savefig(target)
     plt.close(fig)
@@ -161,7 +179,9 @@ def make_figures(results_dir: StrPath, out_dir: StrPath) -> list[Path]:
         written.append(_roc_figure(name, arrays, cond["auc"], out_dir))
         written.append(_score_hist_figure(name, arrays, out_dir))
         written.append(
-            _tpr_at_fpr_figure(name, cond.get("operating_points", []), out_dir)
+            _tpr_at_fpr_figure(
+                name, cond.get("operating_points", []), cond.get("power", []), out_dir
+            )
         )
     # M3 TODO: replace this static stub with the real trusted-reference ladder
     # call when the M3 rung ladder lands — do not silently keep emitting the

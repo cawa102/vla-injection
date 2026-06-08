@@ -79,13 +79,39 @@ def test_table_retains_raw_arrays_for_figures():
     assert len(arrays["attacked_test"]) == 150
 
 
-def test_row_has_latency_summary_field():
+def test_row_has_deferred_latency_summary():
     conditions = {"gcg": _condition(8)}
     table = run_condition_matrix(conditions)
     (row,) = table.rows
-    # Latency summary present (no rollouts run here → no latencies → empty summary).
+    # Cost metrics (latency/abort/degradation) require gated rollouts (GPU/sim
+    # phase); the harness marks the absence explicitly rather than emitting a
+    # misleading all-None "never fired" summary (H4).
     assert isinstance(row.latency_summary, dict)
-    assert "count" in row.latency_summary
+    assert row.latency_summary["status"] == "deferred"
+    assert "gated rollouts" in row.latency_summary["reason"]
+
+
+def test_each_row_has_power_status_aligned_with_operating_points():
+    conditions = {"gcg": _condition(8)}
+    table = run_condition_matrix(conditions)  # default primary_fpr=0.05
+    (row,) = table.rows
+    assert len(row.power_status) == len(row.operating_points)
+    by_target = {ps.fpr_target: ps for ps in row.power_status}
+    # 150 held-out benign rollouts: the 1% point is underpowered (rule-of-three
+    # floor 300), the 5% primary point clears its floor (60).
+    assert by_target[0.01].required_n == 300
+    assert by_target[0.01].is_powered is False
+    assert by_target[0.05].is_powered is True
+    assert by_target[0.05].is_primary is True
+
+
+def test_fpr_targets_and_primary_fpr_are_threaded():
+    conditions = {"gcg": _condition(8)}
+    table = run_condition_matrix(conditions, fpr_targets=(0.05,), primary_fpr=0.05)
+    (row,) = table.rows
+    assert [op.fpr_target for op in row.operating_points] == [0.05]
+    (ps,) = row.power_status
+    assert ps.is_primary is True
 
 
 def test_run_condition_matrix_does_not_mutate_input():
