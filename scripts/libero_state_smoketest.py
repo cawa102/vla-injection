@@ -97,13 +97,19 @@ def _extract_ground_truth(obs: dict[str, Any]) -> dict[str, Any]:
     if "robot0_gripper_qpos" in obs:
         gripper_open, gripper_note = _gripper_open_heuristic(obs["robot0_gripper_qpos"])
 
-    # Object positions = every "<name>_pos" obs that is 3-D and is not the EE itself.
+    # Object positions = every absolute "<name>_pos" obs that is 3-D. Exclude the EE,
+    # robot0_* joint/proprio keys, and "<name>_to_robot0_eef_pos" RELATIVE deltas (real
+    # LIBERO carries both; ingesting the deltas as phantom objects corrupts the metric's
+    # distractor primitive). Mirrors evasion_tax.metric.state_libero.extract_object_poses.
     object_poses: dict[str, tuple[float, float, float]] = {}
     for key in keys:
         if not key.endswith("_pos") or key == "robot0_eef_pos":
             continue
+        stem = key[: -len("_pos")]
+        if stem.startswith("robot0_") or "_to_" in stem:
+            continue
         try:
-            object_poses[key[: -len("_pos")]] = _as_tuple3(obs[key])
+            object_poses[stem] = _as_tuple3(obs[key])
         except (TypeError, ValueError):
             continue  # not a 3-vector (e.g. joint pos) — skip
 
@@ -147,32 +153,48 @@ def _validate_against_contract(gt: dict[str, Any]) -> dict[str, Any]:
 
 
 def try_libero() -> dict[str, Any] | None:
-    """Tier L: a real LIBERO task env, state-only. Returns None if LIBERO is absent.
+    """Tier L: a real LIBERO task env, **state-only**. Returns None if LIBERO is absent.
 
-    Best-effort and fully guarded: any failure (import, asset, GL) returns a blocker
-    dict rather than raising, so the caller can fall back to robosuite.
+    Builds a state-only ``ControlEnv`` (no camera obs, no on-/off-screen renderer) and
+    locates the BDDL straight from the installed ``libero`` package — deliberately
+    avoiding ``libero.libero.benchmark`` (hard-imports torch) and ``OffScreenRenderEnv``
+    (always opens a GL context). This is what makes Tier L run on a headless/8 GB box
+    (verified 2026-06-09). Fully guarded: any failure returns a blocker dict.
     """
     try:
-        from libero.libero import benchmark, get_libero_path  # type: ignore[import-not-found]
-        from libero.libero.envs import OffScreenRenderEnv  # type: ignore[import-not-found]
+        import glob
+
+        import libero.libero  # type: ignore[import-not-found]
+        from libero.libero.envs.env_wrapper import ControlEnv  # type: ignore[import-not-found]
     except ImportError:
         return None  # LIBERO not installed -> caller falls back to Tier R.
 
     try:
-
-        bench = benchmark.get_benchmark_dict()["libero_spatial"]()
-        task = bench.get_task(0)
-        bddl = os.path.join(get_libero_path("bddl_files"), task.problem_folder, task.bddl_file)
-        # State-only: no camera obs. OffScreenRenderEnv still needs a GL context; if that
-        # fails on this headless/Mac box it is a documented blocker (fall back to Tier R).
-        env = OffScreenRenderEnv(bddl_file_name=bddl, camera_heights=0, camera_widths=0)
+        bddl_root = os.path.join(os.path.dirname(libero.libero.__file__), "bddl_files")
+        bddls = sorted(glob.glob(os.path.join(bddl_root, "libero_spatial", "*.bddl")))
+        if not bddls:
+            return {"tier": "L", "blocker": f"no BDDL under {bddl_root}/libero_spatial"}
+        # State-only ControlEnv: no GL context, no torch (bypasses OffScreenRenderEnv/benchmark).
+        env = ControlEnv(
+            bddl_file_name=bddls[0], robots=["Panda"], use_camera_obs=False,
+            has_renderer=False, has_offscreen_renderer=False, horizon=10,
+        )
         obs = env.reset()
+        obj_of_interest = [str(o) for o in env.obj_of_interest]
+        language_instruction = env.language_instruction
         env.close()
+
         gt = _extract_ground_truth(obs)
+        # target_region = the BDDL goal's reference object (last obj_of_interest); may be a
+        # pose-less abstract region (then the metric abstains) — record it regardless.
+        gt["target_region"] = obj_of_interest[-1] if obj_of_interest else None
+        gt["target_region_note"] = f"BDDL obj_of_interest={obj_of_interest}"
         return {
             "tier": "L",
-            "stack": "libero",
-            "task": getattr(task, "name", None) or getattr(task, "bddl_file", None),
+            "stack": "libero (state-only ControlEnv)",
+            "task": os.path.basename(bddls[0]),
+            "language_instruction": language_instruction,
+            "obj_of_interest": obj_of_interest,
             "ground_truth": gt,
             "contract": _validate_against_contract(gt),
         }
