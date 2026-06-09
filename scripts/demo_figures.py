@@ -21,10 +21,11 @@ Run (zero-setup, synthetic, core venv):
 
     PYTHONPATH=src .venv/bin/python scripts/demo_figures.py --n 16
 
-Run (real MuJoCo ground truth, isolated sim venv with scipy+sklearn+matplotlib):
+Run (real LIBERO ground truth, libero14 venv with sklearn+matplotlib):
 
-    PYTHONPATH=src ~/.cache/evasion_tax-libero-smoke/venv/bin/python \
-        scripts/demo_figures.py --backend robosuite --n 16
+    PYTHONPATH=src:~/.cache/t7-libero-smoke/LIBERO \
+        ~/.cache/evasion_tax-libero14/venv/bin/python \
+        scripts/demo_figures.py --backend libero --n 8
 """
 
 from __future__ import annotations
@@ -47,7 +48,8 @@ from evasion_tax.repro.run_logger import RunLogger  # noqa: E402
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--backend", choices=("synthetic", "robosuite"), default="synthetic")
+    parser.add_argument("--backend", choices=("synthetic", "robosuite", "libero"),
+                        default="synthetic")
     parser.add_argument("--n", type=int, default=16, help="rollouts per class (>=4)")
     parser.add_argument("--steps", type=int, default=12, help="rollout length (>=4)")
     parser.add_argument("--seed", type=int, default=0)

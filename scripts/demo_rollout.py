@@ -9,14 +9,18 @@ write-once ``run.json``, per-step :class:`~evasion_tax.records.RolloutStep`, the
 
 * **OpenVLA-7B** as the action source -> replaced by a transparent **placeholder
   policy** (``scripted`` reach heuristic or seeded ``random``).
-* **LIBERO** as the simulator -> replaced by **robosuite** (the identical MuJoCo
-  substrate LIBERO sits on; ``Lift``/``Panda``, state-only, 8 GB-safe). If robosuite
-  is absent, falls back to :class:`~evasion_tax.attack.dynamics.SyntheticDynamics`
-  (pure NumPy) so the demo *always* emits records.
+* **LIBERO** as the simulator -> three env seams, chosen with ``--backend``:
+  ``libero`` is the **real** state-only LIBERO env (now local: GL-free + torch-free,
+  see ``docs/setup/libero-local-env.md``), driven through the **real**
+  :class:`~evasion_tax.metric.state_libero.LiberoStateAdapter` — the exact env the
+  GPU node uses, so only the policy seam remains a stand-in; ``robosuite`` is the
+  lighter MuJoCo stand-in (``Lift``/``Panda``); ``synthetic`` is the pure-NumPy
+  :class:`~evasion_tax.attack.dynamics.SyntheticDynamics` fallback (always available).
 
 The records produced here are **structurally identical** to the real experiment's;
-only the action source, the env name, and the BDDL-derived ``target_region`` change
-on the GPU node (see ``docs/setup/local-rollout-demo.md`` for the mapping).
+with ``--backend libero`` even the ``target_region`` and object names are the real
+BDDL ground truth, so only the action source changes on the GPU node (see
+``docs/setup/local-rollout-demo.md`` for the mapping).
 
 This is a DEMO, not an experiment: the placeholder policy is not OpenVLA, so output
 goes to ``results/_demo/`` (git-ignored), never the write-once real ``results/``.
@@ -43,6 +47,7 @@ import _bootstrap  # noqa: F401  (import side effect: puts src/ on sys.path)
 import numpy as np
 
 from evasion_tax.attack.dynamics import AttackScenario, SyntheticDynamics  # noqa: E402
+from evasion_tax.metric.state_libero import LiberoStateAdapter  # noqa: E402
 from evasion_tax.records import ACTION_DIM, Rollout, RolloutStep, TargetActionSpec  # noqa: E402
 from evasion_tax.repro.run_logger import RunLogger  # noqa: E402
 
@@ -188,6 +193,96 @@ def _make_robosuite_env_maker() -> Any | None:
 
 
 # --------------------------------------------------------------------------- #
+# Tier L: real LIBERO, state-only — the env the GPU node actually uses         #
+# --------------------------------------------------------------------------- #
+# The earlier demo stood LIBERO in with robosuite; a state-only LIBERO env now runs
+# locally (GL-free + torch-free — docs/setup/libero-local-env.md), so the env seam can
+# be the REAL thing. Privileged state is built by the REAL LiberoStateAdapter (real
+# BDDL target_region, real object names, the `_to_` relative-key filter) on the live
+# obs dict — only the policy seam (placeholder vs OpenVLA) stays a GPU-side stand-in.
+_LIBERO_SUITE = "libero_spatial"
+
+
+def _make_libero_env_maker() -> Any | None:
+    """Return a ``horizon -> env`` factory for a state-only LIBERO task, or None.
+
+    Builds the lower-level state-only ``ControlEnv`` (no GL, no torch) on the first
+    ``libero_spatial`` BDDL, locating it straight from the installed package
+    (bypassing ``libero.libero.benchmark``). Identical construction to
+    ``scripts/libero_state_smoketest.py``. The chosen task's id is stashed on the
+    returned callable for record labelling.
+    """
+    try:
+        import glob
+
+        import libero.libero  # type: ignore[import-not-found]
+        from libero.libero.envs.env_wrapper import ControlEnv  # type: ignore[import-not-found]
+    except ImportError:
+        return None
+
+    bddl_root = os.path.join(os.path.dirname(libero.libero.__file__), "bddl_files")
+    bddls = sorted(glob.glob(os.path.join(bddl_root, _LIBERO_SUITE, "*.bddl")))
+    if not bddls:
+        return None
+    bddl = bddls[0]
+
+    def make(*, horizon: int) -> Any:
+        return ControlEnv(
+            bddl_file_name=bddl, robots=["Panda"], use_camera_obs=False,
+            has_renderer=False, has_offscreen_renderer=False, horizon=horizon,
+        )
+
+    make.task_id = os.path.basename(bddl)[: -len(".bddl")]  # type: ignore[attr-defined]
+    return make
+
+
+def _rollout_libero(
+    env_maker: Any, actions: np.ndarray, *, seed: int, attacked: bool, suffix_ref: str | None
+) -> Rollout:
+    """Roll ``actions`` out in a fresh state-only LIBERO env via the real adapter.
+
+    Each step's ``privileged_state`` is built by the **real**
+    :class:`~evasion_tax.metric.state_libero.LiberoStateAdapter` (the concrete
+    StateAdapter the GPU node uses), so the demo exercises the real BDDL
+    ``target_region``, the real object names, and the ``_to_`` relative-key filter on
+    live LIBERO ground truth. ``np.random`` is seeded before reset to pin LIBERO's
+    object-placement RNG; the action sequence uses an independent ``Generator``, so
+    this does not perturb it (reproducible: same seed -> identical records).
+    """
+    env = env_maker(horizon=len(actions))
+    np.random.seed(seed)  # pin LIBERO placement RNG (actions use an independent Generator)
+    obs = env.reset()
+    obj_of_interest = [str(o) for o in env.obj_of_interest]
+    instruction = str(env.language_instruction)
+    adapter = LiberoStateAdapter(obj_of_interest)
+    task_id = getattr(env_maker, "task_id", f"{_LIBERO_SUITE}-task")
+
+    steps = []
+    for t, action in enumerate(actions):
+        privileged = dataclasses.asdict(adapter.to_privileged_state(obs))
+        steps.append(
+            RolloutStep(
+                run_id=f"demo-libero-{seed}",
+                seed=seed,
+                git_commit=None,
+                suite=_LIBERO_SUITE,
+                task_id=task_id,
+                step=t,
+                observation_ref=f"{_LIBERO_SUITE}/{task_id}/{t}",
+                action=tuple(float(x) for x in action),
+                privileged_state=privileged,
+                instruction=instruction,
+                trusted_goal=instruction,
+                attacked=attacked,
+                suffix_ref=suffix_ref,
+            )
+        )
+        obs = _step_env(env, action)
+    env.close()
+    return Rollout(steps=tuple(steps))
+
+
+# --------------------------------------------------------------------------- #
 # Tier 0: SyntheticDynamics fallback (pure NumPy, no simulator)                #
 # --------------------------------------------------------------------------- #
 def _rollout_synthetic(actions: np.ndarray, *, seed: int, attacked: bool) -> Rollout:
@@ -264,8 +359,13 @@ def main(argv: list[str] | None = None) -> int:
                         help="placeholder policy standing in for OpenVLA")
     parser.add_argument("--results-root", default="results/_demo",
                         help="write-once demo results root (git-ignored)")
+    parser.add_argument("--backend", choices=("auto", "robosuite", "libero", "synthetic"),
+                        default="auto",
+                        help="env seam: auto (robosuite if importable, else synthetic), "
+                             "robosuite (MuJoCo stand-in), libero (REAL state-only LIBERO), "
+                             "or synthetic (no simulator)")
     parser.add_argument("--no-sim", action="store_true",
-                        help="force the SyntheticDynamics fallback (skip robosuite)")
+                        help="deprecated alias for --backend synthetic")
     args = parser.parse_args(argv)
 
     if args.steps < 4:
@@ -274,13 +374,38 @@ def main(argv: list[str] | None = None) -> int:
     benign_actions = _benign_actions(args.steps, args.seed, args.policy)
     attacked_actions = _attacked_actions(args.steps, args.seed, args.policy)
 
-    env_maker = None if args.no_sim else _make_robosuite_env_maker()
-    if env_maker is not None:
+    backend = "synthetic" if args.no_sim else args.backend
+    if backend == "auto":
+        env_maker = _make_robosuite_env_maker()
+        backend = "robosuite" if env_maker is not None else "synthetic"
+    elif backend == "robosuite":
+        env_maker = _make_robosuite_env_maker()
+        if env_maker is None:
+            parser.error("robosuite not importable — use --backend synthetic, or the "
+                         "isolated sim venv (docs/setup/local-rollout-demo.md §1)")
+    elif backend == "libero":
+        env_maker = _make_libero_env_maker()
+        if env_maker is None:
+            parser.error("LIBERO not importable — run with the libero14 venv + LIBERO on "
+                         "PYTHONPATH (docs/setup/libero-local-env.md)")
+    else:
+        env_maker = None
+
+    if backend == "robosuite":
         tier = "R (robosuite / real MuJoCo ground truth)"
         benign = _rollout_robosuite(
             env_maker, benign_actions, seed=args.seed, attacked=False, suffix_ref=None
         )
         attacked = _rollout_robosuite(
+            env_maker, attacked_actions, seed=args.seed, attacked=True,
+            suffix_ref="demo/placeholder-suffix",
+        )
+    elif backend == "libero":
+        tier = "L (real LIBERO, state-only / real BDDL ground truth)"
+        benign = _rollout_libero(
+            env_maker, benign_actions, seed=args.seed, attacked=False, suffix_ref=None
+        )
+        attacked = _rollout_libero(
             env_maker, attacked_actions, seed=args.seed, attacked=True,
             suffix_ref="demo/placeholder-suffix",
         )
@@ -295,14 +420,19 @@ def main(argv: list[str] | None = None) -> int:
         "demo": True,
         "note": "DEMO — placeholder policy stands in for OpenVLA; NOT a real experiment.",
         "policy": f"placeholder-{args.policy}",
+        "backend": backend,
         "env_tier": tier,
         "steps": args.steps,
-        "trusted_goal": _TRUSTED_GOAL,
+        # The authoritative goal comes from the rollout: _TRUSTED_GOAL for the
+        # robosuite/synthetic stand-ins, the real BDDL instruction for libero.
+        "trusted_goal": benign.steps[0].trusted_goal,
         "attack_target": dataclasses.asdict(_ATTACK_TARGET),
     }
 
     logger = RunLogger(args.results_root)
-    handle = logger.start(slug=f"demo-rollout-{args.policy}", config=config, seed=args.seed)
+    handle = logger.start(
+        slug=f"demo-rollout-{backend}-{args.policy}", config=config, seed=args.seed
+    )
     handle.write("rollout_benign", _rollout_to_json(benign))
     handle.write("rollout_attacked", _rollout_to_json(attacked))
     handle.write_array("actions_benign", benign.actions())
