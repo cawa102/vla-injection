@@ -1,5 +1,10 @@
 # LIBERO State Adapter Implementation Plan
 
+> **✅ COMPLETED 2026-06-09.** All four tasks landed and the suite is **395 tests green, ruff clean**:
+> Task 1 `6ddcee4` · Task 2 `2d07d0f` · Task 3 `441f19e` · Task 4 `818a1e7`. Recorded in
+> execution-playbook §1 + §10 (2026-06-09 row). The local adapter is a **draft re-validated on the GPU node**
+> (repro rule) — see the *Out of scope* note at the bottom for what remains GPU-only.
+
 > **For Claude:** REQUIRED SUB-SKILL: Use executing-plans / `/tdd` to implement this plan task-by-task.
 
 **Goal:** Build the concrete LIBERO `StateAdapter` (`src/evasion_tax/metric/state_libero.py`) that maps a real LIBERO observation dict + task metadata to the FROZEN `PrivilegedState` contract, with the BDDL-derived `target_region` the demo previously faked — pulling forward work that was deferred to the GPU node, now that state-only LIBERO is proven to run locally.
@@ -23,7 +28,7 @@
 
 ---
 
-- [ ] Task 1: Freeze real-LIBERO obs fixtures + provenance
+- [x] Task 1: Freeze real-LIBERO obs fixtures + provenance
 
 **Files:**
 - Create: `tests/evasion_tax/metric/fixtures/libero_obs_spatial0.json` (pick-place / binary predicate)
@@ -45,7 +50,7 @@
 
 ---
 
-- [ ] Task 2: `state_libero.py` — extraction helpers + `LiberoStateAdapter`
+- [x] Task 2: `state_libero.py` — extraction helpers + `LiberoStateAdapter`
 
 **Files:**
 - Create: `src/evasion_tax/metric/state_libero.py`
@@ -80,7 +85,7 @@
 
 ---
 
-- [ ] Task 3: Live Tier-L smoke — GL-free `ControlEnv` path
+- [x] Task 3: Live Tier-L smoke — GL-free `ControlEnv` path
 
 **Files:**
 - Modify: `scripts/libero_state_smoketest.py` (`try_libero()` ~line 158)
@@ -99,7 +104,7 @@
 
 ---
 
-- [ ] Task 4: Docs — record the overturned deferral + env recipe
+- [x] Task 4: Docs — record the overturned deferral + env recipe
 
 **Files:**
 - Modify: `docs/setup/libero-local-notes.md`

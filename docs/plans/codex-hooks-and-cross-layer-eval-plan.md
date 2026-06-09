@@ -1,5 +1,10 @@
 # Embodiment Evasion Tax — Codex-#2 model-free hooks + §4b-III cross-layer eval (implementation plan)
 
+> **✅ COMPLETED 2026-06-03** (`a2ae59f` cross-layer eval + ΔASR tax · `0323923` coverage manifest ·
+> `cdce8f1` power rule; ledgered in execution-playbook §10, 2026-06-03 row). All three deliverables landed,
+> ruff + pyright clean. *The "237 tests" / "312 + new" figures below are the planning-time counts — the live
+> total is now **395** (execution-playbook §1).*
+
 > Companion to the **execution playbook** (`docs/core/execution-playbook.md` §4b, §5, §7 task ledger) and
 > the **frozen metric-A schema** (`docs/core/metric-a-annotation-schema.md` §6). Covers the three model-free
 > builds the playbook lists as the immediate pre-GPU work. No GPU, no OpenVLA/LIBERO/GCG — synthetic-fixture

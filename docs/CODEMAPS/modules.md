@@ -1,10 +1,10 @@
-<!-- Generated: 2026-06-05 | Files scanned: 36 src (27 modules · 9 __init__) | Token estimate: ~900 -->
+<!-- Generated: 2026-06-05 · reconciled 2026-06-09 | Files scanned: 37 src (28 modules · 9 __init__) | Token estimate: ~900 -->
 
 # Modules — `src/evasion_tax`
 
 Stands in for the template's `backend.md` (this is a library, not an HTTP backend).
-8 subpackages + root, **36 `.py` files** (27 modules · 9 `__init__`), **~4.3k LOC**.
-Key public symbols per file (verified against source 2026-06-05).
+8 subpackages + root, **37 `.py` files** (28 modules · 9 `__init__`), **~4.7k LOC**.
+Key public symbols per file (verified against source 2026-06-05; `state_libero.py` added 2026-06-09).
 
 ## records.py — shared immutable contract (Task 2)
 `RolloutStep` · `Rollout` (`.prefix_window` causal #1, `.actions`) · `TargetActionSpec`
@@ -21,6 +21,8 @@ Key public symbols per file (verified against source 2026-06-05).
 `Synthetic`/`Real` impls. `probe_confounds.py` `shuffle_labels`, `probe_auc` (L1 control, Codex #2 #11).
 `coverage.py` `CoverageManifest`, `classify_cell`, `GoalKind` (metric-A support map, #6).
 `state.py` `PrivilegedState`, `StateAdapter` Protocol, `SyntheticStateAdapter` (Task 4).
+`state_libero.py` **`LiberoStateAdapter`** (real LIBERO obs → `PrivilegedState`; `_to_` relative-key filter,
+BDDL `target_region` from `obj_of_interest[-1]`, gripper `sum|qpos|>0.04`; Task 10, added 2026-06-09).
 
 ## detector/ — FP-calibrated decision (Task 6)
 `calibrate.py` `calibrate(...)→Threshold(tau)` (per-rollout FPR primary; shared by every baseline, #4).

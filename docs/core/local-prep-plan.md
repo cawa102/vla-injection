@@ -29,7 +29,7 @@ env management, `numpy` `scipy` `scikit-learn` `pyyaml` `pydantic`, `pytest` + `
 
 ---
 
-## Status (live — 2026-06-03)
+## Status (live — 2026-06-09)
 
 | Task | Status | Commit |
 |------|--------|--------|
@@ -43,10 +43,10 @@ env management, `numpy` `scipy` `scikit-learn` `pyyaml` `pydantic`, `pytest` + `
 | 7 Eval harness + stats | ✅ | `2ab71aa` |
 | 8 Baselines | ✅ goal-agnostic anomaly (χ² OOD) + perplexity filter (mock + GPU stub), shared `calibrate` | `3287c5c` |
 | 9 Config + scripts + figures | ✅ frozen pydantic `Config` + `one_variable_diff`; shared GPU guard; `make_figures` script-regenerable from logged `results.json` (`results_table_to_dict` = eval→figures contract); 6 scripts + `_bootstrap` | `60b0462` |
-| 10 LIBERO state-only smoke | ✅ Tier R (robosuite) pass — real MuJoCo ground truth → `PrivilegedState` constructs **unmodified** (no schema change; Task-5 freeze stands); real LIBERO deferred to GPU node (`benchmark` hard-imports torch + `OffScreenRenderEnv` needs GL; pins robosuite 1.4 vs local 1.5.2); synthetic fixtures kept; **no** `state_libero.py` yet (conditional). Notes: `docs/setup/libero-local-notes.md` | `577c2d1` |
+| 10 LIBERO state-only smoke | ✅ **Tier-L (real LIBERO) now runs locally (2026-06-09)** — GL-free/torch-free `ControlEnv` → concrete `state_libero.py` (`LiberoStateAdapter`) built + unit-tested vs frozen real-obs fixtures; real BDDL `target_region` (`obj_of_interest[-1]`), `_to_` phantom-object bug fixed. *(Earlier 2026-06-03: Tier-R/robosuite validated the `PrivilegedState` contract; real LIBERO was deferred to the GPU node — now overturned: env-assembly, not fundamental.)* Task-5 freeze stands. Recipe `docs/setup/libero-local-env.md`; notes `docs/setup/libero-local-notes.md`; plan `docs/plans/2026-06-09-libero-state-adapter.md` | `577c2d1`, `2d07d0f` |
 | 11 GPU runbook | ✅ runbook + pinned env spec for **Kelvin2** (granted GPU); OpenVLA/LIBERO/RoboGCG pins fetched from source (invariant #8, all `[VERIFY ON THE GPU NODE]`); checkpoint provenance placeholder rows; cluster mechanics in `docs/gpu/` | `a491a63`, `9c3eaff` |
 
-**362 tests green; full `src/evasion_tax` *and* the test tree are type-clean under `uvx pyright` and ruff-clean** *(2026-06-03 `2963e72`: the 3 pyright errors + 1 ruff B905 that previously sat in `test_state.py`/`test_records.py`/`test_consistency_a.py` are cleared — `reached_window` annotation widened to match its `(n,7)`-array docstring; intentional-bad-input tests `# type: ignore`d; `zip(strict=True)`)*. *(2026-06-02: +6 tests for the eval-harness held-out-FPR fix, invariant #3 — see execution-playbook §10.)* Infra notes: pytest resolves `evasion_tax` via `pythonpath=["src"]` (uv's editable `.pth` is
+**395 tests green; full `src/evasion_tax` *and* the test tree are type-clean under `uvx pyright` and ruff-clean** *(2026-06-03 `2963e72`: the 3 pyright errors + 1 ruff B905 that previously sat in `test_state.py`/`test_records.py`/`test_consistency_a.py` are cleared — `reached_window` annotation widened to match its `(n,7)`-array docstring; intentional-bad-input tests `# type: ignore`d; `zip(strict=True)`)*. *(2026-06-02: +6 tests for the eval-harness held-out-FPR fix, invariant #3 — see execution-playbook §10.)* *(2026-06-09: +14 tests for the concrete `LiberoStateAdapter` — Task 10.)* Infra notes: pytest resolves `evasion_tax` via `pythonpath=["src"]` (uv's editable `.pth` is
 unreliable on this host — corrupted on each `uv run`); pyright via `pyrightconfig.json` (`uvx pyright` is the
 authoritative type-check — the harness LSP's `reportMissingImports` for `evasion_tax.*` are cosmetic artifacts of the
 broken editable install).

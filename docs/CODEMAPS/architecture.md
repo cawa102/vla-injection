@@ -1,4 +1,4 @@
-<!-- Generated: 2026-06-05 | Files scanned: 36 src | Token estimate: ~750 -->
+<!-- Generated: 2026-06-05 · reconciled 2026-06-09 | Files scanned: 37 src | Token estimate: ~750 -->
 
 # Architecture — Embodiment Evasion Tax
 
@@ -21,12 +21,13 @@ L2  behavioural  goal-action consistency (A)      metric/consistency_a.py
 
 ## Model-free / GPU boundary (the core design split)
 ```
-MODEL-FREE (local, here · 354 tests green)       GPU NODE (Kelvin2, deferred)
+MODEL-FREE (local, here · 395 tests green)       GPU NODE (Kelvin2, deferred)
 ────────────────────────────────────────        ──────────────────────────────
 metric A scorer · FP-calibrated detector         OpenVLA-7B inference
-eval stats (ROC/AUC · TPR@FPR · CIs)             GCG suffix optimisation
-idealized action-space attacker + frontier       LIBERO rollouts
-cross-layer ΔASR tax + cluster bootstrap         (fill the SAME contract via Real* seams)
+LiberoStateAdapter (real BDDL ground truth)      GCG suffix optimisation
+eval stats (ROC/AUC · TPR@FPR · CIs)             LIBERO policy rollouts
+idealized action-space attacker + frontier       (fill the SAME contract via Real* seams)
+cross-layer ΔASR tax + cluster bootstrap
 ```
 Every GPU piece sits behind a `Protocol` — `Dynamics`, `ActivationExtractor`, `PerplexityScorer`,
 `Scorer`, `StateAdapter` — each with a `Synthetic*`/`Mock*` impl for tests. The stats layers

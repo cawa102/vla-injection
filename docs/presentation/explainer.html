@@ -305,9 +305,9 @@ footer a{ color:var(--indigo); text-decoration:none; }
 
   <div class="status">
     <span class="chip"><span class="k">Phase</span><span class="dot amber"></span>Design → starting experiments</span>
-    <span class="chip"><span class="k">Code</span><span class="dot green"></span>Local prep done · 362 tests green</span>
+    <span class="chip"><span class="k">Code</span><span class="dot green"></span>Local prep done · real-LIBERO adapter · 395 tests green</span>
     <span class="chip"><span class="k">Waiting on</span><span class="dot grey"></span>GPU access (Kelvin2)</span>
-    <span class="chip"><span class="k">Updated</span>2026-06-03</span>
+    <span class="chip"><span class="k">Updated</span>2026-06-09</span>
   </div>
   <p style="font-size:.92rem;color:var(--ink-3);max-width:60ch;margin-top:14px">
     One question in one sentence: <em>when someone secretly hijacks a robot's instructions,
@@ -649,6 +649,7 @@ footer a{ color:var(--indigo); text-decoration:none; }
     <h3>The inspectors' brains <span class="path">src/evasion_tax/metric/</span></h3>
     <div class="files">
       <div class="file"><div class="fp">state.py</div><div class="fd">A clean adapter for the simulator's "privileged" ground truth (where the arm, gripper, and objects really are).</div></div>
+      <div class="file"><div class="fp">state_libero.py</div><div class="fd">The concrete adapter that reads a <em>real</em> LIBERO scene into that ground-truth form (real object names + the BDDL goal region) — now runs locally.</div></div>
       <div class="file"><div class="fp">consistency_a.py</div><div class="fd">The L2-oracle metric (A): scores how well recent actions match the goal, using ground truth — the "ceiling" inspector.</div></div>
       <div class="file"><div class="fp">coverage.py</div><div class="fd">Records which goal types metric A can honestly handle, so the attacker can't win by exploiting a blind spot.</div></div>
       <div class="file"><div class="fp">probe_internal.py</div><div class="fd">The L1 inspector: a small classifier reading the model's hidden activations to spot an injection.</div></div>
@@ -705,6 +706,9 @@ footer a{ color:var(--indigo); text-decoration:none; }
       <div class="file"><div class="fp">evaluate.py <span class="local-pill">LOCAL</span></div><div class="fd">Turns logged scores into the results file (catch-rates, AUC, intervals).</div></div>
       <div class="file"><div class="fp">make_figures.py <span class="local-pill">LOCAL</span></div><div class="fd">Regenerates all charts from the results file.</div></div>
       <div class="file"><div class="fp">libero_state_smoketest.py <span class="local-pill">LOCAL</span></div><div class="fd">A quick check that the simulator's ground-truth fits our expected data shape.</div></div>
+      <div class="file"><div class="fp">demo_rollout.py <span class="local-pill">LOCAL</span></div><div class="fd">Records a laptop demo rollout — real state-only LIBERO (<code>--backend libero</code>) or a zero-setup synthetic stand-in — so you can see the exact records the GPU run will log.</div></div>
+      <div class="file"><div class="fp">demo_metric_separation.py <span class="local-pill">LOCAL</span></div><div class="fd">Runs those demo rollouts through the real metric (A) + statistics to preview the benign-vs-attacked separation the GPU viability gate (H1) tests for real.</div></div>
+      <div class="file"><div class="fp">demo_figures.py <span class="local-pill">LOCAL</span></div><div class="fd">Drives the real figure pipeline end-to-end on demo data — proving charts regenerate purely from logged results.</div></div>
       <div class="file"><div class="fp">_bootstrap.py <span class="local-pill">LOCAL</span></div><div class="fd">A tiny helper so standalone scripts can import the <code>evasion_tax</code> package.</div></div>
     </div>
   </div>
@@ -751,7 +755,7 @@ footer a{ color:var(--indigo); text-decoration:none; }
     • What &amp; why (threat model, design) → <code>docs/core/goal-action-consistency-detector.md</code><br>
     • Verified external facts → <code>docs/references/README.md</code> &nbsp;·&nbsp; Code → <code>src/evasion_tax/</code>
   </p>
-  <p>Generated 2026-06-03 · MSc Cyber Security &amp; AI individual research project · simulation only, defensive research.</p>
+  <p>Generated 2026-06-03 · updated 2026-06-09 · MSc Cyber Security &amp; AI individual research project · simulation only, defensive research.</p>
 </footer>
 
 <script>

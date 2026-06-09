@@ -1,4 +1,4 @@
-<!-- Generated: 2026-06-05 | Files scanned: 76 (36 src · 9 scripts · 31 tests) | Token estimate: ~300 -->
+<!-- Generated: 2026-06-05 · reconciled 2026-06-09 | Files scanned: 85 (37 src · 12 scripts · 36 tests) | Token estimate: ~300 -->
 
 # CODEMAPS — Embodiment Evasion Tax
 
@@ -18,11 +18,12 @@ Source of truth for *what & why* = `docs/core/execution-playbook.md`; these maps
 API and no UI. The module map fills the package-internals role those files would serve in a service.
 
 ## Scan summary
-**2026-06-05** — re-run of `/update-codemaps`.
-- Source unchanged since the prior (06-05) generation (newest `src` file 06-03; no commits since) →
-  content diff ≈ 0%. This pass **split** the previously consolidated single file into the per-area maps
-  above and corrected the file counts.
-- Scanned: 36 `src/evasion_tax` `.py` (27 modules · 9 `__init__`, ~4.3k LOC) · 9 `scripts` · 31 files in `tests/`
-  (28 `test_*` modules + conftest/fixtures, 354 test fns) · `pyproject.toml` · `configs/`.
+**2026-06-09** — manual reconciliation of the 2026-06-05 `/update-codemaps` maps after the `state_libero.py`
+pull-forward (Tier-L LIBERO now runs locally — execution-playbook §10, 2026-06-09).
+- Since the 06-05 generation: `src/evasion_tax/metric/state_libero.py` (`LiberoStateAdapter`) added 06-09;
+  3 demo scripts added (`demo_rollout` / `demo_metric_separation` / `demo_figures`). Counts + the Tier-R→Tier-L
+  framing refreshed across the four maps above; a full `/update-codemaps` re-run is still the canonical regen.
+- Scanned: 37 `src/evasion_tax` `.py` (28 modules · 9 `__init__`, ~4.7k LOC) · 12 `scripts` · 36 files in `tests/`
+  (30 `test_*` modules + conftest/fixtures, **395 tests** collected) · `pyproject.toml` · `configs/`.
 - Structure: single Python package, layered model-free core + `Protocol`-gated GPU seams; no routes/DB/UI.
 - Regenerate after each milestone (M-tag) or when `src/evasion_tax` subpackages change.
