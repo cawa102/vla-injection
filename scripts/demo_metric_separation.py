@@ -18,8 +18,6 @@ Backends (rollout source):
 
 * ``synthetic`` (default) — :class:`SyntheticDynamics`, pure NumPy. Runs end-to-end
   in the **core ``.venv``** (numpy+scipy+sklearn) in one command, no sim install.
-* ``robosuite`` — real MuJoCo ground truth (``Lift``/``Panda``). Needs the isolated
-  sim venv *plus* scipy+sklearn there (see ``docs/setup/local-rollout-demo.md`` §7).
 * ``libero`` — the **real** state-only LIBERO env scored through the real
   :class:`~evasion_tax.metric.state_libero.LiberoStateAdapter` (real BDDL
   ``target_region``). Needs the libero14 venv + LIBERO on ``PYTHONPATH`` + sklearn
@@ -67,17 +65,10 @@ def _generate(
     Rollout ``i`` of each class shares seed ``seed+i``; benign vs attacked differ
     only by the injected redirect (one variable at a time). ``libero`` drives the
     real state-only LIBERO env (real BDDL ground truth via the real adapter);
-    ``robosuite`` the lighter MuJoCo stand-in; ``synthetic`` needs no simulator.
+    ``synthetic`` needs no simulator (runs in the core ``.venv``).
     """
     env_maker = None
-    if backend == "robosuite":
-        env_maker = dr._make_robosuite_env_maker()
-        if env_maker is None:
-            raise SystemExit(
-                "robosuite not importable — run this with the isolated sim venv "
-                "(see docs/setup/local-rollout-demo.md §1), or use --backend synthetic."
-            )
-    elif backend == "libero":
+    if backend == "libero":
         env_maker = dr._make_libero_env_maker()
         if env_maker is None:
             raise SystemExit(
@@ -91,12 +82,7 @@ def _generate(
         s = seed + i
         b_actions = dr._benign_actions(steps, s, policy)
         a_actions = dr._attacked_actions(steps, s, policy)
-        if backend == "robosuite":
-            benign.append(dr._rollout_robosuite(
-                env_maker, b_actions, seed=s, attacked=False, suffix_ref=None))
-            attacked.append(dr._rollout_robosuite(
-                env_maker, a_actions, seed=s, attacked=True, suffix_ref="demo/suffix"))
-        elif backend == "libero":
+        if backend == "libero":
             benign.append(dr._rollout_libero(
                 env_maker, b_actions, seed=s, attacked=False, suffix_ref=None))
             attacked.append(dr._rollout_libero(
@@ -178,8 +164,7 @@ def _print_report(
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--backend", choices=("synthetic", "robosuite", "libero"),
-                        default="synthetic")
+    parser.add_argument("--backend", choices=("synthetic", "libero"), default="synthetic")
     parser.add_argument("--n", type=int, default=16, help="rollouts per class (>=4)")
     parser.add_argument("--steps", type=int, default=12, help="rollout length (>=4)")
     parser.add_argument("--seed", type=int, default=0)

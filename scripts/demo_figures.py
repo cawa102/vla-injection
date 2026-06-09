@@ -48,8 +48,7 @@ from evasion_tax.repro.run_logger import RunLogger  # noqa: E402
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--backend", choices=("synthetic", "robosuite", "libero"),
-                        default="synthetic")
+    parser.add_argument("--backend", choices=("synthetic", "libero"), default="synthetic")
     parser.add_argument("--n", type=int, default=16, help="rollouts per class (>=4)")
     parser.add_argument("--steps", type=int, default=12, help="rollout length (>=4)")
     parser.add_argument("--seed", type=int, default=0)

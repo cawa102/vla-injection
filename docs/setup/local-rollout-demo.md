@@ -21,41 +21,37 @@ stand-in**; only the policy does:
 | Real experiment (GPU node) | Local demo stand-in | Why the swap |
 |---|---|---|
 | **OpenVLA-7B** emits the 7-DoF action | **placeholder policy** (`scripted` reach / seeded `random`) | OpenVLA-7B needs CUDA + bf16; absent on an 8 GB Mac |
-| **LIBERO** simulates the rollout | **real LIBERO**, state-only (`--backend libero`) — *or* the lighter **robosuite** `Lift`/`Panda` stand-in (`--backend robosuite`) | `--backend libero` is the **real** simulator (state-only `ControlEnv`, real BDDL `target_region`, real object names, scored through the real [`LiberoStateAdapter`](../../src/evasion_tax/metric/state_libero.py)). robosuite remains a faster substitute (the identical MuJoCo substrate LIBERO sits on, same obs-dict extraction) when LIBERO isn't installed. |
+| **LIBERO** simulates the rollout | **real LIBERO**, state-only (`--backend libero`) | The **real** simulator: state-only `ControlEnv`, real BDDL `target_region`, real object names, scored through the real [`LiberoStateAdapter`](../../src/evasion_tax/metric/state_libero.py). When LIBERO isn't on `PYTHONPATH`, `--backend synthetic` ([`SyntheticDynamics`](../../src/evasion_tax/attack/dynamics.py), pure NumPy) emits the **same records** with no simulator — the zero-setup path that runs in the core `.venv`. |
 
 **The records produced are structurally identical** to the GPU run's. With `--backend libero`
 the **only** GPU-only stand-in left is the policy — so just two things differ on the GPU node:
 1. action source: placeholder policy → OpenVLA-7B,
 2. attacker suffix: `demo/placeholder-suffix` → a real RoboGCG `suffix_ref`.
 
-(The `robosuite`/`synthetic` backends additionally stand in for the env; with `--backend
-libero` the `suite`, `task_id`, `target_region`, and object names are already the real BDDL
-ground truth.) If LIBERO is not on `PYTHONPATH`, `--backend robosuite` uses the MuJoCo
-substrate; if neither is installed the demo auto-falls back to
-[`SyntheticDynamics`](../../src/evasion_tax/attack/dynamics.py) (pure NumPy, no simulator)
-so it **always** emits records — just without real MuJoCo/LIBERO ground truth.
+(The `synthetic` backend additionally stands in for the env; with `--backend libero` the
+`suite`, `task_id`, `target_region`, and object names are already the real BDDL ground
+truth.) The old `robosuite` stand-in was removed once real LIBERO ran locally — `synthetic`
+is the only non-LIBERO backend kept, as the portable zero-setup fallback.
 
 ---
 
-## 1. One-time setup — isolated sim venv
+## 1. One-time setup — the env per backend
 
-The sim stack (`mujoco`, `robosuite`) is **never** installed into the core `.venv` (it must
-stay stable for the model-free tests). Use a throwaway venv, built with **Python 3.11**
-(the system `python3` here is anaconda 3.8 — too old for `numpy>=1.26`):
+* **`--backend libero` (real ground truth):** build the disposable state-only LIBERO env
+  (Py3.10 + robosuite 1.4.0 + the LIBERO clone) per
+  [`libero-local-env.md`](./libero-local-env.md), then add sklearn for the eval layer
+  (§3b/§3c):
+  ```bash
+  L14=~/.cache/evasion_tax-libero14/venv/bin/python
+  uv pip install --python "$L14" "scikit-learn==1.3.2"   # numpy<1.24-compatible pin
+  ```
+* **`--backend synthetic` (zero-setup):** nothing to install — runs in the core `.venv`
+  (numpy+scipy+sklearn already present). The portable smoke path; no simulator.
 
-```bash
-SMOKE=~/.cache/evasion_tax-libero-smoke
-.venv/bin/python -m venv "$SMOKE/venv"          # 3.11 base, isolated
-"$SMOKE/venv/bin/python" -m pip install --upgrade pip
-"$SMOKE/venv/bin/python" -m pip install "numpy>=1.26" "mujoco>=3.1" "robosuite>=1.4"
-# sanity:
-"$SMOKE/venv/bin/python" -c "import numpy,mujoco,robosuite; \
-  print(numpy.__version__, mujoco.__version__, robosuite.__version__)"
-```
-
-`evasion_tax` itself is **not** pip-installed here — its model-free record classes need only
-NumPy, so the demo imports them straight off the source tree via `PYTHONPATH=src` (the
-`import _bootstrap` line in the script does the path dance).
+The sim stack is **never** installed into the core `.venv` (it must stay stable for the
+model-free tests). `evasion_tax` is **not** pip-installed into the LIBERO env either — its
+model-free record classes need only NumPy, so the demo imports them off the source tree via
+`PYTHONPATH=src` (the `import _bootstrap` line does the path dance).
 
 ---
 
@@ -64,23 +60,19 @@ NumPy, so the demo imports them straight off the source tree via `PYTHONPATH=src
 ```bash
 cd /Users/kawaikyousuke/Desktop/MSc/indivisual
 
-# Tier L — REAL state-only LIBERO ground truth (recommended). Needs the libero14 venv
-# + the LIBERO clone on PYTHONPATH (see docs/setup/libero-local-env.md):
+# REAL state-only LIBERO ground truth (recommended). Needs the libero14 venv + the LIBERO
+# clone on PYTHONPATH (see docs/setup/libero-local-env.md):
 LIB=~/.cache/t7-libero-smoke/LIBERO
 L14=~/.cache/evasion_tax-libero14/venv/bin/python
 PYTHONPATH=src:$LIB "$L14" scripts/demo_rollout.py --backend libero --steps 12 --seed 0
 
-# Tier R — robosuite MuJoCo stand-in (lighter; isolated sim venv):
-SMOKE=~/.cache/evasion_tax-libero-smoke
-PYTHONPATH=src "$SMOKE/venv/bin/python" scripts/demo_rollout.py --backend robosuite --steps 12 --seed 0
-
 # variants:
 PYTHONPATH=src:$LIB "$L14" scripts/demo_rollout.py --backend libero --policy random --seed 1
-PYTHONPATH=src .venv/bin/python scripts/demo_rollout.py --backend synthetic   # no simulator
+PYTHONPATH=src .venv/bin/python scripts/demo_rollout.py --backend synthetic   # zero-setup, no simulator
 ```
 
 Flags: `--steps N` (rollout length, ≥4), `--seed S` (pinned), `--policy {scripted,random}`,
-`--backend {auto,robosuite,libero,synthetic}` (`auto` = robosuite if importable else synthetic;
+`--backend {auto,libero,synthetic}` (`auto` = libero if importable else synthetic;
 `--no-sim` is a deprecated alias for `--backend synthetic`), `--results-root DIR`
 (default `results/_demo`).
 
@@ -97,8 +89,9 @@ The run is **reproducible**: same `--seed`/`--steps`/`--policy` ⇒ identical ac
 
 ## 3. What gets recorded (the point of the demo)
 
-Each run creates a **write-once** directory `results/_demo/<UTC-timestamp>-demo-rollout-<policy>/`
-via the real [`RunLogger`](../../src/evasion_tax/repro/run_logger.py) — the same logger the GPU
+Each run creates a **write-once** directory
+`results/_demo/<UTC-timestamp>-demo-rollout-<backend>-<policy>/` via the real
+[`RunLogger`](../../src/evasion_tax/repro/run_logger.py) — the same logger the GPU
 experiment uses. Inside:
 
 | File | Record | What it is |
@@ -115,8 +108,10 @@ experiment uses. Inside:
 `target_region`), `instruction`, `trusted_goal`, `attacked` (bool), `suffix_ref`.
 
 The `privileged_state` is the ground truth the **non-deployable metric (A)** reasons over —
-on robosuite it's pulled from `robot0_eef_pos`, `robot0_gripper_qpos`, and the `*_pos` object
-keys (identical to LIBERO's obs dict).
+the real [`LiberoStateAdapter`](../../src/evasion_tax/metric/state_libero.py) pulls it from
+`robot0_eef_pos`, `robot0_gripper_qpos`, and the absolute `*_pos` object keys (the
+`*_to_robot0_eef_pos` relative deltas are filtered out), with `target_region` from the BDDL
+`obj_of_interest`.
 
 Inspect them:
 ```bash
@@ -140,12 +135,8 @@ benign-vs-attacked separation the GPU viability gate (H1) tests for real.
 # zero-setup (synthetic rollouts, runs entirely in the core .venv — has scipy/sklearn):
 PYTHONPATH=src .venv/bin/python scripts/demo_metric_separation.py --n 16
 
-# REAL LIBERO ground truth (the eval layer needs sklearn in the libero14 venv — once:
-#   uv pip install --python "$L14" "scikit-learn==1.3.2"   # numpy<1.24-compatible pin):
-PYTHONPATH=src:$LIB "$L14" scripts/demo_metric_separation.py --backend libero --n 8
-
-# robosuite MuJoCo stand-in (the eval layer adds scipy+sklearn+matplotlib to the sim venv):
-PYTHONPATH=src "$SMOKE/venv/bin/python" scripts/demo_metric_separation.py --backend robosuite --n 16
+# REAL LIBERO ground truth (needs sklearn in the libero14 venv — see §1):
+PYTHONPATH=src:$LIB "$L14" scripts/demo_metric_separation.py --backend libero --n 24
 ```
 
 It prints score histograms, the **ROC AUC**, and calibrated **TPR@{1%,5%} FPR** operating
@@ -180,9 +171,7 @@ principle in action — *figures regenerable purely from logged data by a script
 # synthetic (core .venv):
 PYTHONPATH=src .venv/bin/python scripts/demo_figures.py --n 16
 # REAL LIBERO ground truth (libero14 venv with sklearn+matplotlib):
-PYTHONPATH=src:$LIB "$L14" scripts/demo_figures.py --backend libero --n 8
-# robosuite MuJoCo stand-in (isolated sim venv with scipy+sklearn+matplotlib):
-PYTHONPATH=src "$SMOKE/venv/bin/python" scripts/demo_figures.py --backend robosuite --n 16
+PYTHONPATH=src:$LIB "$L14" scripts/demo_figures.py --backend libero --n 24
 ```
 
 Writes a logged `results.json` plus, under `figures/`, four PNGs per run:
@@ -203,7 +192,7 @@ RUN=$(ls -dt results/_demo/*demo-figures-*/ | head -1); open "$RUN"figures/*.png
 [ policy ] --actions--> [ dynamics/env ] --rollout--> [ RolloutStep records ] --> [ metric A ] --> [ eval ] --> [ figures ]
    ^OpenVLA (GPU)            ^LIBERO (now local!)          §2/§3                        §3b           §3b          §3c
    demo: placeholder         demo: real LIBERO         (records)                  (separation)   (AUC/FPR)   (PNG regen)
-                             (or robosuite stand-in)
+                             (synthetic if no sim)
 ```
 
 The three demo scripts now exercise the **whole** model-free pipeline end to end: §2/§3
@@ -242,7 +231,6 @@ action source). The records it feeds are the ones above.
 The isolated env and demo outputs are disposable:
 ```bash
 rm -rf ~/.cache/evasion_tax-libero14         # the real-LIBERO state-only venv (--backend libero)
-rm -rf ~/.cache/evasion_tax-libero-smoke     # the robosuite sim venv (--backend robosuite)
 rm -rf results/_demo                          # git-ignored demo runs
 ```
 Nothing in the repo or the model-free test suite depends on either.

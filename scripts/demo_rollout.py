@@ -9,13 +9,13 @@ write-once ``run.json``, per-step :class:`~evasion_tax.records.RolloutStep`, the
 
 * **OpenVLA-7B** as the action source -> replaced by a transparent **placeholder
   policy** (``scripted`` reach heuristic or seeded ``random``).
-* **LIBERO** as the simulator -> three env seams, chosen with ``--backend``:
+* **LIBERO** as the simulator -> two env seams, chosen with ``--backend``:
   ``libero`` is the **real** state-only LIBERO env (now local: GL-free + torch-free,
   see ``docs/setup/libero-local-env.md``), driven through the **real**
   :class:`~evasion_tax.metric.state_libero.LiberoStateAdapter` — the exact env the
-  GPU node uses, so only the policy seam remains a stand-in; ``robosuite`` is the
-  lighter MuJoCo stand-in (``Lift``/``Panda``); ``synthetic`` is the pure-NumPy
-  :class:`~evasion_tax.attack.dynamics.SyntheticDynamics` fallback (always available).
+  GPU node uses, so only the policy seam remains a stand-in; ``synthetic`` is the
+  pure-NumPy :class:`~evasion_tax.attack.dynamics.SyntheticDynamics` fallback that
+  needs no simulator (the zero-setup path, runs in the core ``.venv``).
 
 The records produced here are **structurally identical** to the real experiment's;
 with ``--backend libero`` even the ``target_region`` and object names are the real
@@ -25,10 +25,15 @@ BDDL ground truth, so only the action source changes on the GPU node (see
 This is a DEMO, not an experiment: the placeholder policy is not OpenVLA, so output
 goes to ``results/_demo/`` (git-ignored), never the write-once real ``results/``.
 
-Run (inside the isolated sim venv that has numpy+mujoco+robosuite):
+Run (real LIBERO — the libero14 venv + LIBERO on PYTHONPATH):
 
-    PYTHONPATH=src ~/.cache/evasion_tax-libero-smoke/venv/bin/python \
-        scripts/demo_rollout.py --steps 12 --seed 0
+    PYTHONPATH=src:~/.cache/t7-libero-smoke/LIBERO \
+        ~/.cache/evasion_tax-libero14/venv/bin/python \
+        scripts/demo_rollout.py --backend libero --steps 12 --seed 0
+
+Run (zero-setup synthetic fallback — core .venv, no simulator):
+
+    PYTHONPATH=src .venv/bin/python scripts/demo_rollout.py --backend synthetic
 
 See ``docs/setup/local-rollout-demo.md`` for the full manual.
 """
@@ -96,111 +101,20 @@ def _attacked_actions(n_steps: int, seed: int, policy: str) -> np.ndarray:
 
 
 # --------------------------------------------------------------------------- #
-# Tier R: robosuite (the MuJoCo substrate LIBERO sits on) — real ground truth  #
+# Tier L: real LIBERO, state-only — the env the GPU node actually uses         #
 # --------------------------------------------------------------------------- #
-def _extract_privileged_state(obs: dict[str, Any]) -> dict[str, Any]:
-    """Map a robosuite/LIBERO obs dict to a PrivilegedState dict (real ground truth).
-
-    Identical extraction to ``scripts/libero_state_smoketest.py`` (LIBERO returns a
-    robosuite obs dict). ``target_region`` has no robosuite equivalent — on LIBERO it
-    comes from the BDDL goal predicate; here we point it at the manipuland (``cube``)
-    as a documented demo stand-in so the field is populated.
-    """
-    ee = obs.get("robot0_eef_pos")
-    ee_pos = (float(ee[0]), float(ee[1]), float(ee[2])) if ee is not None else (0.0, 0.0, 0.0)
-
-    gripper_open = True
-    if "robot0_gripper_qpos" in obs:
-        span = sum(abs(float(x)) for x in obs["robot0_gripper_qpos"])
-        gripper_open = span > 0.04  # Panda heuristic (raw qpos pinned on the GPU node)
-
-    object_poses: dict[str, tuple[float, float, float]] = {}
-    for key, val in obs.items():
-        if not key.endswith("_pos") or key == "robot0_eef_pos":
-            continue
-        try:
-            vec = [float(x) for x in list(val)]
-        except (TypeError, ValueError):
-            continue
-        if len(vec) == 3:
-            object_poses[key[: -len("_pos")]] = (vec[0], vec[1], vec[2])
-
-    target = "cube" if "cube" in object_poses else (next(iter(object_poses), None))
-    return {
-        "ee_pos": ee_pos,
-        "gripper_open": bool(gripper_open),
-        "object_poses": object_poses,
-        "target_region": target,
-    }
+# A state-only LIBERO env runs locally (GL-free + torch-free —
+# docs/setup/libero-local-env.md), so the env seam is the REAL thing. Privileged state
+# is built by the REAL LiberoStateAdapter (real BDDL target_region, real object names,
+# the `_to_` relative-key filter) on the live obs dict — only the policy seam
+# (placeholder vs OpenVLA) stays a GPU-side stand-in.
+_LIBERO_SUITE = "libero_spatial"
 
 
 def _step_env(env: Any, action: np.ndarray) -> dict[str, Any]:
-    """Step a robosuite env and return the obs dict (4- or 5-tuple gym APIs)."""
+    """Step a gym/MuJoCo env and return the obs dict (4- or 5-tuple gym APIs)."""
     out = env.step(np.asarray(action, dtype=float))
     return out[0]  # (obs, reward, done, info[, truncated]) -> obs
-
-
-def _rollout_robosuite(
-    env_maker: Any, actions: np.ndarray, *, seed: int, attacked: bool, suffix_ref: str | None
-) -> Rollout:
-    """Roll ``actions`` out in a fresh robosuite env, recording real ground truth."""
-    env = env_maker(horizon=len(actions))
-    obs = env.reset()
-    steps = []
-    for t, action in enumerate(actions):
-        privileged = _extract_privileged_state(obs)
-        steps.append(
-            RolloutStep(
-                run_id=f"demo-robosuite-{seed}",
-                seed=seed,
-                git_commit=None,
-                suite="robosuite/Lift",
-                task_id="Lift-Panda",
-                step=t,
-                observation_ref=f"robosuite/Lift/{t}",
-                action=tuple(float(x) for x in action),
-                privileged_state=privileged,
-                instruction=_TRUSTED_GOAL,
-                trusted_goal=_TRUSTED_GOAL,
-                attacked=attacked,
-                suffix_ref=suffix_ref,
-            )
-        )
-        obs = _step_env(env, action)
-    env.close()
-    return Rollout(steps=tuple(steps))
-
-
-def _make_robosuite_env_maker() -> Any | None:
-    """Return a ``horizon -> env`` factory for state-only Lift/Panda, or None."""
-    try:
-        import robosuite as suite  # type: ignore[import-not-found]
-    except ImportError:
-        return None
-
-    def make(*, horizon: int) -> Any:
-        return suite.make(
-            env_name="Lift",
-            robots="Panda",
-            has_renderer=False,
-            has_offscreen_renderer=False,
-            use_camera_obs=False,
-            use_object_obs=True,
-            horizon=horizon,
-        )
-
-    return make
-
-
-# --------------------------------------------------------------------------- #
-# Tier L: real LIBERO, state-only — the env the GPU node actually uses         #
-# --------------------------------------------------------------------------- #
-# The earlier demo stood LIBERO in with robosuite; a state-only LIBERO env now runs
-# locally (GL-free + torch-free — docs/setup/libero-local-env.md), so the env seam can
-# be the REAL thing. Privileged state is built by the REAL LiberoStateAdapter (real
-# BDDL target_region, real object names, the `_to_` relative-key filter) on the live
-# obs dict — only the policy seam (placeholder vs OpenVLA) stays a GPU-side stand-in.
-_LIBERO_SUITE = "libero_spatial"
 
 
 def _make_libero_env_maker() -> Any | None:
@@ -359,11 +273,10 @@ def main(argv: list[str] | None = None) -> int:
                         help="placeholder policy standing in for OpenVLA")
     parser.add_argument("--results-root", default="results/_demo",
                         help="write-once demo results root (git-ignored)")
-    parser.add_argument("--backend", choices=("auto", "robosuite", "libero", "synthetic"),
+    parser.add_argument("--backend", choices=("auto", "libero", "synthetic"),
                         default="auto",
-                        help="env seam: auto (robosuite if importable, else synthetic), "
-                             "robosuite (MuJoCo stand-in), libero (REAL state-only LIBERO), "
-                             "or synthetic (no simulator)")
+                        help="env seam: auto (libero if importable, else synthetic), "
+                             "libero (REAL state-only LIBERO), or synthetic (no simulator)")
     parser.add_argument("--no-sim", action="store_true",
                         help="deprecated alias for --backend synthetic")
     args = parser.parse_args(argv)
@@ -376,31 +289,17 @@ def main(argv: list[str] | None = None) -> int:
 
     backend = "synthetic" if args.no_sim else args.backend
     if backend == "auto":
-        env_maker = _make_robosuite_env_maker()
-        backend = "robosuite" if env_maker is not None else "synthetic"
-    elif backend == "robosuite":
-        env_maker = _make_robosuite_env_maker()
-        if env_maker is None:
-            parser.error("robosuite not importable — use --backend synthetic, or the "
-                         "isolated sim venv (docs/setup/local-rollout-demo.md §1)")
+        env_maker = _make_libero_env_maker()
+        backend = "libero" if env_maker is not None else "synthetic"
     elif backend == "libero":
         env_maker = _make_libero_env_maker()
         if env_maker is None:
             parser.error("LIBERO not importable — run with the libero14 venv + LIBERO on "
-                         "PYTHONPATH (docs/setup/libero-local-env.md)")
+                         "PYTHONPATH (docs/setup/libero-local-env.md), or --backend synthetic")
     else:
         env_maker = None
 
-    if backend == "robosuite":
-        tier = "R (robosuite / real MuJoCo ground truth)"
-        benign = _rollout_robosuite(
-            env_maker, benign_actions, seed=args.seed, attacked=False, suffix_ref=None
-        )
-        attacked = _rollout_robosuite(
-            env_maker, attacked_actions, seed=args.seed, attacked=True,
-            suffix_ref="demo/placeholder-suffix",
-        )
-    elif backend == "libero":
+    if backend == "libero":
         tier = "L (real LIBERO, state-only / real BDDL ground truth)"
         benign = _rollout_libero(
             env_maker, benign_actions, seed=args.seed, attacked=False, suffix_ref=None
@@ -424,7 +323,7 @@ def main(argv: list[str] | None = None) -> int:
         "env_tier": tier,
         "steps": args.steps,
         # The authoritative goal comes from the rollout: _TRUSTED_GOAL for the
-        # robosuite/synthetic stand-ins, the real BDDL instruction for libero.
+        # synthetic stand-in, the real BDDL instruction for libero.
         "trusted_goal": benign.steps[0].trusted_goal,
         "attack_target": dataclasses.asdict(_ATTACK_TARGET),
     }
