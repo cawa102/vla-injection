@@ -15,9 +15,9 @@
     "semantic_hash": "7c1894e806fd697972dd29334ded4f41"
   },
   "/Users/kawaikyousuke/Desktop/MSc/indivisual/scripts/evaluate.py": {
-    "mtime": 1780642431.5043402,
-    "ast_hash": "4cee6109e13563ce601bc4f5ad7d2677",
-    "semantic_hash": "4cee6109e13563ce601bc4f5ad7d2677"
+    "mtime": 1780887197.1120942,
+    "ast_hash": "973fbc2ce3683b9f955da4eab8dfb694",
+    "semantic_hash": "973fbc2ce3683b9f955da4eab8dfb694"
   },
   "/Users/kawaikyousuke/Desktop/MSc/indivisual/scripts/fetch_openvla_stats.py": {
     "mtime": 1780642431.5096555,
@@ -70,9 +70,9 @@
     "semantic_hash": "2c977f91edbdd0e9f2c94da2240c8348"
   },
   "/Users/kawaikyousuke/Desktop/MSc/indivisual/src/evasion_tax/attack/idealized_frontier.py": {
-    "mtime": 1780706945.6341784,
-    "ast_hash": "aefdd65399aa83289c3d47495510336b",
-    "semantic_hash": "aefdd65399aa83289c3d47495510336b"
+    "mtime": 1780887588.720547,
+    "ast_hash": "c0177ffde77c0930fb6d85560597fa95",
+    "semantic_hash": "c0177ffde77c0930fb6d85560597fa95"
   },
   "/Users/kawaikyousuke/Desktop/MSc/indivisual/src/evasion_tax/baselines/__init__.py": {
     "mtime": 1780642431.6311553,
@@ -120,29 +120,29 @@
     "semantic_hash": "e3b4ccf5bdea8b25255bcb398b997c42"
   },
   "/Users/kawaikyousuke/Desktop/MSc/indivisual/src/evasion_tax/eval/__init__.py": {
-    "mtime": 1780642431.6802368,
-    "ast_hash": "4e9700914e58bfa0794addbb56bd3758",
-    "semantic_hash": "4e9700914e58bfa0794addbb56bd3758"
+    "mtime": 1780887159.1947362,
+    "ast_hash": "b89fad32da4e4084becd5fc2366b2bc9",
+    "semantic_hash": "b89fad32da4e4084becd5fc2366b2bc9"
   },
   "/Users/kawaikyousuke/Desktop/MSc/indivisual/src/evasion_tax/eval/cross_layer.py": {
-    "mtime": 1780704497.565346,
-    "ast_hash": "1fc8c999e39beb723ae4af98d29faedf",
-    "semantic_hash": "1fc8c999e39beb723ae4af98d29faedf"
+    "mtime": 1780887553.1440613,
+    "ast_hash": "7e38dfcbc200a1ffe42103f78cf59eb6",
+    "semantic_hash": "7e38dfcbc200a1ffe42103f78cf59eb6"
   },
   "/Users/kawaikyousuke/Desktop/MSc/indivisual/src/evasion_tax/eval/figures.py": {
-    "mtime": 1780704430.4644022,
-    "ast_hash": "3112d5c40d9f23776fefa92b9a85a796",
-    "semantic_hash": "3112d5c40d9f23776fefa92b9a85a796"
+    "mtime": 1780887127.8839612,
+    "ast_hash": "3ac50de38b3f2a34aff20d100732276b",
+    "semantic_hash": "3ac50de38b3f2a34aff20d100732276b"
   },
   "/Users/kawaikyousuke/Desktop/MSc/indivisual/src/evasion_tax/eval/harness.py": {
-    "mtime": 1780642431.6941772,
-    "ast_hash": "24d61a2e86238391609ac489a17b829d",
-    "semantic_hash": "24d61a2e86238391609ac489a17b829d"
+    "mtime": 1780887057.6494563,
+    "ast_hash": "c521010b8fcea5fafe298bfb90969ac2",
+    "semantic_hash": "c521010b8fcea5fafe298bfb90969ac2"
   },
   "/Users/kawaikyousuke/Desktop/MSc/indivisual/src/evasion_tax/eval/metrics.py": {
-    "mtime": 1780642431.6999238,
-    "ast_hash": "cc1a5ba56c0b88ab5ff4d14402a0b334",
-    "semantic_hash": "cc1a5ba56c0b88ab5ff4d14402a0b334"
+    "mtime": 1780887771.2038443,
+    "ast_hash": "30accf87cb9cc598012f64317479d06c",
+    "semantic_hash": "30accf87cb9cc598012f64317479d06c"
   },
   "/Users/kawaikyousuke/Desktop/MSc/indivisual/src/evasion_tax/eval/power.py": {
     "mtime": 1780642431.7046304,
@@ -160,9 +160,9 @@
     "semantic_hash": "af9e7708319a7637fcda61edacf2ecf1"
   },
   "/Users/kawaikyousuke/Desktop/MSc/indivisual/src/evasion_tax/metric/consistency_a.py": {
-    "mtime": 1780704486.1437695,
-    "ast_hash": "de8f7e822dd7b4e2df891f4b3d08c453",
-    "semantic_hash": "de8f7e822dd7b4e2df891f4b3d08c453"
+    "mtime": 1780887715.480242,
+    "ast_hash": "3af3a53005a33923cdd6b5b9df5a984f",
+    "semantic_hash": "3af3a53005a33923cdd6b5b9df5a984f"
   },
   "/Users/kawaikyousuke/Desktop/MSc/indivisual/src/evasion_tax/metric/coverage.py": {
     "mtime": 1780643143.1696415,
@@ -200,9 +200,9 @@
     "semantic_hash": "8c72405e94a0076f2bfd2abf65965669"
   },
   "/Users/kawaikyousuke/Desktop/MSc/indivisual/src/evasion_tax/records.py": {
-    "mtime": 1780488431.6638722,
-    "ast_hash": "a4d4466698eb5245ce51537b7c72d8ab",
-    "semantic_hash": "a4d4466698eb5245ce51537b7c72d8ab"
+    "mtime": 1780887516.584466,
+    "ast_hash": "0deceb031f058a8608df47bc0cdac84e",
+    "semantic_hash": "0deceb031f058a8608df47bc0cdac84e"
   },
   "/Users/kawaikyousuke/Desktop/MSc/indivisual/src/evasion_tax/repro/__init__.py": {
     "mtime": 1780706945.634848,
@@ -210,9 +210,9 @@
     "semantic_hash": "452f838026ed137ff49317321a40603f"
   },
   "/Users/kawaikyousuke/Desktop/MSc/indivisual/src/evasion_tax/repro/env_capture.py": {
-    "mtime": 1780704396.1588612,
-    "ast_hash": "b0db1a5746cc8bf0953dbb8d1564ab5b",
-    "semantic_hash": "b0db1a5746cc8bf0953dbb8d1564ab5b"
+    "mtime": 1780887780.6536038,
+    "ast_hash": "4bc4064c600ad30f05ab7dbbc85da952",
+    "semantic_hash": "4bc4064c600ad30f05ab7dbbc85da952"
   },
   "/Users/kawaikyousuke/Desktop/MSc/indivisual/src/evasion_tax/repro/provenance.py": {
     "mtime": 1780254878.3499327,
@@ -280,24 +280,24 @@
     "semantic_hash": "96dfcdfc8d216b239b4d00e7cf9d2cff"
   },
   "/Users/kawaikyousuke/Desktop/MSc/indivisual/tests/evasion_tax/eval/test_cross_layer.py": {
-    "mtime": 1780642431.8057375,
-    "ast_hash": "c5269a0fe21fcb0abb66c316b7030111",
-    "semantic_hash": "c5269a0fe21fcb0abb66c316b7030111"
+    "mtime": 1780887957.3560557,
+    "ast_hash": "fcbd7d12bce658012affbfc9c300c47a",
+    "semantic_hash": "fcbd7d12bce658012affbfc9c300c47a"
   },
   "/Users/kawaikyousuke/Desktop/MSc/indivisual/tests/evasion_tax/eval/test_figures.py": {
-    "mtime": 1780642431.8099587,
-    "ast_hash": "6ae4c1b34c8b7c933954aa0c6a2b4659",
-    "semantic_hash": "6ae4c1b34c8b7c933954aa0c6a2b4659"
+    "mtime": 1780887265.4319327,
+    "ast_hash": "31b90bb6b6b72e5a2549df33c849ed92",
+    "semantic_hash": "31b90bb6b6b72e5a2549df33c849ed92"
   },
   "/Users/kawaikyousuke/Desktop/MSc/indivisual/tests/evasion_tax/eval/test_harness.py": {
-    "mtime": 1780642431.8141391,
-    "ast_hash": "bbe8f5ca66bf527cb4c7b391d6ac39ea",
-    "semantic_hash": "bbe8f5ca66bf527cb4c7b391d6ac39ea"
+    "mtime": 1780887235.423718,
+    "ast_hash": "a94e0261ff14aa0b4a05f4b9d0aff509",
+    "semantic_hash": "a94e0261ff14aa0b4a05f4b9d0aff509"
   },
   "/Users/kawaikyousuke/Desktop/MSc/indivisual/tests/evasion_tax/eval/test_metrics.py": {
-    "mtime": 1780642431.8184223,
-    "ast_hash": "206f9a7e2ffcde39ba6e13ca3f828554",
-    "semantic_hash": "206f9a7e2ffcde39ba6e13ca3f828554"
+    "mtime": 1780887813.1401727,
+    "ast_hash": "da47feb96a7eb107582611f9d9f3fc76",
+    "semantic_hash": "da47feb96a7eb107582611f9d9f3fc76"
   },
   "/Users/kawaikyousuke/Desktop/MSc/indivisual/tests/evasion_tax/eval/test_power.py": {
     "mtime": 1780642431.8229294,
@@ -320,9 +320,9 @@
     "semantic_hash": "80510694d74a174c3dc1b72b0e08b049"
   },
   "/Users/kawaikyousuke/Desktop/MSc/indivisual/tests/evasion_tax/metric/test_consistency_a.py": {
-    "mtime": 1780642431.8358915,
-    "ast_hash": "37dfa749ac93519f95ca31e29643dd20",
-    "semantic_hash": "37dfa749ac93519f95ca31e29643dd20"
+    "mtime": 1780887735.3921854,
+    "ast_hash": "e9bab0d912ec02296bb578dcf625f015",
+    "semantic_hash": "e9bab0d912ec02296bb578dcf625f015"
   },
   "/Users/kawaikyousuke/Desktop/MSc/indivisual/tests/evasion_tax/metric/test_coverage.py": {
     "mtime": 1780642431.8403673,
@@ -355,9 +355,9 @@
     "semantic_hash": "2469a26441a14a423875b696c58d2871"
   },
   "/Users/kawaikyousuke/Desktop/MSc/indivisual/tests/evasion_tax/repro/test_env_capture.py": {
-    "mtime": 1780642431.8721666,
-    "ast_hash": "60f5342b971a1d810b0e9e20947ccc65",
-    "semantic_hash": "60f5342b971a1d810b0e9e20947ccc65"
+    "mtime": 1780887870.5065339,
+    "ast_hash": "8d1b9ec20f1c9db13716d6e619b520b2",
+    "semantic_hash": "8d1b9ec20f1c9db13716d6e619b520b2"
   },
   "/Users/kawaikyousuke/Desktop/MSc/indivisual/tests/evasion_tax/repro/test_provenance.py": {
     "mtime": 1780642431.8768191,
@@ -375,9 +375,9 @@
     "semantic_hash": "474fdf0ec877ca577e9bbc574e9411da"
   },
   "/Users/kawaikyousuke/Desktop/MSc/indivisual/tests/evasion_tax/test_records.py": {
-    "mtime": 1780642431.8891234,
-    "ast_hash": "dcf5c78dc8df567fb3f53ba9a728c457",
-    "semantic_hash": "dcf5c78dc8df567fb3f53ba9a728c457"
+    "mtime": 1780887670.6582425,
+    "ast_hash": "d078fe4e0f85cbe002405eb114a4c7dc",
+    "semantic_hash": "d078fe4e0f85cbe002405eb114a4c7dc"
   },
   "/Users/kawaikyousuke/Desktop/MSc/indivisual/tests/evasion_tax/test_smoke.py": {
     "mtime": 1780642431.8933384,
@@ -395,9 +395,9 @@
     "semantic_hash": "c6c3d1b828ada45ce45eab99c2972f57"
   },
   "/Users/kawaikyousuke/Desktop/MSc/indivisual/.claude/agent-memory/session-context-loader/status-snapshot.md": {
-    "mtime": 1780643030.644657,
-    "ast_hash": "50716f5e90277654894bbe9a4309eaa2",
-    "semantic_hash": "50716f5e90277654894bbe9a4309eaa2"
+    "mtime": 1780888784.7130628,
+    "ast_hash": "3f57f94e42f85f879f61cbebb45464ee",
+    "semantic_hash": "3f57f94e42f85f879f61cbebb45464ee"
   },
   "/Users/kawaikyousuke/Desktop/MSc/indivisual/.claude/agents/session-context-loader.md": {
     "mtime": 1780445326.3062117,
@@ -455,14 +455,14 @@
     "semantic_hash": "8c14bc876b1b0378cf657482af2ff4a3"
   },
   "/Users/kawaikyousuke/Desktop/MSc/indivisual/docs/core/execution-playbook.md": {
-    "mtime": 1780642807.4155447,
-    "ast_hash": "259b6dd4670013659f1da7561c50e214",
-    "semantic_hash": "259b6dd4670013659f1da7561c50e214"
+    "mtime": 1780888142.6532397,
+    "ast_hash": "81c03bce33cabdad14ba2b1f9380446d",
+    "semantic_hash": "81c03bce33cabdad14ba2b1f9380446d"
   },
   "/Users/kawaikyousuke/Desktop/MSc/indivisual/docs/core/goal-action-consistency-detector.md": {
-    "mtime": 1780642842.1315057,
-    "ast_hash": "04ca9a9f1b040af6fdbbaafbb7c43c57",
-    "semantic_hash": "04ca9a9f1b040af6fdbbaafbb7c43c57"
+    "mtime": 1780887893.8877497,
+    "ast_hash": "0b1bf0095b547d044d79e84ca3a8f799",
+    "semantic_hash": "0b1bf0095b547d044d79e84ca3a8f799"
   },
   "/Users/kawaikyousuke/Desktop/MSc/indivisual/docs/core/local-prep-plan.md": {
     "mtime": 1780642807.3847597,
@@ -470,9 +470,9 @@
     "semantic_hash": "d55b9f5c8576cc3a4a8f4a7933ba1a30"
   },
   "/Users/kawaikyousuke/Desktop/MSc/indivisual/docs/core/metric-a-annotation-schema.md": {
-    "mtime": 1780642807.379742,
-    "ast_hash": "df7fff45b3e8b044ecac2c52c1cd4bff",
-    "semantic_hash": "df7fff45b3e8b044ecac2c52c1cd4bff"
+    "mtime": 1780888110.207221,
+    "ast_hash": "28068ebaa15b4f92f8642450c54aead1",
+    "semantic_hash": "28068ebaa15b4f92f8642450c54aead1"
   },
   "/Users/kawaikyousuke/Desktop/MSc/indivisual/docs/gpu/Connection.md": {
     "mtime": 1780487565.5028245,
@@ -553,5 +553,65 @@
     "mtime": 1780252179.2822385,
     "ast_hash": "b3bb3359d918d6b29302aa65bf39b625",
     "semantic_hash": "b3bb3359d918d6b29302aa65bf39b625"
+  },
+  "/Users/kawaikyousuke/Desktop/MSc/indivisual/scripts/demo_figures.py": {
+    "mtime": 1780958307.708094,
+    "ast_hash": "587f17ed805bf2c1546b26eb7f562cb1",
+    "semantic_hash": "587f17ed805bf2c1546b26eb7f562cb1"
+  },
+  "/Users/kawaikyousuke/Desktop/MSc/indivisual/scripts/demo_metric_separation.py": {
+    "mtime": 1780958279.8455744,
+    "ast_hash": "c861c52cb2db4759cc2d21b4c850d407",
+    "semantic_hash": "c861c52cb2db4759cc2d21b4c850d407"
+  },
+  "/Users/kawaikyousuke/Desktop/MSc/indivisual/scripts/demo_rollout.py": {
+    "mtime": 1780957104.3367345,
+    "ast_hash": "ab7081a5541b514a7ac2d6b75ff3dab7",
+    "semantic_hash": "ab7081a5541b514a7ac2d6b75ff3dab7"
+  },
+  "/Users/kawaikyousuke/Desktop/MSc/indivisual/tests/evasion_tax/eval/test_evaluate_cli.py": {
+    "mtime": 1780887331.2107575,
+    "ast_hash": "d4c8faf40be51ae7a739de002d432b7c",
+    "semantic_hash": "d4c8faf40be51ae7a739de002d432b7c"
+  },
+  "/Users/kawaikyousuke/Desktop/MSc/indivisual/tests/evasion_tax/metric/fixtures/libero_obs_goal_opendrawer.json": {
+    "mtime": 1780964746.1882365,
+    "ast_hash": "c6f564c38713f565182abb9c11023020",
+    "semantic_hash": "c6f564c38713f565182abb9c11023020"
+  },
+  "/Users/kawaikyousuke/Desktop/MSc/indivisual/tests/evasion_tax/metric/fixtures/libero_obs_spatial0.json": {
+    "mtime": 1780964745.1483867,
+    "ast_hash": "4b957386a1d99e2f6e228e1e9b4ae8d6",
+    "semantic_hash": "4b957386a1d99e2f6e228e1e9b4ae8d6"
+  },
+  "/Users/kawaikyousuke/Desktop/MSc/indivisual/tests/evasion_tax/metric/test_state_libero.py": {
+    "mtime": 1780964891.3917446,
+    "ast_hash": "d870d709332d31e649229b442957ee94",
+    "semantic_hash": "d870d709332d31e649229b442957ee94"
+  },
+  "/Users/kawaikyousuke/Desktop/MSc/indivisual/docs/dynamic-workflow/2026-06-08-code-review.md": {
+    "mtime": 1780878915.5743632,
+    "ast_hash": "983f73acb047bd999f7a5a5a0daac4dd",
+    "semantic_hash": "983f73acb047bd999f7a5a5a0daac4dd"
+  },
+  "/Users/kawaikyousuke/Desktop/MSc/indivisual/docs/plans/2026-06-09-libero-state-adapter.md": {
+    "mtime": 1780964699.915348,
+    "ast_hash": "6626590aa0a12287ec8eb7bc085ed532",
+    "semantic_hash": "6626590aa0a12287ec8eb7bc085ed532"
+  },
+  "/Users/kawaikyousuke/Desktop/MSc/indivisual/docs/setup/local-rollout-demo.md": {
+    "mtime": 1780958423.5860913,
+    "ast_hash": "7fa2ab5dadfcbf78a2ca44631e2646f8",
+    "semantic_hash": "7fa2ab5dadfcbf78a2ca44631e2646f8"
+  },
+  "/Users/kawaikyousuke/Desktop/MSc/indivisual/graphify-out/memory/query_20260607_194413_explain__starting_guide_when_start_using_gpu.md": {
+    "mtime": 1780861453.690792,
+    "ast_hash": "cd11102636179d791eb94b7e543a37c5",
+    "semantic_hash": "cd11102636179d791eb94b7e543a37c5"
+  },
+  "/Users/kawaikyousuke/Desktop/MSc/indivisual/tests/evasion_tax/metric/fixtures/PROVENANCE.md": {
+    "mtime": 1780964777.7617142,
+    "ast_hash": "3750382ffabd7e296b270c2c75044ca6",
+    "semantic_hash": "3750382ffabd7e296b270c2c75044ca6"
   }
 }

@@ -40,3 +40,7 @@ venv/
 *.swp
 .idea/
 .vscode/
+
+# --- graphify Obsidian vault: skip the bundled presentation images (byte-identical
+#     duplicates of docs/presentation/assets/image-*.png — keep one copy only) ---
+graphify-out/obsidian/_assets/

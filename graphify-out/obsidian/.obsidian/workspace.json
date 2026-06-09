@@ -1,0 +1,228 @@
+{
+  "main": {
+    "id": "2fd8fc94dd2a53da",
+    "type": "split",
+    "children": [
+      {
+        "id": "57b12d11bc16c0a5",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "42373a48ee103a8f",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "execution-playbook.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": true,
+                "backlinkOpts": {
+                  "collapseAll": false,
+                  "extraContext": false,
+                  "sortOrder": "alphabetical",
+                  "showSearch": false,
+                  "searchQuery": "",
+                  "backlinkCollapsed": false,
+                  "unlinkedCollapsed": true
+                }
+              },
+              "icon": "lucide-file",
+              "title": "execution-playbook"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "3fc466c4d06d5ee4",
+    "type": "split",
+    "children": [
+      {
+        "id": "4864a94165002413",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "ac7cbab9c8755a8e",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "a4f07a7bbf2594e3",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "3a5177b13fe5954a",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "189a5ecec68b9715",
+    "type": "split",
+    "children": [
+      {
+        "id": "25e1f45ae6340633",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "4ec67ee37d7da820",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "ActivationExtractor (Protocol seam).md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for ActivationExtractor (Protocol seam)"
+            }
+          },
+          {
+            "id": "6fa38e196e6a9026",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "ActivationExtractor (Protocol seam).md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from ActivationExtractor (Protocol seam)"
+            }
+          },
+          {
+            "id": "a6acb30e480baf52",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "2e6d533809a1f36e",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "e992c4e108797fcb",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "ActivationExtractor (Protocol seam).md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of ActivationExtractor (Protocol seam)"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "42373a48ee103a8f",
+  "lastOpenFiles": [
+    "CLAUDE.md",
+    "execution-playbook.md",
+    "Coverage manifest (Codex 6; coverage.py).md",
+    "_COMMUNITY_Attack Mechanisms M-aM-b.md",
+    "_assets/image-2.png",
+    "_assets/image-1.png",
+    "_assets",
+    "CLAUDE.md project instructions.md",
+    "classify_power().md",
+    "Causal prefix window detection.md",
+    "Causal goal-action consistency scorer over a prefix window (metric A).      Args.md",
+    "ConsistencyMetricA.md",
+    "Any.md",
+    "ActivationExtractor (Protocol seam).md",
+    "akita_black_bowl_1_to_robot0_eef_quat_1.md",
+    "No-leakage calibtest invariant 3.md",
+    "assert_disjoint (calibtest leakage guard).md",
+    "GPU Day-1 Runbook (Kelvin2  M1 gate).md",
+    "_COMMUNITY_run_condition_matrix.md",
+    "_COMMUNITY_Make this directory's helper modules imp.md",
+    "_COMMUNITY_Shared pytest fixtures for the evasion_t.md",
+    "_COMMUNITY_Reproducibility infrastructure for the E.md",
+    "_COMMUNITY_Policy-side helpers (Task 3).  Currently.md",
+    "_COMMUNITY_Privileged-state metric package (Task 4+.md",
+    "_COMMUNITY_Evaluation harness + statistics (Task 7).md",
+    "_COMMUNITY_FP-calibrated detector (Task 6).  Turns.md",
+    "_COMMUNITY_Pinned-config schema + runtime guard (Ta.md",
+    "_COMMUNITY_M2 comparison baselines (Task 8).  Two d.md",
+    "_COMMUNITY_Rollout.md"
+  ]
+}

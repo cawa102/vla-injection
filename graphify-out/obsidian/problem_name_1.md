@@ -1,0 +1,18 @@
+---
+source_file: "tests/evasion_tax/metric/fixtures/libero_obs_spatial0.json"
+type: "code"
+community: "LIBERO Problem Metadata"
+location: "L3"
+tags:
+  - graphify/code
+  - graphify/EXTRACTED
+  - community/LIBERO_Problem_Metadata
+---
+
+# problem_name
+
+## Connections
+- [[libero_obs_spatial0.json]] - `defined_in` [EXTRACTED]
+- [[problem_info_1]] - `contains` [EXTRACTED]
+
+#graphify/code #graphify/EXTRACTED #community/LIBERO_Problem_Metadata
