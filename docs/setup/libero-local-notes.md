@@ -12,6 +12,42 @@
 
 ---
 
+## 2026-06-09 UPDATE — Tier L now RUNS locally (the deferral is overturned)
+
+The "Tier L BLOCKED / deferred to the GPU node" conclusion below was **env-assembly,
+not fundamental**. A state-only LIBERO env now runs on this mac, **GL-free and
+torch-free**, by avoiding the two blocking entry points:
+
+- bypass `libero.libero.benchmark` (hard-imports torch) → locate the BDDL from the
+  package dir directly;
+- bypass `OffScreenRenderEnv` (GL) → construct the lower-level
+  `libero.libero.envs.env_wrapper.ControlEnv(use_camera_obs=False, has_renderer=False,
+  has_offscreen_renderer=False)`.
+
+The remaining real requirement was **robosuite 1.4.0** (LIBERO imports
+`robosuite...single_arm_env.SingleArmEnv`, removed in 1.5) → a dedicated Py3.10 venv;
+full recipe in [`libero-local-env.md`](./libero-local-env.md).
+
+**What this unblocked (built locally against real LIBERO ground truth):**
+- `src/evasion_tax/metric/state_libero.py` (`LiberoStateAdapter`) — was deferred to the
+  GPU node; now built + unit-tested against frozen real-obs fixtures
+  (`tests/evasion_tax/metric/fixtures/`).
+- The real BDDL **`target_region`** the demo faked: `obj_of_interest[-1]`
+  (`plate_1` for the spatial-0 pick-place; `(On bowl plate_1)`).
+- A **bug** the synthetic/robosuite path hid: naive `*_pos` extraction ingests
+  `<obj>_to_robot0_eef_pos` **relative deltas** as phantom objects (corrupts the metric's
+  distractor primitive). The adapter + this script now filter `_to_` keys.
+- Tier L of this smoke test now **PASSES** (was: fell back to Tier R).
+
+**Still on the GPU node:** the production pinned stack (Py3.10 / robosuite-pin / GL) +
+re-validation of the gripper threshold, object naming, and the relative-key filter across
+**all** suites; and anything needing a policy (OpenVLA rollouts). The local adapter is a
+**draft re-validated on the GPU node** (repro rule), not the final.
+
+The original 2026-06-03 record is kept verbatim below (honest history).
+
+---
+
 ## Outcome (headline)
 
 **Tier R (robosuite) — PASS.** A state-only robosuite env (`Lift`/`Panda`,
