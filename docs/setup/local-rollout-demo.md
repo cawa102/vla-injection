@@ -160,6 +160,14 @@ same per-seed policy jitter; the only difference is the injected redirect (one v
 > With small `--n` the calibration split is tiny, so τ is coarse and the held-out FPR can
 > overshoot its target — that is the honest small-sample behaviour, not a bug.
 
+**Verified run — real LIBERO, 2026-06-09** (`--backend libero --n 24 --steps 10 --seed 0`,
+`libero_spatial` task *"pick the akita black bowl … place it on the plate"*, real BDDL
+`target_region=plate_1`): benign per-rollout score 0.149–0.344, attacked 0.810–0.926,
+**AUC = 1.000** (by construction), τ = 0.344, **TPR@{1%,5%}FPR = 1.00** (CI [0.86, 1.00]),
+**held-out FPR = 0.000** (clean at n=24, vs 0.50 at n=8). Power flag stays on — `n_benign=12`
+< the rule-of-three floor (60 for 5%, 300 for 1% FPR) — so the figures honestly mark the
+operating points underpowered (invariant #5). Same seed ⇒ byte-identical records.
+
 ## 3c. Figure-regeneration dry-run
 
 [`scripts/demo_figures.py`](../../scripts/demo_figures.py) runs the **real M2 figure
