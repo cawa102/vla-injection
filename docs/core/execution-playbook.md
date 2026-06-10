@@ -547,7 +547,7 @@ one_variable:  <what single variable changed vs the previous run>
   VLA-safety lane is **occupied**; our claim is the narrower **adaptive evasion-cost *measurement* for the
   instruction channel, FP-calibrated, with an action-space intrinsic frontier** — none of these measure adaptive
   evasion cost. `2602.01834` / `2603.06001` also bound the **L1-arm** novelty (cite + differentiate in §4b-I).
-  *PDFs not yet downloaded — pending SHA-pin into `docs/references/README.md`.*
+  *PDFs downloaded + SHA-256-pinned 2026-06-10 (`docs/references/README.md`).*
 - **Hardware:** **A100/H100** (granted 2026-06-02; single-card vs cluster + queue depth TBC), superseding the
   assumed single GB10. OpenVLA-7B runs in **bf16** (≈14 GB; fits an 80 GB card; 4-bit no longer required) → the
   published H100 GCG timings should ≈ transfer (verified at the M1 micro-bench). The compute branch (N / N− / F)

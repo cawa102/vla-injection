@@ -22,6 +22,10 @@ do not redistribute. Verify the canonical license on each paper's source page be
 | `2603.23117-trap-cot-patch-attack-vla.pdf` | TRAP: Hijacking VLA CoT-Reasoning via Adversarial Patches | 2603.23117 (Mar 2026) | https://arxiv.org/pdf/2603.23117 | 2026-06-01 | `b1c5ae8ec7b7f46028f07a7a3acfaa3b50ad623045b0280fb02802f6d45a47f7` | arXiv (confirm abs page) |
 | `2604.23775-vla-safety-survey.pdf` | Vision-Language-Action Safety: Threats, Challenges, Evaluations, and Mechanisms | 2604.23775 (Apr 2026) | https://arxiv.org/pdf/2604.23775 | 2026-06-01 | `0f3666a9dffe542e281b40b74c0c174ae4cbf10e5dff04cbbc6234cfc0c87a88` | arXiv (confirm abs page) |
 | `2604.05229-koch-runtime-guardrails-governance.pdf` | From Governance Norms to Enforceable Controls: A Layered Translation Method for Runtime Guardrails in Agentic AI | 2604.05229 (Apr 2026) | https://arxiv.org/pdf/2604.05229 | 2026-06-01 | `e1b35992fa32629bec1c648a163787b7103b9ddb9edc3c56d6820e62c3e17b8b` | arXiv (confirm abs page) |
+| `2602.01834-concept-dictionary-inference-time-safety-vla.pdf` | Concept-Based Dictionary Learning for Inference-Time Safety in Vision Language Action Models | 2602.01834 (v1 2 Feb 2026; v2 23 Mar 2026) | https://arxiv.org/pdf/2602.01834 | 2026-06-10 | `823151dac87ca89913d5fee9258de1f255c9a250d82eeffb3bb7888db6fd2226` | arXiv (confirm abs page) |
+| `2603.06001-igar-attention-recalibration-vla.pdf` | Restoring Linguistic Grounding in VLA Models via Train-Free Attention Recalibration (IGAR) | 2603.06001 (6 Mar 2026) | https://arxiv.org/pdf/2603.06001 | 2026-06-10 | `623eb92dcdab545edc39d44c9d73e02a42b09467666d89f62b91fc459531112b` | arXiv (confirm abs page) |
+| `2604.12447-hazardarena-semantic-safety-vla.pdf` | HazardArena: Evaluating Semantic Safety in Vision-Language-Action Models | 2604.12447 (14 Apr 2026) | https://arxiv.org/pdf/2604.12447 | 2026-06-10 | `6933001310bae5828fbc4e879f896c4bd8c2735d50690971dbaab523fdd899ea` | arXiv (confirm abs page) |
+| `2605.22446-pre-vla-runtime-verification.pdf` | Pre-VLA: Preemptive Runtime Verification for Reliable Vision-Language-Action and World-Model Rollouts | 2605.22446 (21 May 2026) | https://arxiv.org/pdf/2605.22446 | 2026-06-10 | `91e8af701c85102fc1b5434736b88443fd784dc173aa32c65e8002406b0ad911` | arXiv (confirm abs page) |
 
 ## RoboGCG — verified facts (full-text, 2026-05-31)
 
@@ -159,12 +163,12 @@ LVLM — threat-generalization / future arm only (**out** of committed scope) ·
   for observable/determinate/time-sensitive controls. **Domain-general (not VLA-specific)** — our embodied
   application is a faithful extension, not a paper claim.
 
-### 2026 runtime / inference-time VLA-safety cluster — Codex review #2, verified on arXiv 2026-06-02 (NOT yet downloaded)
+### 2026 runtime / inference-time VLA-safety cluster — Codex review #2, verified on arXiv 2026-06-02 (downloaded + SHA-pinned 2026-06-10)
 
 These four were flagged by the Codex review as "omitted adjacent work" and **independently re-verified on the
-arXiv abstract pages 2026-06-02** (title/authors/abstract confirmed) before acting on them. They are **not yet
-downloaded / SHA-pinned**, so they are **not in the local-copies manifest above** — `[TODO download + SHA-pin]`
-before any of them is cited in the dissertation.
+arXiv abstract pages 2026-06-02** (title/authors/abstract confirmed) before acting on them. **They are now
+downloaded, SHA-256-pinned, and in the local-copies manifest above** (titles/authors/dates re-confirmed on the
+abstract pages 2026-06-10; PDFs gitignored). Safe to cite in the dissertation.
 
 - **Pre-VLA** `2605.22446` `[FRAME]` (Sun, Guo, Sun, Wang, Lu, Ji, Ji, Xiong, Meng) — **runtime** preemptive
   action-validity verification before execution (dual-branch safety/advantage; LIBERO 30.8→37.6%). Runtime, but
