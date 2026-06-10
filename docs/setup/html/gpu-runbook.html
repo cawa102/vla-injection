@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GPU Day-1 Runbook | Setup Guide</title>
+  <link rel="stylesheet" href="setup-guide.css">
+</head>
+<body>
+  <div class="guide-shell">
+    <nav class="site-nav" aria-label="Setup HTML guides">
+      <div class="nav-inner">
+        <a class="brand" href="../gpu-runbook.md">
+          <span class="brand-mark">ET</span>
+          <span>Setup Guides</span>
+        </a>
+        <div class="nav-links">
+          <a href="libero-local-env.html">Local LIBERO env</a>
+          <a href="local-rollout-demo.html">Rollout demo</a>
+          <a href="libero-local-notes.html">Local notes</a>
+          <a href="gpu-runbook.html" aria-current="page">GPU runbook</a>
+        </div>
+      </div>
+    </nav>
+
+    <header class="hero">
+      <div class="hero-inner">
+        <div>
+          <p class="eyebrow">Kelvin2 / M1 viability gate</p>
+          <h1>GPU Day-1 Runbook</h1>
+          <p class="hero-summary">
+            GPU accessをM1 GO/NO-GO判定へ変換するための操作資料。
+            clone、pinned env、checkpoint provenance、benign baseline、RoboGCG、micro-bench、
+            metric (A) signal、D8 branch selectionまでを一気通貫で扱う。
+          </p>
+          <div class="hero-actions">
+            <a class="button-link" href="../gpu-runbook.md">Source Markdown</a>
+            <a class="button-link secondary" href="../../gpu/Overview.md">Kelvin2 docs</a>
+          </div>
+        </div>
+        <aside class="hero-panel">
+          <h2>Exit condition</h2>
+          <p>
+            H1の4条件を満たすか、どこで失敗したかをwrite-once <code>results/</code> に残す。
+            negative resultも落とさない。
+          </p>
+          <div class="tag-row">
+            <span class="tag cool">A100/H100</span>
+            <span class="tag cool">bf16</span>
+            <span class="tag hot">3-day cap</span>
+          </div>
+        </aside>
+      </div>
+    </header>
+
+    <main>
+      <section class="section">
+        <p class="section-kicker">Mission</p>
+        <h2>Day-1で決めることは「動いたか」だけではない</h2>
+        <div class="gate-grid">
+          <article class="gate-card">
+            <span class="metric">H1a</span>
+            <h3>Benign reproduced</h3>
+            <p>OpenVLA-7B + LIBEROのbenign successがpublished numbersの許容範囲に入る。</p>
+          </article>
+          <article class="gate-card">
+            <span class="metric">H1b</span>
+            <h3>Targeted redirect</h3>
+            <p>RoboGCGがdenial/freezingではなく、選んだlow-level action regionへredirectする。</p>
+          </article>
+          <article class="gate-card">
+            <span class="metric">H1c</span>
+            <h3>Metric signal</h3>
+            <p>metric (A) separationがclean-instruction ceilingだけでなくcoarse operator-goalで残る。</p>
+          </article>
+        </div>
+        <div class="callout">
+          <h3>最後の条件: D8 branch selection</h3>
+          <p>
+            micro-benchの実測値で compute branch <strong>N / N- / F</strong> を選ぶ。
+            H6-D tax headlineはN/N-でだけclaimし、FならH6-A oracle frontierへfall backする。
+          </p>
+        </div>
+      </section>
+
+      <section class="section">
+        <p class="section-kicker">Pre-flight</p>
+        <h2>GPU jobに入る前のチェック</h2>
+        <ul class="checklist">
+          <li>Account + MFAが動き、<code>ssh kelvin2</code> できる。</li>
+          <li>Repoを <code>$HOME</code> にcloneし、<code>git log</code> が <code>origin/main</code> と一致する。</li>
+          <li>Scratch: <code>/mnt/scratch2/users/&lt;id&gt;/{checkpoints,data,rollouts,untrusted}</code> を作る。</li>
+          <li><code>module avail cuda</code> でCUDA module名を記録する。</li>
+          <li>interactive GPU job内の <code>nvidia-smi</code> がA100/H100を表示する。</li>
+        </ul>
+        <div class="quick-grid">
+          <article class="info-card">
+            <h3>Cluster mechanics</h3>
+            <p>
+              接続、module、storage、Slurmは <a href="../../gpu/Connection.md">Connection</a>,
+              <a href="../../gpu/Start.md">Start</a>, <a href="../../gpu/Running.md">Running</a> を参照。
+            </p>
+          </article>
+          <article class="info-card">
+            <h3>Quarantine</h3>
+            <p>GCG suffixes、attacked rollouts、untrusted artifactsはscratchの <code>untrusted/</code> へ。</p>
+          </article>
+          <article class="info-card">
+            <h3>No mixed hardware claim</h3>
+            <p>1つのclaim内でA100とH100を混ぜて比較しない。card、precision、parallelismをrunごとに記録。</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section">
+        <p class="section-kicker">Day-1 sequence</p>
+        <h2>6 steps, each ending in a gate</h2>
+        <div class="timeline">
+          <article class="timeline-item">
+            <h3>Step 1: pinned environments</h3>
+            <p>OpenVLA + project eval env、LIBERO source install、project editable installを同じGPU envへ。RoboGCGは別envに隔離。</p>
+            <div class="command-block">
+              <div class="command-title"><span>OpenVLA + project env sketch</span><span>verify modules on node</span></div>
+              <pre><code>module purge
+module load &lt;anaconda-module&gt;
+module load &lt;cuda-module&gt;
+conda create -n evasion_tax-openvla python=3.10.13 -y
+conda activate evasion_tax-openvla
+
+git clone https://github.com/openvla/openvla.git
+cd openvla
+git checkout c8f03f48
+pip install -e .
+pip install "flash-attn==2.5.5" --no-build-isolation</code></pre>
+            </div>
+          </article>
+          <article class="timeline-item">
+            <h3>Step 2: checkpoints, hashes, provenance</h3>
+            <p>
+              HF checkpointをdownloadし、resolved weight filesのSHA-256、source URL、date、licenceを
+              <code>docs/references/README.md</code> に記録する。
+            </p>
+            <div class="command-block">
+              <div class="command-title"><span>HF checkpoint download</span><span>repeat per suite</span></div>
+              <pre><code>export HF_HOME=/mnt/scratch2/users/&lt;id&gt;/checkpoints/hf
+huggingface-cli download openvla/openvla-7b-finetuned-libero-spatial</code></pre>
+            </div>
+          </article>
+          <article class="timeline-item">
+            <h3>Step 3: benign LIBERO baseline</h3>
+            <p>
+              benign rolloutsはcalibration/held-out benign poolになる。primary 1% FPRにはheld-out benign
+              約300、5%には約60が目安。
+            </p>
+            <div class="command-block">
+              <div class="command-title"><span>OpenVLA LIBERO eval</span><span>center_crop required</span></div>
+              <pre><code>python openvla/experiments/robot/libero/run_libero_eval.py \
+    --model_family openvla \
+    --pretrained_checkpoint openvla/openvla-7b-finetuned-libero-spatial \
+    --task_suite_name libero_spatial \
+    --center_crop True</code></pre>
+            </div>
+          </article>
+          <article class="timeline-item">
+            <h3>Step 4: RoboGCG targeted redirect</h3>
+            <p>
+              RoboGCGはown env。successはdenialではなく、<code>TargetActionSpec</code> のpersistence windowで
+              target action regionに達したかで判断する。
+            </p>
+            <div class="command-block">
+              <div class="command-title"><span>RoboGCG env sketch</span><span>isolate from OpenVLA env</span></div>
+              <pre><code>conda env create -f robogcg/robo_env.yml
+conda activate robo_env
+git clone https://github.com/facebookresearch/co-tracker
+pip install -e co-tracker
+python -m experiments.single_step.run_experiment \
+    --config experiments/single_step/configs/libero_10/libero_10_0.json \
+    --num-gpus 1</code></pre>
+            </div>
+          </article>
+          <article class="timeline-item">
+            <h3>Step 5: micro-bench resolves D4 / D7 / D8</h3>
+            <p>
+              actual granted cardでGCG s/target、L1 extraction overhead、LIBERO throughput、queue depthを測る。
+              ここがbranch selector。
+            </p>
+            <div class="command-block">
+              <div class="command-title"><span>Compute branch micro-bench</span><span>log sacct backing numbers</span></div>
+              <pre><code>python -m scripts.microbench_gcg --config configs/example_m2.yaml</code></pre>
+            </div>
+          </article>
+          <article class="timeline-item">
+            <h3>Step 6: metric (A) signal sanity check</h3>
+            <p>
+              real LIBERO ground-truth state adapterでbenign vs attacked rolloutsをscoreし、ROC/AUC、
+              TPR@FPR、latencyを出す。
+            </p>
+            <div class="command-block">
+              <div class="command-title"><span>Evaluate signal</span><span>after attacked rollouts exist</span></div>
+              <pre><code>python -m scripts.run_attack   ... 
+python -m scripts.evaluate     --config configs/example_m2.yaml</code></pre>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section">
+        <p class="section-kicker">Branch selector</p>
+        <h2>D8は希望ではなく、実測affordabilityで選ぶ</h2>
+        <div class="branch-grid">
+          <article class="info-card">
+            <span class="metric">N</span>
+            <h3>Full deployable tax</h3>
+            <p>
+              matched-attacker H6-D matrixがcalendar内に入り、benign Nやseedsにslackがある。
+              H6-Dをheadlineにできる。
+            </p>
+          </article>
+          <article class="info-card">
+            <span class="metric">N-</span>
+            <h3>Scoped deployable tax</h3>
+            <p>
+              one deployable route、fewer targets/seeds、5% FPR primaryなら入る。
+              scoped H6-D + oracle gapを正直に報告。
+            </p>
+          </article>
+          <article class="info-card">
+            <span class="metric">F</span>
+            <h3>Oracle frontier only</h3>
+            <p>
+              reduced deployable matrixも入らない。H6-A oracle frontierをheadlineにし、
+              H6-Dはnot run / unresolvedと明記。
+            </p>
+          </article>
+        </div>
+        <div class="diagram" aria-label="Compute branch selector diagram">
+          <svg viewBox="0 0 1020 260" role="img" aria-labelledby="branch-diagram-title branch-diagram-desc">
+            <title id="branch-diagram-title">D8 compute branch selector</title>
+            <desc id="branch-diagram-desc">Measured micro-bench values feed into branch N, N-, or F.</desc>
+            <rect x="40" y="70" width="230" height="110" fill="#fffdf6" stroke="#17211d" stroke-width="3"/>
+            <text x="72" y="108" font-size="21" font-weight="900" fill="#17211d">Measured inputs</text>
+            <text x="72" y="136" font-size="16" fill="#56615c">GCG s/target</text>
+            <text x="72" y="160" font-size="16" fill="#56615c">L1 overhead, throughput</text>
+            <path d="M292 124 H412" stroke="#0d8587" stroke-width="6"/>
+            <polygon points="412,124 392,112 392,136" fill="#0d8587"/>
+            <rect x="430" y="70" width="190" height="110" fill="#e9f3ee" stroke="#0d8587" stroke-width="3"/>
+            <text x="470" y="116" font-size="21" font-weight="900" fill="#086468">Affordable</text>
+            <text x="474" y="146" font-size="16" fill="#56615c">matrix calculator</text>
+            <path d="M640 124 H742" stroke="#d8553f" stroke-width="6"/>
+            <polygon points="742,124 722,112 722,136" fill="#d8553f"/>
+            <rect x="760" y="30" width="78" height="58" fill="#183026" stroke="#17211d" stroke-width="3"/>
+            <text x="786" y="67" font-size="23" font-weight="900" fill="#fffdf6">N</text>
+            <rect x="760" y="102" width="78" height="58" fill="#183026" stroke="#17211d" stroke-width="3"/>
+            <text x="780" y="139" font-size="23" font-weight="900" fill="#fffdf6">N-</text>
+            <rect x="760" y="174" width="78" height="58" fill="#183026" stroke="#17211d" stroke-width="3"/>
+            <text x="790" y="211" font-size="23" font-weight="900" fill="#fffdf6">F</text>
+            <text x="860" y="67" font-size="16" fill="#56615c">full H6-D</text>
+            <text x="860" y="139" font-size="16" fill="#56615c">scoped H6-D</text>
+            <text x="860" y="211" font-size="16" fill="#56615c">H6-A only</text>
+          </svg>
+        </div>
+      </section>
+
+      <section class="section">
+        <p class="section-kicker">GO / NO-GO</p>
+        <h2>H1 gate: all four must hold</h2>
+        <div class="gate-grid">
+          <article class="gate-card">
+            <h3>1. Benign reproduced</h3>
+            <p>Published-like LIBERO benign success on pinned seeds.</p>
+          </article>
+          <article class="gate-card">
+            <h3>2. Targeted redirect</h3>
+            <p>Attack reaches target action region over persistence window.</p>
+          </article>
+          <article class="gate-card">
+            <h3>3. Coarse-goal signal</h3>
+            <p>Metric (A) separation survives the operator-goal rung.</p>
+          </article>
+          <article class="gate-card">
+            <h3>4. Branch selected</h3>
+            <p>N/N-/F chosen from measured micro-bench values.</p>
+          </article>
+        </div>
+        <div class="callout success">
+          <h3>GO</h3>
+          <p>Proceed to M2 calibrated floor detector, then M3 H6-A, then M4 H6-D if branch permits.</p>
+        </div>
+        <div class="callout warning">
+          <h3>NO-GO</h3>
+          <p>
+            Record exactly which gate failed and why. Do not hide negative results; revisit D2 framing,
+            env, or checkpoint before rerun.
+          </p>
+        </div>
+      </section>
+
+      <section class="section">
+        <p class="section-kicker">Run protocol</p>
+        <h2>Every run log gets the same protocol block</h2>
+        <div class="command-block">
+          <div class="command-title"><span>Paste into each run log</span><span>write-once results</span></div>
+          <pre><code>run_id:        &lt;UTC timestamp&gt;-&lt;short-slug&gt;
+git_commit:    &lt;hash&gt;
+hardware:      &lt;A100|H100 — card+count&gt; + precision bf16 + CUDA/driver/torch
+config:        &lt;path to pinned config&gt;
+seed(s):       &lt;pinned, recorded&gt;
+hypothesis:    &lt;H#&gt;
+expected:      &lt;pre-registered prediction&gt;
+command:       &lt;exact command&gt;
+results_path:  results/&lt;timestamp&gt;/...
+observed:      &lt;fill after run&gt;
+decision:      &lt;what it changes&gt;
+one_variable:  &lt;single variable changed vs comparison run&gt;</code></pre>
+        </div>
+        <ul class="checklist">
+          <li>seeds pinned and recorded.</li>
+          <li>environment captured, including CUDA/driver/torch and module strings.</li>
+          <li>checkpoint/data provenance has source, hash, date, licence.</li>
+          <li>outputs are write-once; no overwrite.</li>
+          <li>exactly one variable changed vs comparison run.</li>
+          <li>figures regenerate from logged data.</li>
+          <li>adversarial artifacts are quarantined.</li>
+          <li>no dataset, checkpoint, secret, PII, or third-party binary is staged.</li>
+        </ul>
+      </section>
+
+      <section class="section">
+        <p class="section-kicker">Pins</p>
+        <h2>Quick env-pin reference</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Component</th>
+                <th>Pin</th>
+                <th>Source</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Python</td><td><code>3.10.13</code></td><td>OpenVLA README results env</td></tr>
+              <tr><td>torch / torchvision / torchaudio</td><td><code>2.2.0 / 0.17.0 / 2.2.0</code></td><td>OpenVLA <code>pyproject.toml</code></td></tr>
+              <tr><td>transformers / tokenizers</td><td><code>4.40.1 / 0.19.1</code></td><td>OpenVLA <code>pyproject.toml</code></td></tr>
+              <tr><td>timm / peft / sentencepiece / draccus</td><td><code>0.9.10 / 0.11.1 / 0.1.99 / 0.8.0</code></td><td>OpenVLA <code>pyproject.toml</code></td></tr>
+              <tr><td>flash-attn</td><td><code>2.5.5</code></td><td>OpenVLA README results env; separate build</td></tr>
+              <tr><td>GPU / precision</td><td>A100 or H100 / <strong>bf16</strong></td><td>OpenVLA README + D8</td></tr>
+              <tr><td>OpenVLA commit</td><td><code>c8f03f48</code></td><td>codec-verified in docs/references</td></tr>
+              <tr><td>RoboGCG env</td><td><code>robo_env.yml</code> + co-tracker</td><td>README pins undocumented; verify</td></tr>
+              <tr><td>LIBERO</td><td>source install + <code>libero_requirements.txt</code></td><td>OpenVLA README</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="caption">
+          Full pip layer: <a href="../../../configs/env/requirements-gpu.txt">configs/env/requirements-gpu.txt</a>.
+          Items marked verify in the Markdown remain verify-on-node items here too.
+        </p>
+      </section>
+    </main>
+
+    <footer class="footer">
+      HTML guide generated from <a href="../gpu-runbook.md">docs/setup/gpu-runbook.md</a>.
+      Status and claims remain governed by <a href="../../core/execution-playbook.md">docs/core/execution-playbook.md</a>.
+    </footer>
+  </div>
+</body>
+</html>

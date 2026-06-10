@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Local State-only LIBERO Env | Setup Guide</title>
+  <link rel="stylesheet" href="setup-guide.css">
+</head>
+<body>
+  <div class="guide-shell">
+    <nav class="site-nav" aria-label="Setup HTML guides">
+      <div class="nav-inner">
+        <a class="brand" href="../libero-local-env.md">
+          <span class="brand-mark">ET</span>
+          <span>Setup Guides</span>
+        </a>
+        <div class="nav-links">
+          <a href="libero-local-env.html" aria-current="page">Local LIBERO env</a>
+          <a href="local-rollout-demo.html">Rollout demo</a>
+          <a href="libero-local-notes.html">Local notes</a>
+          <a href="gpu-runbook.html">GPU runbook</a>
+        </div>
+      </div>
+    </nav>
+
+    <header class="hero">
+      <div class="hero-inner">
+        <div>
+          <p class="eyebrow">Disposable local validation stack</p>
+          <h1>Local state-only LIBERO env</h1>
+          <p class="hero-summary">
+            M1 Macで、GLなし・torchなしのLIBERO状態環境を立ち上げるための再現レシピ。
+            目的はOpenVLA実験ではなく、<code>LiberoStateAdapter</code> と実地ground-truth fixtureを
+            GPU前に検証すること。
+          </p>
+          <div class="hero-actions">
+            <a class="button-link" href="../libero-local-env.md">Source Markdown</a>
+            <a class="button-link secondary" href="libero-local-notes.html">Debug notes</a>
+          </div>
+        </div>
+        <aside class="hero-panel">
+          <h2>このページの読み方</h2>
+          <p>
+            まず「なぜ動くか」を確認し、次にPy3.10 venvの作成、LIBERO cloneの
+            <code>PYTHONPATH</code> 接続、smoketest実行へ進む。production stackはGPU側で再検証する。
+          </p>
+          <div class="tag-row">
+            <span class="tag cool">GL-free</span>
+            <span class="tag cool">torch-free</span>
+            <span class="tag leaf">robosuite 1.4.0</span>
+          </div>
+        </aside>
+      </div>
+    </header>
+
+    <main>
+      <section class="section">
+        <p class="section-kicker">Purpose</p>
+        <h2>これは本番環境ではなく、検証用の小さな足場</h2>
+        <div class="quick-grid">
+          <article class="info-card">
+            <span class="metric">1</span>
+            <h3>何を検証するか</h3>
+            <p>
+              real LIBEROの状態観測から、研究コードの <code>PrivilegedState</code>
+              が構成できるかを確認する。
+            </p>
+          </article>
+          <article class="info-card">
+            <span class="metric">2</span>
+            <h3>何をしないか</h3>
+            <p>
+              OpenVLA-7B、RoboGCG、GPU bf16推論、レンダリングは扱わない。
+              local adapterはGPU nodeで再検証する draft。
+            </p>
+          </article>
+          <article class="info-card">
+            <span class="metric">3</span>
+            <h3>なぜ重要か</h3>
+            <p>
+              M1前に object names、<code>target_region</code>、relative-key filter の実データ形状を固め、
+              metric (A) の実装リスクを下げる。
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section">
+        <p class="section-kicker">Blockers bypassed</p>
+        <h2>LIBEROの「簡単な入口」を避けると、状態だけなら動く</h2>
+        <p class="lead">
+          ローカルで詰まっていたのはLIBEROそのものではなく、便利なentry pointがtorchやGLを
+          早い段階で要求すること。下位の <code>ControlEnv</code> を直接使うと、状態観測だけを取得できる。
+        </p>
+        <div class="diagram" aria-label="LIBERO blocker bypass diagram">
+          <svg viewBox="0 0 960 300" role="img" aria-labelledby="env-diagram-title env-diagram-desc">
+            <title id="env-diagram-title">State-only LIBERO bypass</title>
+            <desc id="env-diagram-desc">Two blocked LIBERO entry points are bypassed by direct BDDL lookup and ControlEnv.</desc>
+            <rect x="30" y="36" width="250" height="86" rx="0" fill="#fffdf6" stroke="#17211d" stroke-width="3"/>
+            <text x="55" y="72" font-size="22" font-weight="800" fill="#17211d">benchmark</text>
+            <text x="55" y="101" font-size="17" fill="#56615c">hard-imports torch</text>
+            <rect x="30" y="172" width="250" height="86" rx="0" fill="#fffdf6" stroke="#17211d" stroke-width="3"/>
+            <text x="55" y="208" font-size="22" font-weight="800" fill="#17211d">OffScreenRenderEnv</text>
+            <text x="55" y="237" font-size="17" fill="#56615c">opens GL context</text>
+            <path d="M300 80 H438" stroke="#0d8587" stroke-width="6"/>
+            <path d="M300 216 H438" stroke="#0d8587" stroke-width="6"/>
+            <polygon points="438,80 418,68 418,92" fill="#0d8587"/>
+            <polygon points="438,216 418,204 418,228" fill="#0d8587"/>
+            <rect x="460" y="74" width="210" height="70" rx="0" fill="#e9f3ee" stroke="#0d8587" stroke-width="3"/>
+            <text x="488" y="106" font-size="20" font-weight="800" fill="#086468">package dir BDDL</text>
+            <text x="488" y="130" font-size="15" fill="#56615c">skip benchmark</text>
+            <rect x="460" y="174" width="210" height="70" rx="0" fill="#e9f3ee" stroke="#0d8587" stroke-width="3"/>
+            <text x="488" y="206" font-size="20" font-weight="800" fill="#086468">ControlEnv</text>
+            <text x="488" y="230" font-size="15" fill="#56615c">no camera, no renderer</text>
+            <path d="M690 112 C746 112 746 150 792 150" stroke="#d8553f" stroke-width="6" fill="none"/>
+            <path d="M690 210 C746 210 746 150 792 150" stroke="#d8553f" stroke-width="6" fill="none"/>
+            <polygon points="792,150 772,138 772,162" fill="#d8553f"/>
+            <rect x="810" y="98" width="120" height="104" rx="0" fill="#183026" stroke="#17211d" stroke-width="3"/>
+            <text x="836" y="139" font-size="22" font-weight="900" fill="#fffdf6">real</text>
+            <text x="828" y="168" font-size="22" font-weight="900" fill="#fffdf6">state</text>
+            <text x="826" y="192" font-size="15" fill="#f1cc73">LIBERO</text>
+          </svg>
+        </div>
+        <div class="callout success">
+          <h3>結論</h3>
+          <p>
+            <code>libero.libero.envs</code> 自体はtorch-free。
+            <code>ControlEnv(use_camera_obs=False, has_renderer=False, has_offscreen_renderer=False)</code>
+            で純粋な状態環境として起動する。
+          </p>
+        </div>
+      </section>
+
+      <section class="section slim">
+        <p class="section-kicker">Recipe</p>
+        <h2>1回だけ作るPy3.10 venv</h2>
+        <p class="lead">
+          LIBEROは <code>robosuite.environments.manipulation.single_arm_env.SingleArmEnv</code>
+          を参照するため、<code>robosuite 1.4.0</code> が必要。1.5系では対象moduleが消えている。
+        </p>
+        <div class="command-block">
+          <div class="command-title"><span>Py3.10 venv + state-only deps</span><span>local only</span></div>
+          <pre><code>uv venv --python python3.10 ~/.cache/evasion_tax-libero14/venv
+uv pip install --python ~/.cache/evasion_tax-libero14/venv/bin/python \
+    "robosuite==1.4.0" "numpy&lt;1.24" pyyaml easydict bddl \
+    termcolor scipy pillow opencv-python pynput h5py matplotlib cloudpickle "gym==0.25.2"</code></pre>
+        </div>
+        <div class="callout">
+          <h3>LIBERO sourceの置き場所</h3>
+          <p>
+            project-owned cloneは <code>~/.cache/t7-libero-smoke/LIBERO</code>。
+            uv editable <code>.pth</code> がこのhostでは不安定なので、実行時に
+            <code>PYTHONPATH</code> で繋ぐ。
+          </p>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Component</th>
+                <th>Resolved version</th>
+                <th>Why it matters</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Python</td>
+                <td><code>3.10.8</code></td>
+                <td>GPU production major.minorに寄せる。</td>
+              </tr>
+              <tr>
+                <td>robosuite</td>
+                <td><code>1.4.0</code></td>
+                <td>LIBEROが参照する旧moduleを保持。</td>
+              </tr>
+              <tr>
+                <td>mujoco</td>
+                <td><code>3.9.0</code></td>
+                <td>state-only resetの実体。</td>
+              </tr>
+              <tr>
+                <td>numpy</td>
+                <td><code>1.23.5</code></td>
+                <td><code>robosuite 1.4.0</code> と互換。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section slim">
+        <p class="section-kicker">Run</p>
+        <h2>smoketestとfixture再取得</h2>
+        <div class="command-block">
+          <div class="command-title"><span>State-only Tier-L smoke</span><span>real LIBERO obs</span></div>
+          <pre><code>PYTHONPATH=~/.cache/t7-libero-smoke/LIBERO \
+  ~/.cache/evasion_tax-libero14/venv/bin/python scripts/libero_state_smoketest.py</code></pre>
+        </div>
+        <div class="command-block">
+          <div class="command-title"><span>Re-capture frozen fixtures</span><span>when needed</span></div>
+          <pre><code>PYTHONPATH=~/.cache/t7-libero-smoke/LIBERO \
+  ~/.cache/evasion_tax-libero14/venv/bin/python /tmp/libero_capture_fixtures.py</code></pre>
+        </div>
+        <ul class="checklist">
+          <li><code>MUJOCO_GL=disable</code> はscript側で設定される。</li>
+          <li>state-onlyなのでcamera observationもGL rendererも要求しない。</li>
+          <li>core <code>.venv</code> は触らない。local sim stackは隔離する。</li>
+        </ul>
+      </section>
+
+      <section class="section">
+        <p class="section-kicker">Boundary</p>
+        <h2>GPU側で必ず再検証するもの</h2>
+        <div class="quick-grid">
+          <article class="info-card">
+            <h3>gripper threshold</h3>
+            <p>ローカルの <code>sum|qpos|</code> heuristicは、GPU production stackで実値を見て固定する。</p>
+          </article>
+          <article class="info-card">
+            <h3>object naming</h3>
+            <p>全LIBERO suiteでBDDL object namesとadapter mappingを再確認する。</p>
+          </article>
+          <article class="info-card">
+            <h3>relative-key filter</h3>
+            <p><code>*_to_robot0_eef_pos</code> をphantom objectとして拾わないことを全suiteで見る。</p>
+          </article>
+        </div>
+        <div class="callout warning">
+          <h3>productionではない</h3>
+          <p>
+            このenvは検証用。OpenVLA/LIBERO/RoboGCGの本番pin、checkpoint hash、CUDA/driver/torchは
+            <a href="gpu-runbook.html">GPU Day-1 Runbook</a> に従ってKelvin2で記録する。
+          </p>
+        </div>
+      </section>
+
+      <section class="section slim">
+        <p class="section-kicker">Cleanup</p>
+        <h2>使い捨てで消せる</h2>
+        <div class="command-block">
+          <div class="command-title"><span>Remove local validation env</span><span>safe cleanup</span></div>
+          <pre><code>rm -rf ~/.cache/evasion_tax-libero14</code></pre>
+        </div>
+        <p class="caption">
+          repository runtimeはこのenvに依存しない。<code>state_libero.py</code> はLIBEROをimportせず、
+          unit testsはfrozen JSON fixturesを読む。
+        </p>
+      </section>
+    </main>
+
+    <footer class="footer">
+      HTML guide generated from <a href="../libero-local-env.md">docs/setup/libero-local-env.md</a>.
+      Operational source of truth remains <a href="../../core/execution-playbook.md">docs/core/execution-playbook.md</a>.
+    </footer>
+  </div>
+</body>
+</html>
