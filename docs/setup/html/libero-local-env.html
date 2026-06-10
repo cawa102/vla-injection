@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ja">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -29,9 +29,9 @@
           <p class="eyebrow">Disposable local validation stack</p>
           <h1>Local state-only LIBERO env</h1>
           <p class="hero-summary">
-            M1 Macで、GLなし・torchなしのLIBERO状態環境を立ち上げるための再現レシピ。
-            目的はOpenVLA実験ではなく、<code>LiberoStateAdapter</code> と実地ground-truth fixtureを
-            GPU前に検証すること。
+            A reproducible recipe for running a GL-free, torch-free LIBERO state environment on the M1 Mac.
+            This is not an OpenVLA experiment; it validates the <code>LiberoStateAdapter</code> and real
+            ground-truth fixtures before GPU day-1.
           </p>
           <div class="hero-actions">
             <a class="button-link" href="../libero-local-env.md">Source Markdown</a>
@@ -39,10 +39,10 @@
           </div>
         </div>
         <aside class="hero-panel">
-          <h2>このページの読み方</h2>
+          <h2>How to read this page</h2>
           <p>
-            まず「なぜ動くか」を確認し、次にPy3.10 venvの作成、LIBERO cloneの
-            <code>PYTHONPATH</code> 接続、smoketest実行へ進む。production stackはGPU側で再検証する。
+            First check why the state-only route works, then build the Py3.10 venv, connect the LIBERO clone
+            through <code>PYTHONPATH</code>, and run the smoketest. The production stack is re-validated on the GPU node.
           </p>
           <div class="tag-row">
             <span class="tag cool">GL-free</span>
@@ -56,30 +56,29 @@
     <main>
       <section class="section">
         <p class="section-kicker">Purpose</p>
-        <h2>これは本番環境ではなく、検証用の小さな足場</h2>
+        <h2>This is a small validation scaffold, not the production environment</h2>
         <div class="quick-grid">
           <article class="info-card">
             <span class="metric">1</span>
-            <h3>何を検証するか</h3>
+            <h3>What it validates</h3>
             <p>
-              real LIBEROの状態観測から、研究コードの <code>PrivilegedState</code>
-              が構成できるかを確認する。
+              It checks whether the research code's <code>PrivilegedState</code> can be built from real LIBERO state observations.
             </p>
           </article>
           <article class="info-card">
             <span class="metric">2</span>
-            <h3>何をしないか</h3>
+            <h3>What it does not do</h3>
             <p>
-              OpenVLA-7B、RoboGCG、GPU bf16推論、レンダリングは扱わない。
-              local adapterはGPU nodeで再検証する draft。
+              It does not run OpenVLA-7B, RoboGCG, GPU bf16 inference, or rendering.
+              The local adapter is a draft that must be re-validated on the GPU node.
             </p>
           </article>
           <article class="info-card">
             <span class="metric">3</span>
-            <h3>なぜ重要か</h3>
+            <h3>Why it matters</h3>
             <p>
-              M1前に object names、<code>target_region</code>、relative-key filter の実データ形状を固め、
-              metric (A) の実装リスクを下げる。
+              It fixes the real data shape for object names, <code>target_region</code>, and relative-key filtering before M1,
+              reducing implementation risk for metric (A).
             </p>
           </article>
         </div>
@@ -87,10 +86,10 @@
 
       <section class="section">
         <p class="section-kicker">Blockers bypassed</p>
-        <h2>LIBEROの「簡単な入口」を避けると、状態だけなら動く</h2>
+        <h2>State-only LIBERO works once the convenient entry points are bypassed</h2>
         <p class="lead">
-          ローカルで詰まっていたのはLIBEROそのものではなく、便利なentry pointがtorchやGLを
-          早い段階で要求すること。下位の <code>ControlEnv</code> を直接使うと、状態観測だけを取得できる。
+          The local blocker was not LIBERO itself; the convenient entry points request torch or GL too early.
+          Calling the lower-level <code>ControlEnv</code> directly gives a pure state-observation path.
         </p>
         <div class="diagram" aria-label="LIBERO blocker bypass diagram">
           <svg viewBox="0 0 960 300" role="img" aria-labelledby="env-diagram-title env-diagram-desc">
@@ -122,21 +121,21 @@
           </svg>
         </div>
         <div class="callout success">
-          <h3>結論</h3>
+          <h3>Conclusion</h3>
           <p>
-            <code>libero.libero.envs</code> 自体はtorch-free。
+            <code>libero.libero.envs</code> itself is torch-free.
             <code>ControlEnv(use_camera_obs=False, has_renderer=False, has_offscreen_renderer=False)</code>
-            で純粋な状態環境として起動する。
+            starts a pure state-only environment.
           </p>
         </div>
       </section>
 
       <section class="section slim">
         <p class="section-kicker">Recipe</p>
-        <h2>1回だけ作るPy3.10 venv</h2>
+        <h2>Build the Py3.10 venv once</h2>
         <p class="lead">
-          LIBEROは <code>robosuite.environments.manipulation.single_arm_env.SingleArmEnv</code>
-          を参照するため、<code>robosuite 1.4.0</code> が必要。1.5系では対象moduleが消えている。
+          LIBERO references <code>robosuite.environments.manipulation.single_arm_env.SingleArmEnv</code>,
+          so <code>robosuite 1.4.0</code> is required. The module is gone in robosuite 1.5.
         </p>
         <div class="command-block">
           <div class="command-title"><span>Py3.10 venv + state-only deps</span><span>local only</span></div>
@@ -146,11 +145,11 @@ uv pip install --python ~/.cache/evasion_tax-libero14/venv/bin/python \
     termcolor scipy pillow opencv-python pynput h5py matplotlib cloudpickle "gym==0.25.2"</code></pre>
         </div>
         <div class="callout">
-          <h3>LIBERO sourceの置き場所</h3>
+          <h3>Where the LIBERO source lives</h3>
           <p>
-            project-owned cloneは <code>~/.cache/t7-libero-smoke/LIBERO</code>。
-            uv editable <code>.pth</code> がこのhostでは不安定なので、実行時に
-            <code>PYTHONPATH</code> で繋ぐ。
+            The project-owned clone is <code>~/.cache/t7-libero-smoke/LIBERO</code>.
+            The uv editable <code>.pth</code> path is unreliable on this host, so connect it at runtime with
+            <code>PYTHONPATH</code>.
           </p>
         </div>
         <div class="table-wrap">
@@ -166,22 +165,22 @@ uv pip install --python ~/.cache/evasion_tax-libero14/venv/bin/python \
               <tr>
                 <td>Python</td>
                 <td><code>3.10.8</code></td>
-                <td>GPU production major.minorに寄せる。</td>
+                <td>Matches the production GPU major.minor version.</td>
               </tr>
               <tr>
                 <td>robosuite</td>
                 <td><code>1.4.0</code></td>
-                <td>LIBEROが参照する旧moduleを保持。</td>
+                <td>Keeps the legacy module LIBERO imports.</td>
               </tr>
               <tr>
                 <td>mujoco</td>
                 <td><code>3.9.0</code></td>
-                <td>state-only resetの実体。</td>
+                <td>Backs the state-only reset.</td>
               </tr>
               <tr>
                 <td>numpy</td>
                 <td><code>1.23.5</code></td>
-                <td><code>robosuite 1.4.0</code> と互換。</td>
+                <td>Compatible with <code>robosuite 1.4.0</code>.</td>
               </tr>
             </tbody>
           </table>
@@ -190,7 +189,7 @@ uv pip install --python ~/.cache/evasion_tax-libero14/venv/bin/python \
 
       <section class="section slim">
         <p class="section-kicker">Run</p>
-        <h2>smoketestとfixture再取得</h2>
+        <h2>Run the smoketest and re-capture fixtures</h2>
         <div class="command-block">
           <div class="command-title"><span>State-only Tier-L smoke</span><span>real LIBERO obs</span></div>
           <pre><code>PYTHONPATH=~/.cache/t7-libero-smoke/LIBERO \
@@ -202,48 +201,49 @@ uv pip install --python ~/.cache/evasion_tax-libero14/venv/bin/python \
   ~/.cache/evasion_tax-libero14/venv/bin/python /tmp/libero_capture_fixtures.py</code></pre>
         </div>
         <ul class="checklist">
-          <li><code>MUJOCO_GL=disable</code> はscript側で設定される。</li>
-          <li>state-onlyなのでcamera observationもGL rendererも要求しない。</li>
-          <li>core <code>.venv</code> は触らない。local sim stackは隔離する。</li>
+          <li><code>MUJOCO_GL=disable</code> is set by the scripts.</li>
+          <li>The state-only path requests neither camera observations nor a GL renderer.</li>
+          <li>Do not touch the core <code>.venv</code>; keep the local sim stack isolated.</li>
         </ul>
       </section>
 
       <section class="section">
         <p class="section-kicker">Boundary</p>
-        <h2>GPU側で必ず再検証するもの</h2>
+        <h2>What must be re-validated on the GPU node</h2>
         <div class="quick-grid">
           <article class="info-card">
             <h3>gripper threshold</h3>
-            <p>ローカルの <code>sum|qpos|</code> heuristicは、GPU production stackで実値を見て固定する。</p>
+            <p>The local <code>sum|qpos|</code> heuristic must be pinned from real values in the GPU production stack.</p>
           </article>
           <article class="info-card">
             <h3>object naming</h3>
-            <p>全LIBERO suiteでBDDL object namesとadapter mappingを再確認する。</p>
+            <p>Re-check BDDL object names and adapter mapping across all LIBERO suites.</p>
           </article>
           <article class="info-card">
             <h3>relative-key filter</h3>
-            <p><code>*_to_robot0_eef_pos</code> をphantom objectとして拾わないことを全suiteで見る。</p>
+            <p>Confirm across all suites that <code>*_to_robot0_eef_pos</code> keys are not ingested as phantom objects.</p>
           </article>
         </div>
         <div class="callout warning">
-          <h3>productionではない</h3>
+          <h3>Not production</h3>
           <p>
-            このenvは検証用。OpenVLA/LIBERO/RoboGCGの本番pin、checkpoint hash、CUDA/driver/torchは
-            <a href="gpu-runbook.html">GPU Day-1 Runbook</a> に従ってKelvin2で記録する。
+            This env is for validation only. Production OpenVLA/LIBERO/RoboGCG pins, checkpoint hashes,
+            CUDA/driver/torch, and hardware details are recorded on Kelvin2 via the
+            <a href="gpu-runbook.html">GPU Day-1 Runbook</a>.
           </p>
         </div>
       </section>
 
       <section class="section slim">
         <p class="section-kicker">Cleanup</p>
-        <h2>使い捨てで消せる</h2>
+        <h2>Disposable cleanup</h2>
         <div class="command-block">
           <div class="command-title"><span>Remove local validation env</span><span>safe cleanup</span></div>
           <pre><code>rm -rf ~/.cache/evasion_tax-libero14</code></pre>
         </div>
         <p class="caption">
-          repository runtimeはこのenvに依存しない。<code>state_libero.py</code> はLIBEROをimportせず、
-          unit testsはfrozen JSON fixturesを読む。
+          The repository runtime does not depend on this env. <code>state_libero.py</code> imports no LIBERO,
+          and its unit tests read frozen JSON fixtures.
         </p>
       </section>
     </main>

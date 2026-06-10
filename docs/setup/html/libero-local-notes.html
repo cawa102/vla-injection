@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ja">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -29,8 +29,8 @@
           <p class="eyebrow">Task 10 debugging record</p>
           <h1>LIBERO state-only smoke notes</h1>
           <p class="hero-summary">
-            2026-06-03の「Tier Lはlocal blocked」という記録と、2026-06-09の「Tier L now runs」
-            を同じページで読むための整理。古い結論は消さず、何が変わったかを明確にする。
+            A readable record that keeps the 2026-06-03 "Tier L locally blocked" conclusion beside the
+            2026-06-09 "Tier L now runs" update. The old conclusion stays visible, with the change explained.
           </p>
           <div class="hero-actions">
             <a class="button-link" href="../libero-local-notes.md">Source Markdown</a>
@@ -55,29 +55,29 @@
     <main>
       <section class="section">
         <p class="section-kicker">Timeline</p>
-        <h2>同じTask 10の結論がどう更新されたか</h2>
+        <h2>How the Task 10 conclusion changed</h2>
         <div class="timeline">
           <article class="timeline-item">
             <h3>2026-06-03: Tier R pass, Tier L blocked</h3>
             <p>
-              robosuite <code>Lift/Panda</code> のstate-only resetで <code>PrivilegedState</code>
-              contractは構成できた。一方、real LIBEROはtorch import、GL context、version driftで
-              local blockedと記録された。
+              A state-only robosuite <code>Lift/Panda</code> reset proved that the <code>PrivilegedState</code>
+              contract could be constructed. Real LIBERO was recorded as locally blocked by torch import,
+              GL context, and version drift issues.
             </p>
           </article>
           <article class="timeline-item">
             <h3>2026-06-09: Tier L now runs locally</h3>
             <p>
-              blockedの原因はfundamentalではなくenv assemblyだった。
-              BDDLをpackage dirから直接読み、lower-level <code>ControlEnv</code> を使うことで、
-              GL-free / torch-freeのreal LIBERO state-only envが動いた。
+              The blocker was environment assembly, not a fundamental limitation.
+              Reading BDDL directly from the package directory and using lower-level <code>ControlEnv</code>
+              made the real LIBERO state-only env run without GL or torch.
             </p>
           </article>
           <article class="timeline-item">
-            <h3>現在の扱い: draft local adapter</h3>
+            <h3>Current treatment: draft local adapter</h3>
             <p>
-              <code>LiberoStateAdapter</code> はreal obs fixtureでunit-tested。
-              ただしproduction pinned stackと全suite coverageはGPU nodeで再検証する。
+              <code>LiberoStateAdapter</code> is unit-tested against real observation fixtures.
+              The production pinned stack and full-suite coverage still need GPU-node re-validation.
             </p>
           </article>
         </div>
@@ -85,7 +85,7 @@
 
       <section class="section">
         <p class="section-kicker">What changed</p>
-        <h2>「blocked」から「runs」へ変わった理由</h2>
+        <h2>Why "blocked" became "runs"</h2>
         <div class="diagram" aria-label="LIBERO local notes timeline diagram">
           <svg viewBox="0 0 1040 330" role="img" aria-labelledby="notes-diagram-title notes-diagram-desc">
             <title id="notes-diagram-title">Tier L local unblock</title>
@@ -117,22 +117,23 @@
           <article class="info-card">
             <h3>BDDL <code>target_region</code></h3>
             <p>
-              demoがfakeしていたtargetを、real BDDLの <code>obj_of_interest[-1]</code>
-              から取得できるようになった。spatial-0では <code>plate_1</code>。
+              The target that the demo had faked can now be read from real BDDL
+              <code>obj_of_interest[-1]</code>. For spatial-0, that is <code>plate_1</code>.
             </p>
           </article>
           <article class="info-card">
             <h3>phantom object bug</h3>
             <p>
-              naiveな <code>*_pos</code> extractionが <code>&lt;obj&gt;_to_robot0_eef_pos</code>
-              relative deltaをobjectとして拾う問題を発見。adapterで <code>_to_</code> keysをfilter。
+              Naive <code>*_pos</code> extraction was found to ingest
+              <code>&lt;obj&gt;_to_robot0_eef_pos</code> relative deltas as objects.
+              The adapter filters <code>_to_</code> keys.
             </p>
           </article>
           <article class="info-card">
             <h3>adapter moved earlier</h3>
             <p>
-              GPU node deferredだった <code>src/evasion_tax/metric/state_libero.py</code>
-              がlocalで構築・fixture unit-test可能になった。
+              <code>src/evasion_tax/metric/state_libero.py</code>, previously deferred to the GPU node,
+              is now built locally and fixture-tested.
             </p>
           </article>
         </div>
@@ -140,10 +141,11 @@
 
       <section class="section">
         <p class="section-kicker">Tier R proof</p>
-        <h2>robosuite smokeで何が確認できていたか</h2>
+        <h2>What the robosuite smoke had already proved</h2>
         <p class="lead">
-          2026-06-03時点でも、MuJoCo ground truthから研究側のstate contractへ写像できることは確認済みだった。
-          これは後のreal LIBERO adapterが「schema redesign」ではなく「mapping job」で済む根拠。
+          Even on 2026-06-03, the smoke test showed that MuJoCo ground truth could be mapped into the
+          research-side state contract. That is why the later real LIBERO adapter was a mapping job,
+          not a schema redesign.
         </p>
         <div class="table-wrap">
           <table>
@@ -182,61 +184,61 @@
 
       <section class="section">
         <p class="section-kicker">Old blockers</p>
-        <h2>古いblocked記録は、何を警告していたか</h2>
+        <h2>What the old blocked record warned about</h2>
         <div class="quick-grid">
           <article class="note-card">
             <h3>1. <code>benchmark</code> hard-imports torch</h3>
             <p>
-              task registryやBDDL locationを見るだけでもtraining stackを要求していた。
-              現在はpackage dirから直接BDDLを読む。
+              Even task registry or BDDL lookup requested the training stack.
+              The current route reads BDDL directly from the package directory.
             </p>
           </article>
           <article class="note-card">
             <h3>2. <code>OffScreenRenderEnv</code> opens GL</h3>
             <p>
-              headless M1でGL contextがない。現在はlower-level <code>ControlEnv</code>
-              をrendererなしで使う。
+              The headless M1 had no GL context. The current route uses lower-level
+              <code>ControlEnv</code> without renderers.
             </p>
           </article>
           <article class="note-card">
             <h3>3. version drift</h3>
             <p>
-              local boxのrobosuite 1.5.2 / Python 3.11はproductionを代表しない。
-              現在はPy3.10 + robosuite 1.4.0に分離。
+              The local robosuite 1.5.2 / Python 3.11 stack did not represent production.
+              The current local stack is isolated as Py3.10 + robosuite 1.4.0.
             </p>
           </article>
         </div>
         <div class="callout">
-          <h3>honest historyとして残す</h3>
+          <h3>Kept as honest history</h3>
           <p>
-            古い判断は削除せず、後で読み返した時に「何がblockerで、どれが根本問題ではなかったか」が
-            追跡できるようにしている。
+            The old decision is not deleted, so later readers can see which issues were real blockers
+            and which were not fundamental.
           </p>
         </div>
       </section>
 
       <section class="section">
         <p class="section-kicker">Decision log</p>
-        <h2>現在の決定事項</h2>
+        <h2>Current decisions</h2>
         <div class="quick-grid">
           <article class="info-card">
             <h3>synthetic fixtures stay</h3>
             <p>
-              metric (A) のunit-test contractは引き続きsynthetic fixturesも使う。
-              real fixturesはadapter確認を補強する。
+              The metric (A) unit-test contract still uses synthetic fixtures.
+              Real fixtures strengthen adapter validation.
             </p>
           </article>
           <article class="info-card">
             <h3>Task-5 freeze stands</h3>
             <p>
-              real MuJoCo ground truthから <code>PrivilegedState</code> が構成できるため、
-              metric (A) schemaを変更する必要はない。
+              Because <code>PrivilegedState</code> can be constructed from real MuJoCo ground truth,
+              metric (A)'s schema does not need to change.
             </p>
           </article>
           <article class="info-card">
             <h3>GPU re-validation remains</h3>
             <p>
-              gripper threshold、object naming、relative-key filterをproduction pinned stackで再確認する。
+              Re-check the gripper threshold, object naming, and relative-key filter in the production pinned stack.
             </p>
           </article>
         </div>
@@ -244,25 +246,25 @@
 
       <section class="section slim">
         <p class="section-kicker">GPU reproduction</p>
-        <h2>GPU nodeでの再実行</h2>
+        <h2>Re-run on the GPU node</h2>
         <div class="command-block">
           <div class="command-title"><span>Inside pinned evasion_tax-openvla env</span><span>torch + GL + LIBERO present</span></div>
           <pre><code>python scripts/libero_state_smoketest.py</code></pre>
         </div>
         <p>
-          その後、BDDL goal由来の <code>target_region</code>、LIBERO object-name mapping、
-          clean resetでの <code>state_libero.py</code> materializationを確認する。
+          Then confirm <code>target_region</code> from the BDDL goal, LIBERO object-name mapping,
+          and clean-reset materialisation of <code>state_libero.py</code>.
         </p>
       </section>
 
       <section class="section slim">
         <p class="section-kicker">Cleanup</p>
-        <h2>古いsmoke envは使い捨て</h2>
+        <h2>The old smoke env is disposable</h2>
         <div class="command-block">
           <div class="command-title"><span>Remove old smoke env</span><span>optional</span></div>
           <pre><code>rm -rf ~/.cache/evasion_tax-libero-smoke</code></pre>
         </div>
-        <p class="caption">現在のworking recipeは <a href="libero-local-env.html">Local LIBERO env</a> を参照。</p>
+        <p class="caption">For the current working recipe, see <a href="libero-local-env.html">Local LIBERO env</a>.</p>
       </section>
     </main>
 

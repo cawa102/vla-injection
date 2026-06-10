@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ja">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -29,9 +29,9 @@
           <p class="eyebrow">Kelvin2 / M1 viability gate</p>
           <h1>GPU Day-1 Runbook</h1>
           <p class="hero-summary">
-            GPU accessをM1 GO/NO-GO判定へ変換するための操作資料。
-            clone、pinned env、checkpoint provenance、benign baseline、RoboGCG、micro-bench、
-            metric (A) signal、D8 branch selectionまでを一気通貫で扱う。
+            An operational guide for turning GPU access into the M1 GO/NO-GO decision.
+            It covers clone, pinned envs, checkpoint provenance, benign baseline, RoboGCG, micro-bench,
+            metric (A) signal, and D8 branch selection end to end.
           </p>
           <div class="hero-actions">
             <a class="button-link" href="../gpu-runbook.md">Source Markdown</a>
@@ -41,8 +41,8 @@
         <aside class="hero-panel">
           <h2>Exit condition</h2>
           <p>
-            H1の4条件を満たすか、どこで失敗したかをwrite-once <code>results/</code> に残す。
-            negative resultも落とさない。
+            Record whether all four H1 conditions pass, or exactly where they fail, under write-once
+            <code>results/</code>. Do not drop negative results.
           </p>
           <div class="tag-row">
             <span class="tag cool">A100/H100</span>
@@ -56,58 +56,58 @@
     <main>
       <section class="section">
         <p class="section-kicker">Mission</p>
-        <h2>Day-1で決めることは「動いたか」だけではない</h2>
+        <h2>Day-1 decides more than "does it run?"</h2>
         <div class="gate-grid">
           <article class="gate-card">
             <span class="metric">H1a</span>
             <h3>Benign reproduced</h3>
-            <p>OpenVLA-7B + LIBEROのbenign successがpublished numbersの許容範囲に入る。</p>
+            <p>OpenVLA-7B + LIBERO benign success is within tolerance of the published numbers.</p>
           </article>
           <article class="gate-card">
             <span class="metric">H1b</span>
             <h3>Targeted redirect</h3>
-            <p>RoboGCGがdenial/freezingではなく、選んだlow-level action regionへredirectする。</p>
+            <p>RoboGCG redirects to the chosen low-level action region, not just denial or freezing.</p>
           </article>
           <article class="gate-card">
             <span class="metric">H1c</span>
             <h3>Metric signal</h3>
-            <p>metric (A) separationがclean-instruction ceilingだけでなくcoarse operator-goalで残る。</p>
+            <p>Metric (A) separation survives at the coarse operator-goal reference, not only the clean-instruction ceiling.</p>
           </article>
         </div>
         <div class="callout">
-          <h3>最後の条件: D8 branch selection</h3>
+          <h3>Final condition: D8 branch selection</h3>
           <p>
-            micro-benchの実測値で compute branch <strong>N / N- / F</strong> を選ぶ。
-            H6-D tax headlineはN/N-でだけclaimし、FならH6-A oracle frontierへfall backする。
+            Select compute branch <strong>N / N- / F</strong> from measured micro-bench values.
+            Claim the H6-D tax headline only in N/N-; in F, fall back to the H6-A oracle frontier.
           </p>
         </div>
       </section>
 
       <section class="section">
         <p class="section-kicker">Pre-flight</p>
-        <h2>GPU jobに入る前のチェック</h2>
+        <h2>Checks before entering a GPU job</h2>
         <ul class="checklist">
-          <li>Account + MFAが動き、<code>ssh kelvin2</code> できる。</li>
-          <li>Repoを <code>$HOME</code> にcloneし、<code>git log</code> が <code>origin/main</code> と一致する。</li>
-          <li>Scratch: <code>/mnt/scratch2/users/&lt;id&gt;/{checkpoints,data,rollouts,untrusted}</code> を作る。</li>
-          <li><code>module avail cuda</code> でCUDA module名を記録する。</li>
-          <li>interactive GPU job内の <code>nvidia-smi</code> がA100/H100を表示する。</li>
+          <li>Account + MFA work, and <code>ssh kelvin2</code> succeeds.</li>
+          <li>The repo is cloned into <code>$HOME</code>, and <code>git log</code> matches <code>origin/main</code>.</li>
+          <li>Scratch exists: <code>/mnt/scratch2/users/&lt;id&gt;/{checkpoints,data,rollouts,untrusted}</code>.</li>
+          <li><code>module avail cuda</code> has been checked and the CUDA module string is recorded.</li>
+          <li><code>nvidia-smi</code> inside an interactive GPU job shows A100/H100.</li>
         </ul>
         <div class="quick-grid">
           <article class="info-card">
             <h3>Cluster mechanics</h3>
             <p>
-              接続、module、storage、Slurmは <a href="../../gpu/Connection.md">Connection</a>,
-              <a href="../../gpu/Start.md">Start</a>, <a href="../../gpu/Running.md">Running</a> を参照。
+              For connection, modules, storage, and Slurm, see <a href="../../gpu/Connection.md">Connection</a>,
+              <a href="../../gpu/Start.md">Start</a>, and <a href="../../gpu/Running.md">Running</a>.
             </p>
           </article>
           <article class="info-card">
             <h3>Quarantine</h3>
-            <p>GCG suffixes、attacked rollouts、untrusted artifactsはscratchの <code>untrusted/</code> へ。</p>
+            <p>GCG suffixes, attacked rollouts, and untrusted artifacts go under scratch <code>untrusted/</code>.</p>
           </article>
           <article class="info-card">
             <h3>No mixed hardware claim</h3>
-            <p>1つのclaim内でA100とH100を混ぜて比較しない。card、precision、parallelismをrunごとに記録。</p>
+            <p>Do not mix A100 and H100 within one claim. Record card, precision, and parallelism per run.</p>
           </article>
         </div>
       </section>
@@ -118,7 +118,7 @@
         <div class="timeline">
           <article class="timeline-item">
             <h3>Step 1: pinned environments</h3>
-            <p>OpenVLA + project eval env、LIBERO source install、project editable installを同じGPU envへ。RoboGCGは別envに隔離。</p>
+            <p>Install OpenVLA + project eval, LIBERO source, and the project editable package in the same GPU env. Keep RoboGCG isolated in a separate env.</p>
             <div class="command-block">
               <div class="command-title"><span>OpenVLA + project env sketch</span><span>verify modules on node</span></div>
               <pre><code>module purge
@@ -137,8 +137,8 @@ pip install "flash-attn==2.5.5" --no-build-isolation</code></pre>
           <article class="timeline-item">
             <h3>Step 2: checkpoints, hashes, provenance</h3>
             <p>
-              HF checkpointをdownloadし、resolved weight filesのSHA-256、source URL、date、licenceを
-              <code>docs/references/README.md</code> に記録する。
+              Download HF checkpoints and record SHA-256 for resolved weight files, source URL, date, and licence in
+              <code>docs/references/README.md</code>.
             </p>
             <div class="command-block">
               <div class="command-title"><span>HF checkpoint download</span><span>repeat per suite</span></div>
@@ -149,8 +149,8 @@ huggingface-cli download openvla/openvla-7b-finetuned-libero-spatial</code></pre
           <article class="timeline-item">
             <h3>Step 3: benign LIBERO baseline</h3>
             <p>
-              benign rolloutsはcalibration/held-out benign poolになる。primary 1% FPRにはheld-out benign
-              約300、5%には約60が目安。
+              Benign rollouts become the calibration and held-out benign pool. Rough targets:
+              around 300 held-out benign rollouts for the primary 1% FPR point, and around 60 for 5%.
             </p>
             <div class="command-block">
               <div class="command-title"><span>OpenVLA LIBERO eval</span><span>center_crop required</span></div>
@@ -164,8 +164,8 @@ huggingface-cli download openvla/openvla-7b-finetuned-libero-spatial</code></pre
           <article class="timeline-item">
             <h3>Step 4: RoboGCG targeted redirect</h3>
             <p>
-              RoboGCGはown env。successはdenialではなく、<code>TargetActionSpec</code> のpersistence windowで
-              target action regionに達したかで判断する。
+              RoboGCG runs in its own env. Success is not denial; it is reaching the target action region
+              over the <code>TargetActionSpec</code> persistence window.
             </p>
             <div class="command-block">
               <div class="command-title"><span>RoboGCG env sketch</span><span>isolate from OpenVLA env</span></div>
@@ -181,8 +181,8 @@ python -m experiments.single_step.run_experiment \
           <article class="timeline-item">
             <h3>Step 5: micro-bench resolves D4 / D7 / D8</h3>
             <p>
-              actual granted cardでGCG s/target、L1 extraction overhead、LIBERO throughput、queue depthを測る。
-              ここがbranch selector。
+              Measure GCG s/target, L1 extraction overhead, LIBERO throughput, and queue depth on the actual
+              granted card. This is the branch selector.
             </p>
             <div class="command-block">
               <div class="command-title"><span>Compute branch micro-bench</span><span>log sacct backing numbers</span></div>
@@ -192,8 +192,8 @@ python -m experiments.single_step.run_experiment \
           <article class="timeline-item">
             <h3>Step 6: metric (A) signal sanity check</h3>
             <p>
-              real LIBERO ground-truth state adapterでbenign vs attacked rolloutsをscoreし、ROC/AUC、
-              TPR@FPR、latencyを出す。
+              Score benign vs attacked rollouts with the real LIBERO ground-truth state adapter, then report
+              ROC/AUC, TPR@FPR, and latency.
             </p>
             <div class="command-block">
               <div class="command-title"><span>Evaluate signal</span><span>after attacked rollouts exist</span></div>
@@ -206,30 +206,30 @@ python -m scripts.evaluate     --config configs/example_m2.yaml</code></pre>
 
       <section class="section">
         <p class="section-kicker">Branch selector</p>
-        <h2>D8は希望ではなく、実測affordabilityで選ぶ</h2>
+        <h2>D8 is selected by measured affordability, not hope</h2>
         <div class="branch-grid">
           <article class="info-card">
             <span class="metric">N</span>
             <h3>Full deployable tax</h3>
             <p>
-              matched-attacker H6-D matrixがcalendar内に入り、benign Nやseedsにslackがある。
-              H6-Dをheadlineにできる。
+              The matched-attacker H6-D matrix fits the calendar, with slack for benign N and seeds.
+              H6-D can be the headline.
             </p>
           </article>
           <article class="info-card">
             <span class="metric">N-</span>
             <h3>Scoped deployable tax</h3>
             <p>
-              one deployable route、fewer targets/seeds、5% FPR primaryなら入る。
-              scoped H6-D + oracle gapを正直に報告。
+              A reduced matrix fits: one deployable route, fewer targets/seeds, and 5% FPR primary.
+              Report scoped H6-D plus the oracle gap honestly.
             </p>
           </article>
           <article class="info-card">
             <span class="metric">F</span>
             <h3>Oracle frontier only</h3>
             <p>
-              reduced deployable matrixも入らない。H6-A oracle frontierをheadlineにし、
-              H6-Dはnot run / unresolvedと明記。
+              Even the reduced deployable matrix does not fit. Use the H6-A oracle frontier as the headline,
+              and mark H6-D as not run / unresolved.
             </p>
           </article>
         </div>

@@ -134,3 +134,29 @@
 **Notes:** Do not modify unrelated `.claude/` changes already present in the worktree.
 
 **Commit:** `docs: validate setup html guide pages`
+
+- [ ] Task 7: English Overwrite
+
+**Files:**
+- Modify: `docs/setup/html/gpu-runbook.html`
+- Modify: `docs/setup/html/libero-local-env.html`
+- Modify: `docs/setup/html/libero-local-notes.html`
+- Modify: `docs/setup/html/local-rollout-demo.html`
+
+**What:** Replace the Japanese-facing copy in the existing HTML guides with English copy, overwriting the current Japanese version. Keep commands, file paths, research caveats, diagrams, and technical labels intact.
+
+**Interface:**
+- HTML pages keep the same file names and navigation.
+- `<html lang>` changes from `ja` to `en`.
+- Source Markdown links remain unchanged.
+
+**Test scenarios:**
+- No Japanese CJK/kana text remains in `docs/setup/html/*.html`.
+- Local links still resolve.
+- Mobile/desktop rendering remains readable after the copy length changes.
+
+**Dependencies:** `docs/setup/html/setup-guide.css`.
+
+**Notes:** Source Markdown files remain untouched unless a separate edit asks for translated Markdown.
+
+**Commit:** `docs: translate setup html guides to english`

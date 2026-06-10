@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ja">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -29,8 +29,8 @@
           <p class="eyebrow">Laptop-runnable pipeline preview</p>
           <h1>Rollout demo</h1>
           <p class="hero-summary">
-            GPU前に <code>RolloutStep</code> records の流れを確認するdemo。
-            実験結果ではなく、logging pipelineの可視化。
+            A demo for checking the <code>RolloutStep</code> record flow before GPU day-1.
+            This is not an experiment result; it is a visual pass through the logging pipeline.
           </p>
           <div class="hero-actions">
             <a class="button-link" href="../local-rollout-demo.md">Source Markdown</a>
@@ -38,11 +38,11 @@
           </div>
         </div>
         <aside class="hero-panel">
-          <h2>一番大事な置換</h2>
+          <h2>The key substitution</h2>
           <p>
-            <code>--backend libero</code> はreal LIBERO。
-            localではOpenVLA policyだけplaceholder。
-            <code>--backend synthetic</code> はzero-setup fallback。
+            <code>--backend libero</code> uses real LIBERO.
+            Locally, only the OpenVLA policy is a placeholder.
+            <code>--backend synthetic</code> is the zero-setup fallback.
           </p>
           <div class="tag-row">
             <span class="tag cool">records first</span>
@@ -56,10 +56,10 @@
     <main>
       <section class="section">
         <p class="section-kicker">Honest substitution</p>
-        <h2>本物とstand-in</h2>
+        <h2>Real vs stand-ins</h2>
         <p class="lead">
-          GPU実験のrecords構造をローカルで先に確認する。
-          OpenVLA-7BだけはCUDA/bf16が必要なのでplaceholder policyに置き換える。
+          The point is to inspect the GPU experiment's record structure locally before GPU day-1.
+          OpenVLA-7B is the only required stand-in because it needs CUDA/bf16.
         </p>
         <div class="table-wrap">
           <table>
@@ -90,17 +90,17 @@
           </table>
         </div>
         <div class="callout warning">
-          <h3>demoは実験ではない</h3>
+          <h3>The demo is not an experiment</h3>
           <p>
-            action sourceは透明なplaceholder policyなので、demo outputはgitignored
-            <code>results/_demo/</code> に入る。dissertation claimには使わない。
+            The action source is a transparent placeholder policy, so demo output goes to gitignored
+            <code>results/_demo/</code>. It is not used for dissertation claims.
           </p>
         </div>
       </section>
 
       <section class="section">
         <p class="section-kicker">Pipeline map</p>
-        <h2>GPU実験と同じrecord pathを先に通す</h2>
+        <h2>Run the same record path as the GPU experiment</h2>
         <div class="diagram" aria-label="Rollout pipeline diagram">
           <svg viewBox="0 0 1080 310" role="img" aria-labelledby="rollout-diagram-title rollout-diagram-desc">
             <title id="rollout-diagram-title">Rollout recording pipeline</title>
@@ -138,13 +138,13 @@
 
       <section class="section slim">
         <p class="section-kicker">Setup</p>
-        <h2>backendごとの準備</h2>
+        <h2>Setup by backend</h2>
         <div class="quick-grid two">
           <article class="info-card">
             <h3><code>--backend libero</code></h3>
             <p>
-              real ground truth path。<a href="libero-local-env.html">state-only LIBERO env</a>
-              を作り、eval layer用にsklearnを追加する。
+              Real ground-truth path. Build the <a href="libero-local-env.html">state-only LIBERO env</a>
+              and add sklearn for the eval layer.
             </p>
             <div class="command-block">
               <div class="command-title"><span>Add sklearn to libero14 venv</span><span>numpy&lt;1.24 compatible</span></div>
@@ -155,16 +155,16 @@ uv pip install --python "$L14" "scikit-learn==1.3.2"</code></pre>
           <article class="info-card">
             <h3><code>--backend synthetic</code></h3>
             <p>
-              zero-setup path。core <code>.venv</code> だけで動き、simulatorなしで同じrecord schemaを吐く。
+              Zero-setup path. It runs in the core <code>.venv</code> and emits the same record schema without a simulator.
             </p>
-            <p class="caption">portable smokeとして使う。実LIBERO ground truthの確認にはならない。</p>
+            <p class="caption">Use this as the portable smoke path. It does not validate real LIBERO ground truth.</p>
           </article>
         </div>
       </section>
 
       <section class="section slim">
         <p class="section-kicker">Run</p>
-        <h2>demo rolloutを走らせる</h2>
+        <h2>Run the demo rollout</h2>
         <div class="command-block">
           <div class="command-title"><span>Recommended: real state-only LIBERO</span><span>records use real BDDL ground truth</span></div>
           <pre><code>cd /Users/kawaikyousuke/Desktop/MSc/indivisual
@@ -188,31 +188,31 @@ PYTHONPATH=src .venv/bin/python scripts/demo_rollout.py --backend synthetic</cod
 
       <section class="section">
         <p class="section-kicker">Artifacts</p>
-        <h2>1 runで何が保存されるか</h2>
+        <h2>What one run saves</h2>
         <div class="artifact-grid two">
           <article class="artifact-card">
             <h3><code>run.json</code></h3>
             <p>
-              run protocol block。<code>run_id</code>, <code>git_commit</code>, hardware/env snapshot,
-              config, seed, hypothesis placeholdersを含む。
+              Run protocol block with <code>run_id</code>, <code>git_commit</code>, hardware/env snapshot,
+              config, seed, and hypothesis placeholders.
             </p>
           </article>
           <article class="artifact-card">
             <h3><code>rollout_benign.json</code> / <code>rollout_attacked.json</code></h3>
             <p>
-              <code>RolloutStep</code> の列。7-DoF action、privileged_state、instruction、trusted_goal、
-              attacked flag、suffix_refを持つ。
+              A sequence of <code>RolloutStep</code> records with 7-DoF actions, privileged_state, instruction,
+              trusted_goal, attacked flag, and suffix_ref.
             </p>
           </article>
           <article class="artifact-card">
             <h3><code>actions_*.npy</code></h3>
-            <p>raw 7-DoF action arrays。後で同じデータから再分析できる。</p>
+            <p>Raw 7-DoF action arrays, so the same data can be re-analysed later.</p>
           </article>
           <article class="artifact-card">
             <h3><code>attack_outcome.json</code></h3>
             <p>
-              D2 success criterion。<code>TargetActionSpec.reached_window</code> と
-              <code>completion_step</code> を記録する。
+              D2 success criterion. Records <code>TargetActionSpec.reached_window</code>
+              and <code>completion_step</code>.
             </p>
           </article>
         </div>
@@ -228,13 +228,13 @@ cat "$RUN/attack_outcome.json"</code></pre>
 
       <section class="section">
         <p class="section-kicker">Dry runs</p>
-        <h2>H1 plumbingとfigure regenerationをGPU前に通す</h2>
+        <h2>Exercise H1 plumbing and figure regeneration before GPU day-1</h2>
         <div class="quick-grid two">
           <article class="info-card">
             <h3>metric separation</h3>
             <p>
-              <code>scripts/demo_metric_separation.py</code> がreal metric (A) とeval statsで
-              benign-vs-attacked separationを計算する。
+              <code>scripts/demo_metric_separation.py</code> computes benign-vs-attacked separation using
+              the real metric (A) and eval stats.
             </p>
             <div class="command-block">
               <div class="command-title"><span>Metric dry-run</span><span>AUC + TPR@FPR</span></div>
@@ -245,8 +245,8 @@ PYTHONPATH=src:$LIB "$L14" scripts/demo_metric_separation.py --backend libero --
           <article class="info-card">
             <h3>figure regeneration</h3>
             <p>
-              <code>scripts/demo_figures.py</code> がdemo rolloutから <code>results.json</code> を作り、
-              real <code>make_figures</code> でPNGを再生成する。
+              <code>scripts/demo_figures.py</code> builds <code>results.json</code> from demo rollouts
+              and regenerates PNGs through the real <code>make_figures</code> path.
             </p>
             <div class="command-block">
               <div class="command-title"><span>Figure dry-run</span><span>same GPU renderer path</span></div>
@@ -259,17 +259,17 @@ open "$RUN"/figures/*.png</code></pre>
           </article>
         </div>
         <div class="callout warning">
-          <h3>small-sample挙動はそのまま見せる</h3>
+          <h3>Small-sample behaviour is shown honestly</h3>
           <p>
-            demoの <code>n</code> は小さいため、calibration splitは粗く、held-out FPRがtargetを超えることがある。
-            これはsmall-sampleの正直な挙動で、bugではない。
+            The demo <code>n</code> is small, so calibration splits are coarse and held-out FPR can overshoot
+            the target. That is honest small-sample behaviour, not a bug.
           </p>
         </div>
       </section>
 
       <section class="section">
         <p class="section-kicker">GPU preview</p>
-        <h2>Kelvin2では同じrecord pathを本物のpolicyで走らせる</h2>
+        <h2>On Kelvin2, the same record path runs with the real policy</h2>
         <div class="flow three">
           <div class="flow-step">
             <strong>Step 3</strong>
@@ -293,7 +293,7 @@ open "$RUN"/figures/*.png</code></pre>
 
       <section class="section slim">
         <p class="section-kicker">Cleanup</p>
-        <h2>demo出力は消してよい</h2>
+        <h2>Demo output is disposable</h2>
         <div class="command-block">
           <div class="command-title"><span>Remove local demo artifacts</span><span>gitignored</span></div>
           <pre><code>rm -rf ~/.cache/evasion_tax-libero14
