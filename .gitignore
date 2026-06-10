@@ -41,6 +41,7 @@ venv/
 .idea/
 .vscode/
 
-# --- graphify Obsidian vault: skip the bundled presentation images (byte-identical
-#     duplicates of docs/presentation/assets/image-*.png — keep one copy only) ---
-graphify-out/obsidian/_assets/
+# --- graphify knowledge-graph output: derived/regenerable artefact (AST + semantic
+#     caches, Obsidian vault, graph.json/html). Re-buildable with /graphify; not a
+#     dissertation deliverable, so it is not tracked (untracked 2026-06-10). ---
+graphify-out/
