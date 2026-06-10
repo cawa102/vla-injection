@@ -50,7 +50,7 @@ GPU-dependent runs (OpenVLA inference, GCG optimisation, LIBERO rollouts) are de
 node.
 
 ```
-MODEL-FREE (local, in this repo · 354 tests green)   GPU NODE (deferred to A100/H100)
+MODEL-FREE (local, in this repo · 395 tests green)   GPU NODE (deferred to A100/H100)
 ──────────────────────────────────────────────────  ──────────────────────────────────
 metric A scorer · FP-calibrated detector             OpenVLA-7B inference
 eval stats (ROC/AUC · TPR@FPR · confidence intervals) GCG suffix optimisation
@@ -71,7 +71,7 @@ a model: they consume an identical `UnitOutcome` contract whether the rollout wa
 ## Repository layout
 
 ```
-src/evasion_tax/        Python package — model-free core (27 modules, ~4.3k LOC)
+src/evasion_tax/        Python package — model-free core (28 modules, ~4.7k LOC)
   attack/        idealized action-space attacker + Pareto frontier
   baselines/     L0 perplexity / anomaly detectors
   metric/        L1 activation-delta probe · L2 goal-action consistency (A)
@@ -80,7 +80,7 @@ src/evasion_tax/        Python package — model-free core (27 modules, ~4.3k LO
   policy/        OpenVLA action codec / stats (model-free helpers)
   repro/         seeds, env capture, provenance, write-once run logger
   config/        pinned-YAML schema + runtime loader
-tests/         354 unit tests (synthetic/mock seams, no model needed)
+tests/         395 unit tests (synthetic/mock seams, no model needed)
 scripts/       thin CLI for GPU-node runs (run_benign, run_attack, calibrate, evaluate, microbench_gcg, …)
 configs/       pinned experiment configs (example_m2.yaml) + GPU requirements
 docs/          research documents — see Documentation below
@@ -116,7 +116,7 @@ with [`uv`](https://docs.astral.sh/uv/) (`uv.lock` pinned).
 
 ```bash
 uv sync                 # install pinned dependencies into .venv
-uv run pytest           # run the 354 model-free unit tests
+uv run pytest           # run the 395 model-free unit tests
 ```
 
 The heavy simulation stack (`mujoco`, `robosuite`, and `libero` from source) is an isolated optional extra so
