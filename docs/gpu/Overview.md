@@ -40,6 +40,36 @@ the calendar constraint the **M1 on-GPU timing micro-bench** must budget against
 (D8). Note the cluster is **shared** (only 4 A100 nodes + 1 H100 node) → **queue depth is a real variable**; record
 it during M1, as flagged in the playbook (D8 "single-card-vs-cluster + queue depth TBC").
 
+## Minimum viable GPU (project floor)
+
+The binding constraint is **RoboGCG (bf16 forward+backward + candidate-batch eval)**, not inference — so the
+GPU floor is set by GCG, not by loading the model. (Weights ≈14 GB is the established OpenVLA-7B bf16 size from
+the table above; the **GCG VRAM figures below are an estimate** — they depend on candidate-batch size, sequence
+length, and gradient checkpointing, so confirm them during the **M1 micro-bench**.)
+
+| Workload | VRAM floor → comfortable | Binding? |
+|----------|--------------------------|----------|
+| OpenVLA-7B **bf16 inference** | 16 GB (tight) → 24 GB | no |
+| **LIBERO rollout** (inference-driven) | ≈ same as inference | no |
+| **RoboGCG** (bf16 backward + candidate batch) | **24 GB (needs OOM-tuning) → 40 GB (real floor) → 80 GB (headroom)** | **yes — sets the floor** |
+
+**Project minimum (full registered protocol):**
+
+| Item | Minimum | Comfortable |
+|------|---------|-------------|
+| GPU | 1 × NVIDIA CUDA, **24 GB** VRAM | **40 GB+** |
+| GPU count | **1** — OpenVLA-7B fits one card, **no cluster / multi-GPU needed** | 1 |
+| System RAM | 32 GB | 64 GB |
+| Disk | ~50 GB (ckpt ~14 GB + LIBERO + logs) | ~100 GB |
+| OS | **Linux + CUDA** (the OpenVLA / flash_attn / bitsandbytes stack is Linux-first) | — |
+
+**Where Kelvin2 lands.** The granted **A100 / H100 (80 GB)** clears this floor with large headroom — request a
+single card (`--gres=gpu:a100:1`, see [`Running.md`](./Running.md)). An `k2-gpu-a100mig` slice (e.g. `2g.20gb` =
+20 GB) sits at the *inference* floor and is fine for OpenVLA stand-up / cheap harness debugging, but **GCG wants
+a full card** (≥40 GB). For reference, the local **CSB box (8 GB)** is ~⅓ of the floor → 4-bit smoke-tests only
+([`CSB/plan.md`](./CSB/plan.md)); a 16 GB card (e.g. an unverified laptop dGPU) can do bf16 *inference* but
+**not** GCG.
+
 ## Storage
 
 | Store | Path | Quota | Retention |
