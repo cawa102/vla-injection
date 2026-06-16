@@ -50,8 +50,9 @@ old 8 GB box are **gone**. Consequences + the de-risking-vs-registered ladder: [
   state-only path dodged; on a Linux + NVIDIA box it should be crossable.
 - **Exclusivity / sharing:** it is a **shared lab desktop** (GPU 1 runs the GUI; others may log in). The D8
   **timing** micro-bench needs a quiet/exclusive window — confirm how to reserve or pick low-contention times.
-- **Access path:** direct SSH (on the QUB/EEECS network) vs Tailscale/VS Code Remote-SSH; whether the box is
-  reachable off-campus or only on-site / via VPN.
+- **Access path:** RESOLVED 2026-06-16 → **VS Code Remote Tunnel (`code tunnel`, outbound)** — runbook
+  [`ssh.md`](./ssh.md). Direct inbound SSH (port **2222**) is firewall-blocked and there is no sudo; the tunnel
+  is IP-independent so the DHCP address is irrelevant.
 - **Persistence-mode / power-cap** behaviour for sustained GCG runs (A5000 is 230 W per card per `nvidia-smi`).
 
 ## Superseded — the 2026-06-15 Windows reading (a different machine, NOT the plan)

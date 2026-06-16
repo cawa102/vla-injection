@@ -41,8 +41,9 @@ What replaces them are honest **A5000-vs-A100/H100** caveats, not capability wal
 - **Driver 595 / CUDA 13.2 is newer than the OpenVLA pin** (torch 2.2.0 = cu121). The newer driver is
   backward-compatible (runs cu121 torch); verify `flash-attn==2.5.5` loads — wheel, rebuild, or a small torch
   bump (record whatever is used in the run env, invariant #8).
-- Access: direct SSH on the EEECS network (or Tailscale / VS Code Remote-SSH). Decide once the network situation
-  in [`pc-spec.md`](./pc-spec.md) is confirmed.
+- Access: **VS Code Remote Tunnel (`code tunnel`, outbound)** is the working path — full runbook in
+  [`ssh.md`](./ssh.md). Direct inbound SSH (port **2222**) is currently **firewall-blocked** and we have no
+  sudo; the tunnel is IP-independent, so the box's DHCP address does not matter.
 
 ## Bring-up ladder (do in order; each step has a verify gate)
 
