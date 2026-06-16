@@ -27,7 +27,8 @@ a mix. Scope/runbook: [`plan.md`](./plan.md).
 | **Driver / CUDA** | **595.71.05 / CUDA 13.2** | Newer than the OpenVLA pin (torch 2.2.0 = cu121). A newer **driver** is backward-compatible (runs cu121 torch); verify `flash-attn` loads (wheel vs rebuild). |
 | GPU 0 | 15 MiB used (idle) | **fully free** — the registered-run card. |
 | GPU 1 | 579 MiB used (`Disp.A = On`) | drives the **display** (Xorg / gnome-shell / firefox); ≈23.4 GB still free. |
-| CPU / RAM / storage | **unknown for `ecs3-0202`** | the i7-14700KF / 16 GB / 954 GB in the *Superseded* table were the **other** (Windows) box — **re-read on `ecs3-0202`** (`lscpu`, `free -h`, `df -h`) before citing. |
+| CPU / RAM | **20 logical cores / 62 GiB RAM** (verified 2026-06-16) | `nproc` = 20, `free -h` = 62Gi. CPU model still to capture with `lscpu` if cited. The i7-14700KF / 16 GB in the *Superseded* table were the **other** (Windows) box. |
+| Storage | **930 GB local NVMe (`/dev/nvme0n1p3`), 769 GB free** (verified 2026-06-16) | `$HOME` is on `/` (local disk, not a small network quota) → ample for Miniconda + OpenVLA-7B (~14 GB) + LIBERO + write-once `results/`. |
 
 ### What 24 GB VRAM means for OpenVLA-7B (≈7.5B params)
 
@@ -43,7 +44,8 @@ old 8 GB box are **gone**. Consequences + the de-risking-vs-registered ladder: [
 
 ## Not in `nvidia-smi` — verify on the box before a registered run (audit trail)
 
-- **CPU / RAM / storage** of `ecs3-0202` (`lscpu`, `free -h`, `df -h`) — must be re-read (see table note).
+- ✅ **CPU / RAM / storage** verified 2026-06-16: 20 cores / 62 GiB / 930 GB NVMe (769 GB free). Outbound
+  internet to Anaconda + HuggingFace verified reachable. (CPU *model* still via `lscpu` if cited.)
 - **CUDA toolkit (`nvcc --version`) vs the 13.2 driver**, and whether **`flash-attn==2.5.5`** loads against the
   installed torch (cu121) under this driver — or needs a wheel / rebuild / a torch bump.
 - **`MUJOCO_GL=egl`** headless rendering works on the NVIDIA GPU (LIBERO camera obs) — the GL wall the local
