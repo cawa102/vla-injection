@@ -80,9 +80,10 @@ defended). A graded, single-author dissertation: reproducibility and defensible 
 Headline = ***The Embodiment Evasion Tax*** — a *measurement* of per-layer adaptive-evasion cost (**L0** input /
 **L1** internal-probe / **L2** behavioural action-monitor) on instruction-injected VLA policies; the
 FP-calibrated goal-action detector is the **L2** *instrument*, **not** a claimed universal defence. Base
-**OpenVLA-7B** (**bf16**), **simulation only (LIBERO)**, **instruction channel** (RoboGCG primary). **Compute (2026-06-02):**
-hardware = **A100/H100** (single-card-vs-cluster TBC), superseding the assumed GB10; the compute *tiers* are now
-three **branches (N / N− / F) selected by the M1 on-GPU timing micro-bench** (D8). **Claim boundary — don't
+**OpenVLA-7B** (**bf16**), **simulation only (LIBERO)**, **instruction channel** (RoboGCG primary). **Compute (2026-06-16):**
+registered hardware = **CSB `ecs3-0202` = 2× RTX A5000, 24 GB each** (a single A5000 is the registered card; the first accessible
+GPU → **Kelvin2 A100/H100 demoted to backup**, separate registration if ever used); bf16 OpenVLA-7B (~14 GB) fits one card. The compute *tiers* are still
+three **branches (N / N− / F) selected by the M1 on-GPU timing micro-bench** (D8) — but the A5000 is ~2.5–4× slower than A100/H100 with **no published OpenVLA-GCG prior**, so the bench is expected to land on **N−/F** (measured; all registered runs commit to the A5000, no cross-HW mixing). **Claim boundary — don't
 over-claim (Codex review #2, 2026-06-02):** the guaranteed floor (**M3**, delivered in every branch) gives only the
 **oracle** intrinsic action-space frontier (**H6-A**); the cross-layer *tax* headline (**H6-D**, **M4**) is
 **deployable-vs-deployable** and is committed only if the **M1 micro-bench** shows the matched-attacker matrix
@@ -92,7 +93,7 @@ intrinsic frontier* (a 2026 runtime VLA-safety cluster exists — don't claim th
 **Operational source of truth = `docs/core/execution-playbook.md`** (status / tasks / decisions / how-to);
 what & why = `docs/core/goal-action-consistency-detector.md`; verified facts = `docs/references/`; landscape =
 `docs/lit-review/`. **Phase: Design → M0 exiting; coding gate LIFTED for M1–M2 *model-free* work (author OK
-2026-05-31) — OpenVLA / GCG / LIBERO *runs* await the granted GPU.** Don't write experiment code beyond what the
+2026-05-31) — OpenVLA / GCG / LIBERO *runs* now have an accessible registered box (CSB A5000, 2026-06-16); next = M1 bring-up on that box (`docs/gpu/CSB/plan.md`).** Don't write experiment code beyond what the
 agreed `docs/core/` plan covers.
 
 **Phases — know which one a task belongs to; don't skip ahead.**

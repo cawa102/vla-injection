@@ -63,12 +63,16 @@ length, and gradient checkpointing, so confirm them during the **M1 micro-bench*
 | Disk | ~50 GB (ckpt ~14 GB + LIBERO + logs) | ~100 GB |
 | OS | **Linux + CUDA** (the OpenVLA / flash_attn / bitsandbytes stack is Linux-first) | — |
 
-**Where Kelvin2 lands.** The granted **A100 / H100 (80 GB)** clears this floor with large headroom — request a
-single card (`--gres=gpu:a100:1`, see [`Running.md`](./Running.md)). An `k2-gpu-a100mig` slice (e.g. `2g.20gb` =
-20 GB) sits at the *inference* floor and is fine for OpenVLA stand-up / cheap harness debugging, but **GCG wants
-a full card** (≥40 GB). For reference, the local **CSB box (8 GB)** is ~⅓ of the floor → 4-bit smoke-tests only
-([`CSB/plan.md`](./CSB/plan.md)); a 16 GB card (e.g. an unverified laptop dGPU) can do bf16 *inference* but
-**not** GCG.
+**Where the registered box lands.** The **registered compute is now CSB `ecs3-0202` = 2× RTX A5000, 24 GB
+each** (author decision 2026-06-16 — [`CSB/pc-spec.md`](./CSB/pc-spec.md)). A single 24 GB A5000 sits **exactly
+at the minimum floor**: bf16 OpenVLA-7B (~14 GB) fits with rollout headroom, and GCG at 24 GB is plausible at
+batch-1 / gradient-checkpointing — **confirmed (or sized) by the M1 micro-bench, not assumed**. The 2nd card is
+memory relief / an independent job (PCIe, no NVLink), **not** a registered second card.
+
+**Kelvin2 = backup only.** The **A100 / H100 (80 GB)** cluster would clear this floor with large headroom
+(`--gres=gpu:a100:1`, see [`Running.md`](./Running.md)), but its access was never established and it is now a
+**contingency**: cross-hardware comparison is forbidden within a claim, so using Kelvin2 would mean a **separate
+registration**, never a mix with the A5000 results.
 
 ## Storage
 

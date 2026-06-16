@@ -187,22 +187,22 @@ calibration as the headline result.
    **abort rate / latency**. *(NOT "recovered task-success": a hold/abort fallback prevents the target action
    but does not complete the task — only measure recovery if you also build replan / clean-instruction
    re-execution.)* Report degradation **across the trusted-reference ladder**.
-7. **Compute budget** — GCG sweep cost (we now run on A100/H100, so the published H100 GCG timings should ≈
-   transfer; we still micro-bench on the actual granted HW at M1 to fix the eval matrix (D4/D7)); any training
-   for metric (B)/(C).
+7. **Compute budget** — GCG sweep cost (registered compute = CSB RTX A5000; the published H100 GCG timings do
+   **NOT** transfer — A5000 ≈2.5–4× slower, no published prior → the M1 micro-bench on the A5000 is the sole
+   budget source for the eval matrix (D4/D7)); any training for metric (B)/(C).
 
 ---
 
-## 8. Feasibility (A100/H100 + simulation)
+## 8. Feasibility (CSB RTX A5000, 24 GB + simulation)
 
-- **Model:** OpenVLA-7B (bf16 — A100/H100-80GB fit OpenVLA-7B at full precision; 4-bit no longer required;
-  fits comfortably on an A100/H100 (≈14 GB in bf16)), LIBERO-finetuned checkpoints. The **detector concept is
+- **Model:** OpenVLA-7B (bf16 — a 24 GB A5000 fits OpenVLA-7B at full precision, ≈14 GB, with rollout headroom;
+  4-bit not required; the registered card is a **single** A5000), LIBERO-finetuned checkpoints. The **detector concept is
   head-agnostic**, but the **initial RoboGCG attack reproduction is scoped to the discrete-action-token
   OpenVLA-7B** — GCG over discrete action tokens does not transfer unchanged to OpenVLA-OFT's continuous L1
   head. (Still better than T5, whose *defense* mechanism itself was tokenization-specific.)
 - **Attack compute:** RoboGCG is **training-free** (inference-time white-box GCG) but **not free** — the
-  published ~185–604 s/target is **H100-based**; we now run on A100/H100, so the published H100 GCG timings
-  should ≈ transfer. Treat it as **bounded and subsampleable**: micro-benchmark GCG on the actual granted HW at
+  published ~185–604 s/target is **H100-based** and does **NOT** transfer to the A5000 (≈2.5–4× slower, no
+  published prior). Treat it as **bounded and subsampleable**: micro-benchmark GCG on the registered A5000 at
   M1 to fix the eval matrix (D4/D7), subsample targets, and concentrate effort on the detector.
 - **Detector:** metric (A) is analysis-only; (B)/(C) need a small model (in-budget LoRA/MLP scale).
 - **Sim only** — scope all claims to simulation; no real-robot transfer claims. Pin all seeds; write-once

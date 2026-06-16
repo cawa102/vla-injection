@@ -1,4 +1,14 @@
-# Embodiment Evasion Tax — GPU Day-1 Runbook (Kelvin2 / M1 viability gate)
+# Embodiment Evasion Tax — GPU Day-1 Runbook (M1 viability gate)
+
+> **⚠️ REGISTERED COMPUTE CHANGED (2026-06-16).** The registered box is now **CSB `ecs3-0202` = 2× RTX A5000
+> (24 GB)** — direct SSH, **no Slurm/queue/walltime cap**. **Start at the bring-up ladder in
+> [`../gpu/CSB/plan.md`](../gpu/CSB/plan.md)** (env + bf16 stand-up + GCG/D8 bench on the A5000). **Kelvin2 is a
+> BACKUP only** — this Slurm runbook is the Kelvin2 path, kept for that contingency. The **protocol** sections
+> (repro header, checkpoint hashing, GCG/L1 micro-bench, branch select, GO/NO-GO) are **hardware-agnostic and
+> apply on the A5000 too** — just skip the `sbatch`/`--gres`/`module` steps and run interactively. Reproducibility
+> rule: **all registered runs commit to the A5000**; Kelvin2, if used, is a **separate** registration (no cross-HW
+> mixing). Note the A5000 has **no published OpenVLA-GCG prior** → the H100 timing references below do **NOT**
+> transfer; measure on the card.
 
 > **Purpose.** Turn GPU access into the **M1 GO/NO-GO gate** with no improvisation: clone → pinned env →
 > checkpoints (hash) → benign baseline → RoboGCG redirect → GCG + L1 micro-bench → metric-(A) signal → **branch
