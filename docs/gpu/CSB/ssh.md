@@ -119,23 +119,39 @@ echo "== GPU =="; nvidia-smi --query-gpu=name,memory.total,memory.used --format=
 echo "== toolchain =="; python3 --version; for t in conda git pip3 nvcc; do printf "%s: " $t; command -v "$t" || echo "なし"; done
 echo "== cpu/ram =="; echo "$(nproc) cores"; free -h | awk '/Mem/{print $2" RAM"}'
 ```
-- 期待: GPU=`RTX A5000, 24564 MiB ×2`、`conda/git/nvcc=なし`(→ Miniconda で導入)。
+- 期待: GPU=`RTX A5000, 24564 MiB ×2`。**`conda` も `pip` も無く `uv` だけが有る(2026-06-17 箱で確認)** → 環境構築は **uv** で行う(§5)。
 - `wget` で `~/code` を落とせている時点で**外向きHTTPは到達可**(anaconda/HF の個別到達は上で確認)。
 
 ---
 
 ## 5. 次へ — bring-up(初回のみ）
 
+> **箱の事実(2026-06-17):** `conda`/`pip` は無く `uv` だけが有る → env は **uv** で作る(uv が Python 3.10・venv・依存を全部管理、root不要)。
+> `uv.lock` は repo にコミット済 → `uv sync` で model-free 依存を**厳密再現**できる。
+
 環境OKなら(root不要):
 ```bash
-cd ~
-wget -qO mc.sh https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-bash mc.sh -b -p ~/miniconda3 && ~/miniconda3/bin/conda init bash    # → 端末を開き直す
-conda create -y -n eet python=3.10 git
-conda activate eet
-pip install torch==2.2.0 torchvision==0.17.0 --index-url https://download.pytorch.org/whl/cu121
-python -c "import torch; print(torch.cuda.is_available(), torch.cuda.get_device_name(0))"  # True / RTX A5000
+# 0) uv に Python 3.10 を用意させる(システムに無くてOK)
+uv python install 3.10
+
+# 1) repo(既にあれば cd だけ)
+git clone https://github.com/cawa102/vla-injection.git ~/vla-injection
+cd ~/vla-injection
+
+# --- bring-up step 2 ゲート: model-free 395 テスト(torch 不要・repo を先に検証)---
+uv venv --python 3.10          # .venv を 3.10 で作成(OpenVLA スタックに合わせる)
+uv sync                        # uv.lock から厳密再現(core deps + dev: pytest/ruff)
+uv run pytest -q               # 期待: 395 passed(Mac とパリティ)
+
+# --- bring-up step 1 ゲート: CUDA(torch を同じ venv に追加)---
+uv pip install torch==2.2.0 torchvision==0.17.0 --index-url https://download.pytorch.org/whl/cu121
+uv run python -c "import torch; print(torch.cuda.is_available(), torch.cuda.get_device_name(0))"  # True / RTX A5000
+nvidia-smi --query-gpu=index,name,memory.total --format=csv,noheader
 ```
+
+> ⚠️ **`uv sync` を torch インストール後に再実行しない** — lock に無い torch を削除する。再同期が要るなら
+> `uv sync --inexact`(既存パッケージを残す)。`uv run` が `.venv` を使うので `activate` は不要。
+
 以降は [`plan.md`](./plan.md) の bring-up ラダー(OpenVLA bf16 → LIBERO → L2 → GCG/D8)。
 
 ---
