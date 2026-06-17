@@ -1,5 +1,7 @@
 """Tests for the deterministic seeding helper."""
 
+import sys
+
 import numpy as np
 
 from evasion_tax.repro import seed_everything
@@ -47,9 +49,11 @@ def test_different_seeds_give_different_numpy_draws():
     assert not np.array_equal(first, second)
 
 
-def test_torch_absent_is_recorded_not_seeded():
-    # On this machine torch is not installed; the helper must still succeed
-    # and must not claim to have seeded torch.
+def test_torch_absent_is_recorded_not_seeded(monkeypatch):
+    # When torch is not importable, the helper must still succeed and must not
+    # claim to have seeded torch. Simulate absence so this holds on any host
+    # (the model-free suite must not depend on whether torch is installed).
+    monkeypatch.setitem(sys.modules, "torch", None)
     result = seed_everything(0)
     assert "torch" not in result["seeded"]
 

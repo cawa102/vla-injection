@@ -6,11 +6,16 @@ requirement and exit non-zero. The decision and the message live here so all
 three scripts share one tested guard rather than duplicating it.
 """
 
+import sys
+
 from evasion_tax.config.runtime import cuda_available, gpu_required_message
 
 
-def test_cuda_unavailable_on_local_host():
-    # The local M1 host has no torch/CUDA, so the guard must fire.
+def test_cuda_unavailable_when_torch_absent(monkeypatch):
+    # When torch is not importable the guard must fire. Simulate absence so this
+    # holds on any host, including a GPU box that has torch installed (the
+    # model-free suite must be environment-independent).
+    monkeypatch.setitem(sys.modules, "torch", None)
     assert cuda_available() is False
 
 

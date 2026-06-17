@@ -29,9 +29,12 @@ def test_never_raises_on_this_machine():
     capture_env()
 
 
-def test_cuda_and_torch_are_none_locally():
-    # torch is not installed on the local M1 machine, so torch/cuda/driver
-    # must degrade gracefully to None rather than raising.
+def test_cuda_and_torch_are_none_when_torch_absent(monkeypatch):
+    # When torch is not importable, torch/cuda/driver must degrade gracefully to
+    # None rather than raising. Simulate absence (a ``None`` in sys.modules makes
+    # ``import torch`` raise ImportError) so this holds on ANY host — with or
+    # without torch installed — keeping the model-free suite environment-independent.
+    monkeypatch.setitem(sys.modules, "torch", None)
     env = capture_env()
     assert env["torch"] is None
     assert env["cuda"] is None
