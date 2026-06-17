@@ -51,7 +51,7 @@ What replaces them are honest **A5000-vs-A100/H100** caveats, not capability wal
 
 - [x] **1. Linux+CUDA env, `git clone`, install GPU deps** (`requirements-gpu.txt`) — *verify:* `torch.cuda.is_available() == True`; `nvidia-smi` sees both A5000s — *2026-06-17 box ✓: Python 3.10, torch 2.2.0+cu121, numpy 1.26.4, CUDA True, both RTX A5000 visible, torch↔numpy interop OK*
 - [x] **2. Run the existing model-free test suite (395 tests)** — *verify:* parity with the Mac (same pass count) — *2026-06-17 box: all green (after restoring `.git` via real clone — see `ssh.md` §5/§6)*
-- [ ] **3. Load OpenVLA-7B in bf16**, one forward on a dummy image+instruction — *verify:* a valid action vector; **fits on one 24 GB card** (the registered precision runs)
+- [x] **3. Load OpenVLA-7B in bf16**, one forward on a dummy image+instruction — *verify:* a valid action vector; **fits on one 24 GB card** (the registered precision runs) — *2026-06-17 box ✓: `openvla/openvla-7b` bf16+sdpa on cuda:0, valid 7-DoF action, peak VRAM 14.46 GiB reserved / 23.5 GiB (no flash-attn); `scripts/smoke_openvla_load.py`, commit `a24b77a`/`87e9a3f`*
 - [ ] **4. One LIBERO episode** (EGL) with the bf16 policy — *verify:* rollout completes; log schema matches the state-adapter / metric side
 - [ ] **5. Attach the goal-action detector (L2)** to that real rollout — *verify:* detector ingests real OpenVLA actions end-to-end
 - [ ] **6. GCG** — first a tiny run (few steps, 1 example), then the **D8 timing micro-bench** — *verify:* attack harness runs; record `s/target`, peak VRAM, max candidate-batch at 24 GB → **selects Branch N/N−/F (D8)**
