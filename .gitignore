@@ -5,6 +5,9 @@ artifacts/
 # Local demo rollouts (placeholder policy, NOT experiments — see docs/setup/local-rollout-demo.md)
 results/_demo/
 
+# Bring-up / throwaway smoke runs (NOT registered results — see docs/gpu/CSB/plan.md)
+results/_smoke/
+
 # Model weights / checkpoints (record provenance in docs/, never commit binaries)
 *.pt
 *.pth

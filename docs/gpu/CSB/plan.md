@@ -59,6 +59,31 @@ What replaces them are honest **A5000-vs-A100/H100** caveats, not capability wal
 Steps 1–5 de-risk the wiring; **step 6 produces registered measurements** (D4/D7/D8). If bf16 OOMs at step 3
 (it should not at 24 GB) → fall back to memory relief on the 2nd card before any precision change.
 
+### Step 3 how-to (on the box, after steps 1–2)
+
+`scripts/smoke_openvla_load.py` loads OpenVLA-7B in bf16, runs one forward on a dummy image+instruction,
+validates the 7-DoF action, and logs peak VRAM to write-once `results/_smoke/`. OpenVLA loads via
+`trust_remote_code`, so the model + its custom code are fetched from HF on first run (~14 GB; set `HF_HOME` to a
+roomy disk — the box `~` has limited space, see [`pc-spec.md`](./pc-spec.md)):
+
+```bash
+# Add the OpenVLA *inference* deps to the same .venv (lock-external, like torch — ssh.md §6).
+# Pins are the codec-verified OpenVLA set from configs/env/requirements-gpu.txt (the canonical
+# source); this is the forward-pass subset, not the full training/data stack (peft/draccus/dlimp/
+# tensorflow are NOT needed to load + predict_action).
+uv pip install transformers==4.40.1 tokenizers==0.19.1 timm==0.9.10 \
+  accelerate sentencepiece pillow einops huggingface_hub
+
+export HF_HOME=<roomy-disk>/hf            # base model is ~14 GB; default ~/.cache may be too small
+uv run python scripts/smoke_openvla_load.py        # base openvla-7b + bridge_orig, attn=sdpa (no flash-attn)
+```
+
+*Verify gate:* prints a finite **7-DoF** action vector **and** `PASS: … fit one card` (peak VRAM < 24 GiB, no
+OOM). If `sdpa` errors on the box, retry `--attn-impl eager`; flash-attn (`--attn-impl flash_attention_2`) is a
+**separate** perf check (caveat L5), not required for this gate. The exact installed versions are captured into
+the smoke `run.json` (repro header). The full OpenVLA/LIBERO **source** install is **step 4** — this step needs
+only the HF model + the inference deps above.
+
 ## After bring-up — the registered matrix runs here
 
 Once steps 1–6 pass, M1–M4 run on this box (M1 GO/NO-GO → M2 floor → M3 H6-A oracle frontier → M4 H6-D tax if
