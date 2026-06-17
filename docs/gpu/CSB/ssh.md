@@ -179,3 +179,6 @@ nvidia-smi --query-gpu=index,name,memory.total --format=csv,noheader
 - **ブラウザ版が真っ暗** → VS Code アプリ + 同じ GitHub、Chrome/Edge を使う。
 - **`git` が無い**(conda/pip も無い・sudo 無し) → **micromamba 単体バイナリ**で conda-forge `git` をユーザ領域へ(§5 0a)。tarball パイプ(`wget -qO- … | tar -xvj`)は途中で切れて失敗したので、**単体バイナリを直接DL**する。
 - **repo は必ず `git clone`** — ZIP/DL では `.git` が無く `capture_env()` の `git_commit=None` → `test_git_commit_is_resolved_in_this_repo` が落ち、登録ランの commit 記録も取れない(再現性NG)。
+- **`.python-version` が `uv venv --python` を上書きする** — repo の `.python-version` が 3.11 だと `uv sync`/`uv run` が venv を 3.11 に作り直す。OpenVLA は 3.10 pin なので `.python-version` を **3.10** に変更済み(`3b16684`)。`uv venv --python 3.10` 単体では効かない。
+- **numpy は `<2` でなければ torch が壊れる** — torch 2.2.0 は numpy-1.x ABI ビルドで、numpy 2 だと `torch.from_numpy` が `RuntimeError: Numpy is not available`。`pyproject`+`uv.lock` に `numpy>=1.26,<2` を固定済み(`52a77ea`)→ `uv sync` で numpy 1.26.4。**lock に入れたので `uv run` でも戻らない**(手動 `uv pip install numpy<2` は不要)。
+- **torch は lock 外** — `requirements-gpu.txt` の cu121 torch は `uv.lock` に無いので `uv sync` で消える。`uv sync` 後に `uv pip install torch==2.2.0 torchvision==0.17.0 --index-url …/cu121` で戻す(キャッシュ済みで速い)。`uv run` は lock外 torch を prune しない。GPU env 全体の凍結は後工程(env-lock)。
