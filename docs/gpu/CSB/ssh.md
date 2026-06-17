@@ -126,15 +126,27 @@ echo "== cpu/ram =="; echo "$(nproc) cores"; free -h | awk '/Mem/{print $2" RAM"
 
 ## 5. 次へ — bring-up(初回のみ）
 
-> **箱の事実(2026-06-17):** `conda`/`pip` は無く `uv` だけが有る → env は **uv** で作る(uv が Python 3.10・venv・依存を全部管理、root不要)。
+> **箱の事実(2026-06-17、実機確認):** `git`/`conda`/`pip` は無く `uv` だけが有る・sudo 無し →
+> git は **micromamba(単体静的バイナリ)で別途導入**(下記0a)、env は **uv** で作る(uv が Python 3.10・venv・依存を全部管理、root不要)。
 > `uv.lock` は repo にコミット済 → `uv sync` で model-free 依存を**厳密再現**できる。
 
 環境OKなら(root不要):
 ```bash
-# 0) uv に Python 3.10 を用意させる(システムに無くてOK)
+# 0a) git が無ければ micromamba(単体静的バイナリ)で導入 — この箱は git/conda/pip 無し・sudo無し
+cd ~
+wget -O ~/micromamba https://github.com/mamba-org/micromamba-releases/releases/latest/download/micromamba-linux-64
+chmod +x ~/micromamba
+export MAMBA_ROOT_PREFIX="$HOME/.mamba"
+~/micromamba create -y -p "$HOME/git-env" -c conda-forge git
+export PATH="$HOME/git-env/bin:$PATH"
+echo 'export PATH="$HOME/git-env/bin:$PATH"' >> ~/.bashrc   # 恒久化
+git --version
+
+# 0b) uv に Python 3.10 を用意させる(システムに無くてOK)
 uv python install 3.10
 
-# 1) repo(既にあれば cd だけ)
+# 1) repo は必ず git clone(ZIP等のDLは .git が無く capture_env の commit=None → 再現性NG)
+#    private repo: 認証を聞かれたら PAT(Contents:Read) を入力。共有機ゆえ credential は保存しない
 git clone https://github.com/cawa102/vla-injection.git ~/vla-injection
 cd ~/vla-injection
 
@@ -165,3 +177,5 @@ nvidia-smi --query-gpu=index,name,memory.total --format=csv,noheader
 - **inbound SSH を連打しない**(IPS/fail2ban風の遮断を延ばす)。
 - **tunnel 端末は開いたまま**(または §2.3 でサービス化)。
 - **ブラウザ版が真っ暗** → VS Code アプリ + 同じ GitHub、Chrome/Edge を使う。
+- **`git` が無い**(conda/pip も無い・sudo 無し) → **micromamba 単体バイナリ**で conda-forge `git` をユーザ領域へ(§5 0a)。tarball パイプ(`wget -qO- … | tar -xvj`)は途中で切れて失敗したので、**単体バイナリを直接DL**する。
+- **repo は必ず `git clone`** — ZIP/DL では `.git` が無く `capture_env()` の `git_commit=None` → `test_git_commit_is_resolved_in_this_repo` が落ち、登録ランの commit 記録も取れない(再現性NG)。
