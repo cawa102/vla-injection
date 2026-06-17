@@ -12,7 +12,12 @@ dependencies = [
     "pyyaml>=6.0",
     "pydantic>=2.5",
     "matplotlib>=3.8",
-    "huggingface-hub>=0.20",
+    # <1.0: hub is shared by the model-free stats fetcher (scripts/fetch_openvla_stats.py)
+    # AND the OpenVLA GPU stack, which pins transformers 4.40.1 (requires huggingface-hub<1.0).
+    # The open ">=0.20" resolved to hub 1.17.0 in uv.lock, which uv re-applied on every
+    # `uv run`/`uv sync` on the CSB box and broke transformers (ImportError: hub<1.0 required).
+    # Pin here so one consistent lock holds for both stacks (mirrors the numpy<2 ABI pin above).
+    "huggingface-hub>=0.20,<1.0",
 ]
 
 # Heavy simulation stack — isolated so it can never break the core env.

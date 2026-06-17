@@ -67,16 +67,24 @@ validates the 7-DoF action, and logs peak VRAM to write-once `results/_smoke/`. 
 roomy disk — the box `~` has limited space, see [`pc-spec.md`](./pc-spec.md)):
 
 ```bash
-# Add the OpenVLA *inference* deps to the same .venv (lock-external, like torch — ssh.md §6).
-# Pins are the codec-verified OpenVLA set from configs/env/requirements-gpu.txt (the canonical
-# source); this is the forward-pass subset, not the full training/data stack (peft/draccus/dlimp/
-# tensorflow are NOT needed to load + predict_action).
+# 0) Align the env to the just-pulled lock. huggingface-hub is now pinned <1.0 in
+#    pyproject/uv.lock (transformers 4.40.1 needs it; the old open ">=0.20" had resolved
+#    to hub 1.17.0 and uv re-applied it on every `uv run`, breaking transformers — gotcha
+#    below). --inexact aligns hub to the lock WITHOUT pruning the lock-external GPU stack.
+uv sync --inexact
+
+# 1) Add the OpenVLA *inference* deps to the same .venv (lock-external, like torch — ssh.md §6).
+#    Pins are the codec-verified OpenVLA set (configs/env/requirements-gpu.txt); the forward-pass
+#    subset only (peft/draccus/dlimp/tensorflow are NOT needed to load + predict_action). hub is
+#    lock-managed now → do NOT pin it here.
 uv pip install transformers==4.40.1 tokenizers==0.19.1 timm==0.9.10 \
-  accelerate sentencepiece pillow einops huggingface_hub
+  accelerate sentencepiece pillow einops
 
 export HF_HOME=<roomy-disk>/hf            # base model is ~14 GB; default ~/.cache may be too small
 uv run python scripts/smoke_openvla_load.py        # base openvla-7b + bridge_orig, attn=sdpa (no flash-attn)
 ```
+
+With hub pinned in the lock, plain `uv run` keeps hub at 0.36.2 (no `--no-sync` workaround needed).
 
 *Verify gate:* prints a finite **7-DoF** action vector **and** `PASS: … fit one card` (peak VRAM < 24 GiB, no
 OOM). If `sdpa` errors on the box, retry `--attn-impl eager`; flash-attn (`--attn-impl flash_attention_2`) is a
