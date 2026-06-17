@@ -47,14 +47,14 @@ What replaces them are honest **A5000-vs-A100/H100** caveats, not capability wal
 
 ## Bring-up ladder (do in order; each step has a verify gate)
 
-| # | Step | Verify (gate) |
-|---|------|---------------|
-| 1 | Linux+CUDA env, `git clone`, install GPU deps (`requirements-gpu.txt`) | `torch.cuda.is_available() == True`; `nvidia-smi` sees both A5000s |
-| 2 | Run the existing **model-free test suite (395 tests)** | parity with the Mac (same pass count) |
-| 3 | Load **OpenVLA-7B in bf16**, one forward on a dummy image+instruction | a valid action vector; **fits on one 24 GB card** (the registered precision runs) |
-| 4 | **One LIBERO episode** (EGL) with the bf16 policy | rollout completes; log schema matches the state-adapter / metric side |
-| 5 | Attach the **goal-action detector (L2)** to that real rollout | detector ingests real OpenVLA actions end-to-end |
-| 6 | **GCG** — first a tiny run (few steps, 1 example), then the **D8 timing micro-bench** | attack harness runs; record `s/target`, peak VRAM, max candidate-batch at 24 GB → **selects Branch N/N−/F (D8)** |
+> Status: `[ ]` TODO · `[x]` DONE · in-progress/blocked = `[ ]` + inline `🔄` / `⛔ <reason>`. Tick each box as its verify gate passes.
+
+- [ ] **1. Linux+CUDA env, `git clone`, install GPU deps** (`requirements-gpu.txt`) — *verify:* `torch.cuda.is_available() == True`; `nvidia-smi` sees both A5000s
+- [ ] **2. Run the existing model-free test suite (395 tests)** — *verify:* parity with the Mac (same pass count)
+- [ ] **3. Load OpenVLA-7B in bf16**, one forward on a dummy image+instruction — *verify:* a valid action vector; **fits on one 24 GB card** (the registered precision runs)
+- [ ] **4. One LIBERO episode** (EGL) with the bf16 policy — *verify:* rollout completes; log schema matches the state-adapter / metric side
+- [ ] **5. Attach the goal-action detector (L2)** to that real rollout — *verify:* detector ingests real OpenVLA actions end-to-end
+- [ ] **6. GCG** — first a tiny run (few steps, 1 example), then the **D8 timing micro-bench** — *verify:* attack harness runs; record `s/target`, peak VRAM, max candidate-batch at 24 GB → **selects Branch N/N−/F (D8)**
 
 Steps 1–5 de-risk the wiring; **step 6 produces registered measurements** (D4/D7/D8). If bf16 OOMs at step 3
 (it should not at 24 GB) → fall back to memory relief on the 2nd card before any precision change.
