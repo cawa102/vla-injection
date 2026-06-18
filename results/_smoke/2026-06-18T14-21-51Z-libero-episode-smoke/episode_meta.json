@@ -1,0 +1,26 @@
+{
+  "attn_impl": "sdpa",
+  "camera_resolution": 256,
+  "card_total_gib": 23.549,
+  "center_crop": true,
+  "device": "cuda:0",
+  "device_name": "NVIDIA RTX A5000",
+  "dtype": "bfloat16",
+  "fits_one_card": true,
+  "instruction": "pick up the black bowl between the plate and the ramekin and place it on the plate",
+  "model": "openvla/openvla-7b-finetuned-libero-spatial",
+  "mujoco_gl": "egl",
+  "n_steps": 90,
+  "num_steps_wait": 10,
+  "obj_of_interest": [
+    "akita_black_bowl_1",
+    "plate_1"
+  ],
+  "peak_vram_reserved_gib": 14.504,
+  "seed": 42,
+  "stage": "smoke_libero_episode",
+  "success": true,
+  "suite": "libero_spatial",
+  "task_id": "pick_up_the_black_bowl_between_the_plate_and_the_ramekin_and_place_it_on_the_plate",
+  "unnorm_key": "libero_spatial"
+}
