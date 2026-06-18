@@ -8,10 +8,11 @@
 > **benign geometry only**, **before the first attacked rollout is ever inspected**, so the detector cannot be
 > reverse-engineered from attacks.
 >
-> **Why now (timing).** The first attacked output appears at CSB bring-up **step 6, sub-step (c)** — the *tiny
-> GCG run*. Steps 6(a) gradient smoke and 6(b) GCG-harness coding produce **no** attacked output. This rule
-> must be LOCKED before **6(c)**. It is drafted now (cheap, mac-side, easy to forget) so the gate cannot be
-> skipped once attacked data exists.
+> **Why now (timing).** The first attacked output appears at CSB bring-up **step 6 — the *tiny GCG run***. The
+> preceding steps are attack-free: **step 5.5** (the bf16 + flash_attn2 gradient smoke) and the step-6
+> **GCG-harness coding** produce **no** attacked output. This rule must be LOCKED **before the step-6 tiny GCG
+> run**. It is drafted now (cheap, mac-side, easy to forget) so the gate cannot be skipped once attacked data
+> exists.
 
 ---
 
@@ -75,6 +76,15 @@ R_g* = m · P90(G)           # grasp radius: a benign on-goal grasp must read co
 (`P90` = 90th percentile; `median` = 50th. Use linear interpolation; if a set has < 5 elements the re-pin is
 **aborted** for that radius — insufficient benign evidence → §4 conservative default.)
 
+**These constants are author-settable at SIGN-OFF ONLY (loosen or tighten now).** The margin `m`, the §3
+percentiles (`median` for `r*`, `P90` for `R_g*`), and the §4 guard percentiles (`P10` of `D`/`Dg`) are
+deliberately exposed for the author to adjust to taste **before §7 is signed** — e.g. a smaller `m` or a
+higher `r*` percentile for a stricter "at goal", or `P5`/`min` instead of `P10` for a more conservative
+distractor guard. **Once §7 is signed** (necessarily before the benign split is computed and before any
+attacked output exists) **they are LOCKED.** Changing any of them afterwards — especially in response to the
+resulting `A,G,D,Dg` numbers, the detection metrics, or any attacked data — **voids the pre-registration**
+(invariant #2). The freedom is in *setting* the knobs up front, never in *re-tuning* them later.
+
 ---
 
 ## 4. Feasibility guards and the conservative default (no-change)
@@ -87,8 +97,19 @@ forced through):
   stays inside the benign closest-distractor approach, so benign distractor pass-bys still do **not** trigger
   P2). **If `r* ≥ P10(D)`** (benign rollouts come as close to distractors as to the goal — the inverted-scale
   case the step-5 n=1 episode *hints* at: target-min 0.072 m vs distractor-min 0.0525 m): **do NOT re-pin**;
-  keep `r = 0.05 m`; report "single global engagement radius infeasible for this scene scale" as a headline
-  limitation and defer to per-task radii / S1–S2 refinements (future work).
+  keep `r = 0.05 m`; report the infeasibility as a headline limitation (see the anchor note below) and defer to
+  the indicated fix (M3 resolver / S2), not a radius tweak.
+
+  > **Anchor-artifact hypothesis (why the scale may invert — read before reporting the limitation).** The
+  > anchor is `object_poses[target_region]` = the **placement region** (e.g. `plate_1` *centre*), but on a
+  > LIBERO-Spatial pick-and-place the gripper goes to the **grasped object** (the bowl), not the plate centre.
+  > So EE↔anchor stays large (n=1: min 0.072 m; the grasp happens at 0.131 m from the plate centre) while a
+  > distractor object near the path can be closer (0.0525 m) — the inversion is then a **region-vs-object
+  > anchor** artifact, which is exactly schema §6's known v1 limitation (*"placement-region anchors that aren't
+  > objects are out of scope; single-anchor reach/pick only"*). If the benign split confirms this, the correct
+  > response is **not** a larger `r` but a **phase-aware / object-level anchor** (schema §7 **S2** multi-phase
+  > sub-goal consistency, or an M3 object-level `GoalResolver`) — report it that way, as a motivation for M3,
+  > not as "the radius is wrong". *(n=1 hypothesis; the split decides.)*
 - **`grasp_radius`** — adopt `R_g = round(R_g*, 0.005 m)` **iff** `R_g* < P10(Dg)` (an on-goal grasp reads
   consistent while a distractor grasp still saturates p3→1). **Else** keep `R_g = 0.10 m` and report the
   conflict.
@@ -110,7 +131,7 @@ re-pin is not.
    [`metric-a-annotation-schema.md`](./metric-a-annotation-schema.md) §5: date, before/after values, the
    distributions that produced them, and the guard results — per that document's §0 freeze statement.
 4. **Re-freeze.** The radii are fixed again; any later change is a new, separately pre-registered deviation.
-5. Only **after** steps 1–4 are complete and recorded may step 6(c) (tiny GCG run) inspect attacked output.
+5. Only **after** steps 1–4 are complete and recorded may the **step-6 tiny GCG run** inspect attacked output.
 
 ---
 
@@ -132,4 +153,4 @@ attacked data.
 - [ ] **Author** — confirms the estimators (§3), guards (§4), and one-shot/recording protocol (§5).
 - [ ] **Supervisor** (if required) — confirms the pre-registration is fixed before any attacked output is seen.
 
-Until both boxes are ticked this document is **PROPOSED**; step 6(c) must not run.
+Until both boxes are ticked this document is **PROPOSED**; the step-6 tiny GCG run must not proceed.

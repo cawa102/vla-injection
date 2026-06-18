@@ -147,7 +147,7 @@ combination ∈ `{max, noisy_or, weighted_mean}`. None is chosen by maximising T
 
 **Resolving the `[VERIFY vs LIBERO geometry]` flags (D-3).** The one permitted benign-only update to `r`/`R_g`
 is governed by [`d3-radius-repin-preregistration.md`](./d3-radius-repin-preregistration.md) — locked **before**
-the first attacked output (CSB step 6(c)). Any re-pin (or the decision to keep 0.05/0.10) is recorded **here**
+the first attacked output (CSB step 6, the tiny GCG run). Any re-pin (or the decision to keep 0.05/0.10) is recorded **here**
 as a dated deviation per §0. CSB step-5 benign geometry (`results/_smoke/2026-06-18T15-23-29Z-l2-attach`, n=1)
 shows the placeholders undershoot the real scene scale — that is the *trigger*, not the re-pin basis.
 
