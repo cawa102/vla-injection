@@ -5,8 +5,9 @@ artifacts/
 # Local demo rollouts (placeholder policy, NOT experiments — see docs/setup/local-rollout-demo.md)
 results/_demo/
 
-# Bring-up / throwaway smoke runs (NOT registered results — see docs/gpu/CSB/plan.md)
-results/_smoke/
+# NOTE: results/_smoke/ is intentionally TRACKED (not ignored) — bring-up smoke runs are
+# cross-box evidence (e.g. OpenVLA-7B bf16 load on A5000) shared via git. Non-registered
+# (no full reproducibility §8 discipline), distinct from write-once registered results/.
 
 # Model weights / checkpoints (record provenance in docs/, never commit binaries)
 *.pt

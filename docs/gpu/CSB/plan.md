@@ -113,6 +113,7 @@ hardware (no cross-HW mixing).
 ## Reproducibility (registered runs — full discipline)
 
 Pin seeds; capture `nvidia-smi` + `pip freeze` + git commit + **which card** into the run log; one variable per
-run; output to **write-once `results/`** (no overwrite). Bring-up / throwaway smoke runs may go to
-`results/_smoke/`, but **once step 6 is producing the D8/registered numbers they are real results** and follow
+run; output to **write-once `results/`** (no overwrite). Bring-up smoke runs go to `results/_smoke/` —
+**tracked/committed** (git-shared so cross-box bring-up evidence travels between machines) but **non-registered**
+(no full §8 discipline). **Once step 6 is producing the D8/registered numbers they are real results** and follow
 the playbook §8 protocol (CLAUDE.md reproducibility).
