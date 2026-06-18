@@ -1,0 +1,25 @@
+{
+  "action": [
+    -0.0028928782168556808,
+    0.015116348873166409,
+    0.007033863924443714,
+    0.04136974406709838,
+    0.030703043388969717,
+    -6.671134046487559e-05,
+    0.0
+  ],
+  "action_dim": 7,
+  "attn_impl": "flash_attention_2",
+  "card_total_gib": 23.549,
+  "device": "cuda:0",
+  "device_name": "NVIDIA RTX A5000",
+  "dtype": "bfloat16",
+  "fits_one_card": true,
+  "instruction": "pick up the red block",
+  "model": "openvla/openvla-7b",
+  "peak_vram_allocated_gib": 14.412,
+  "peak_vram_reserved_gib": 14.463,
+  "seed": 42,
+  "stage": "smoke_openvla_load",
+  "unnorm_key": "bridge_orig"
+}
