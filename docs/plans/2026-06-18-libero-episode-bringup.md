@@ -153,8 +153,7 @@ episode (Task 2). The extracted pure helper is the only part exercised by local 
 ## Done-when (Step 4 exit)
 - [x] Task 1 green locally (core `.venv`): guard returns `2` CUDA-free, model-free seam tests pass (4), ruff
       clean; full suite 410 passed / 0 failed (2026-06-18).
-- [ ] Box: `import libero` + EGL `agentview_image` render OK on the A5000 (2a verify). *(import chain GREEN 2026-06-18 via `PYTHONPATH=~/LIBERO` + `tensorflow-metadata<1.16`/`protobuf<5`; EGL render still pending.)*
-- [ ] Box: one `libero_spatial` task-0 episode completes; `results/_smoke/…-libero-episode-smoke/` written
-      with the `RolloutStep` schema + repro header; a `PrivilegedState` constructs from the camera obs.
-- [ ] Tick `docs/gpu/CSB/plan.md` step 4 `[x]` with the run_id + peak VRAM; update playbook §1 You-Are-Here
-      (next = step 5: attach the L2 detector to the real rollout); fill the checkpoint provenance row.
+- [x] Box: `import libero` + EGL `agentview_image` render OK on the A5000 (2a verify). *(2026-06-18: import chain GREEN via `PYTHONPATH=~/LIBERO` + `tensorflow-metadata<1.16`/`protobuf<5`; EGL `MUJOCO_GL=egl` initialised + rendered during the episode → headless-render risk retired.)*
+- [x] Box: one `libero_spatial` task-0 episode completes; `results/_smoke/2026-06-18T14-21-51Z-libero-episode-smoke`
+      written with the `RolloutStep` schema + repro header. *(90 policy steps, success=True, sdpa, peak VRAM 14.50 GiB / 23.5 GiB → fits one card. Third gotcha: `--unnorm-key` = `libero_spatial` not `*_no_noops` — script default fixed. Commit the run log from the box: `results/_smoke` is tracked.)*
+- [x] Tick `docs/gpu/CSB/plan.md` step 4 `[x]` (run_id + peak VRAM done); playbook §1 updated (next = step 5: attach the L2 detector to the real rollout). *(Checkpoint provenance row — 2b SHA-256/licence — still TODO before any **registered** run; the smoke run is non-registered.)*

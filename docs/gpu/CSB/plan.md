@@ -52,7 +52,7 @@ What replaces them are honest **A5000-vs-A100/H100** caveats, not capability wal
 - [x] **1. Linux+CUDA env, `git clone`, install GPU deps** (`requirements-gpu.txt`) — *verify:* `torch.cuda.is_available() == True`; `nvidia-smi` sees both A5000s — *2026-06-17 box ✓: Python 3.10, torch 2.2.0+cu121, numpy 1.26.4, CUDA True, both RTX A5000 visible, torch↔numpy interop OK*
 - [x] **2. Run the existing model-free test suite (395 tests)** — *verify:* parity with the Mac (same pass count) — *2026-06-17 box: all green (after restoring `.git` via real clone — see `ssh.md` §5/§6)*
 - [x] **3. Load OpenVLA-7B in bf16**, one forward on a dummy image+instruction — *verify:* a valid action vector; **fits on one 24 GB card** (the registered precision runs) — *2026-06-17 box ✓: `openvla/openvla-7b` bf16+sdpa on cuda:0, valid 7-DoF action, peak VRAM 14.46 GiB reserved / 23.5 GiB (no flash-attn); `scripts/smoke_openvla_load.py`, commit `a24b77a`/`87e9a3f`*
-- [ ] 🔄 **4. One LIBERO episode** (EGL) with the bf16 policy — *verify:* rollout completes; log schema matches the state-adapter / metric side — *2026-06-18 box: LIBERO + openvla cloned & installed; **import gate GREEN** (`import libero, experiments.robot.robot_utils` → `helpers OK`) after the two gotchas in the Step 4 how-to below; **EGL render + episode run still pending** (step-4 plan Task 2c/2d)*
+- [x] **4. One LIBERO episode** (EGL) with the bf16 policy — *verify:* rollout completes; log schema matches the state-adapter / metric side — *2026-06-18 box ✓: `libero_spatial` task-0 episode **completed, 90 policy steps, success=True**, sdpa load, **peak VRAM 14.50 GiB / 23.5 GiB (fits one card)**; logged `RolloutStep` schema → `results/_smoke/2026-06-18T14-21-51Z-libero-episode-smoke`. EGL (`MUJOCO_GL=egl`) initialised + rendered on the A5000 → headless-render risk retired. Two install gotchas + the `--unnorm-key` finding in the Step 4 how-to below.*
 - [ ] **5. Attach the goal-action detector (L2)** to that real rollout — *verify:* detector ingests real OpenVLA actions end-to-end
 - [ ] **6. GCG** — first a tiny run (few steps, 1 example), then the **D8 timing micro-bench** — *verify:* attack harness runs; record `s/target`, peak VRAM, max candidate-batch at 24 GB → **selects Branch N/N−/F (D8)**
 
@@ -121,7 +121,7 @@ PYTHONPATH=~/openvla:~/LIBERO ~/vla-injection/.venv/bin/python \
 PYTHONPATH=~/LIBERO uv run --no-sync python scripts/smoke_libero_episode.py --openvla-root ~/openvla
 ```
 
-**Two step-4 gotchas (both hit 2026-06-18, both resolved):**
+**Three step-4 gotchas (all hit 2026-06-18, all resolved):**
 
 1. **`import libero` fails after `uv pip install -e ~/LIBERO`** (`ModuleNotFoundError: No module named 'libero'`,
    even though `uv pip show libero` reports it installed in the `.venv`). LIBERO's top-level `libero/` has **no
@@ -139,6 +139,13 @@ PYTHONPATH=~/LIBERO uv run --no-sync python scripts/smoke_libero_episode.py --op
    (`tensorflow`/`tfds` were already the right 2.15.0/4.9.3 — recorded in `configs/env/requirements-gpu.txt`).
    TF here is **import-only** (the VLA forward is torch/CUDA) → it runs no ops and steals no A5000 memory; the TF
    startup `I/E/W` logs (oneDNN, cuDNN/cuFFT/cuBLAS "already registered", TF-TRT) are benign (`TF_CPP_MIN_LOG_LEVEL=3` to silence).
+3. **`unnorm_key` mismatch** — `predict_action` asserted `The unnorm_key you chose is not in the set of available
+   dataset statistics, please choose from: dict_keys(['libero_spatial'])`. The `openvla-7b-finetuned-libero-spatial`
+   checkpoint registers its action `norm_stats` under **`libero_spatial`**, NOT `libero_spatial_no_noops` (the
+   training-data name we'd assumed). **Fix = `--unnorm-key libero_spatial`** (now the script default; was
+   `*_no_noops`). Verify the key against the actual checkpoint, not the dataset name. *(Also benign here: a
+   `[Warning]: datasets path .../datasets does not exist!` — the LIBERO demo datasets aren't needed for a policy
+   rollout; the first-run `~/.libero/config.yaml` was created with defaults via `N`.)*
 
 ## After bring-up — the registered matrix runs here
 

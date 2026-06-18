@@ -100,8 +100,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--unnorm-key",
-        default="libero_spatial_no_noops",
-        help="dataset stats key (run_libero_eval auto-falls back to *_no_noops)",
+        default="libero_spatial",
+        help="dataset stats key; the openvla-7b-finetuned-libero-spatial checkpoint registers "
+        "norm_stats under 'libero_spatial' (NOT '*_no_noops' — verified on the box 2026-06-18)",
     )
     parser.add_argument("--task-suite", default="libero_spatial", help="LIBERO suite name")
     parser.add_argument("--task-id", type=int, default=0, help="task index within the suite")
