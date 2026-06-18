@@ -201,20 +201,24 @@ then, batch-scoring logged rollouts (Task 1) is the reusable path M1/M2 will als
 ---
 
 ## Done-when (Step 5 exit)
-- [ ] Task 1 green locally (core `.venv`): loader round-trip + malformed-log boundary tests pass; **state half**
+- [x] Task 1 green locally (core `.venv`): loader round-trip + malformed-log boundary tests pass; **state half**
       scores the real step-4 log with every per-step `value` finite in `[0, 1]`; **action half** passes on the
       real actions **and FAILS on a zeroed stream** (the anti-false-confidence test); provenance validation
       passes on the run dir and raises on a mutated sibling; `rollout_fires` emits a well-typed `Decision`;
-      `geometry_stats` correct; ruff + pyright clean; full suite green (≥410, +new).
-- [ ] Acceptance run against `results/_smoke/2026-06-18T14-21-51Z-libero-episode-smoke` validates provenance
+      `geometry_stats` correct; ruff + pyright clean; full suite green (≥410, +new). — *2026-06-18: 27 new TDD
+      tests, **437 suite green**, ruff + pyright clean.*
+- [x] Acceptance run against `results/_smoke/2026-06-18T14-21-51Z-libero-episode-smoke` validates provenance
       (sha256 logged), prints `PASS` for **both halves**, and writes `l2_attach_report.json` (per-step scores +
-      decision + action_stream + geometry stats + steps_sha256 + the honesty `claim` line).
-- [ ] Tick `docs/gpu/CSB/plan.md` step 5 `[x]` (cite the `l2_attach_report.json` run dir); update playbook §1
+      decision + action_stream + geometry stats + steps_sha256 + the honesty `claim` line). — *2026-06-18:
+      provenance validated (`steps_sha256 0deaf431…`), `PASS` printed → `results/_smoke/2026-06-18T15-23-29Z-l2-attach/l2_attach_report.json`.*
+- [x] Tick `docs/gpu/CSB/plan.md` step 5 `[x]` (cite the `l2_attach_report.json` run dir); update playbook §1
       `Last updated` + `▶ NEXT ACTION` → step 6 (GCG tiny run → D8 timing micro-bench → Branch N/N−/F).
-- [ ] Commit the `results/_smoke/` L2 report (tracked, non-registered). Note in the playbook that step 5 was met
+- [x] Commit the `results/_smoke/` L2 report (tracked, non-registered). Note in the playbook that step 5 was met
       **offline on the mac** from the committed step-4 run dir (no box session needed for the gate).
-- [ ] Before step 6: lock the dated, benign-only, pre-registered rule for any `SchemaA` radius update (D-3) so
-      no post-attack data can inform a re-pin (invariant #2).
+- [ ] **Before step 6 (NOT yet done — carried into the playbook `▶ NEXT ACTION`):** lock the dated, benign-only,
+      pre-registered rule for any `SchemaA` radius update (D-3) so no post-attack data can inform a re-pin
+      (invariant #2). Step-5 `geometry_stats` confirm the placeholder radii undershoot the real scene scale, so
+      this governance must be fixed before step 6 inspects attacked output.
 
 ## What this step does NOT claim (carry into the write-up)
 Wiring only, in two honest halves: the L2-oracle ingests the real privileged-**state trajectory** (metric A is
