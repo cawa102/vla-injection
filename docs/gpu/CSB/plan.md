@@ -52,7 +52,7 @@ What replaces them are honest **A5000-vs-A100/H100** caveats, not capability wal
 - [x] **1. Linux+CUDA env, `git clone`, install GPU deps** (`requirements-gpu.txt`) — *verify:* `torch.cuda.is_available() == True`; `nvidia-smi` sees both A5000s — *2026-06-17 box ✓: Python 3.10, torch 2.2.0+cu121, numpy 1.26.4, CUDA True, both RTX A5000 visible, torch↔numpy interop OK*
 - [x] **2. Run the existing model-free test suite (395 tests)** — *verify:* parity with the Mac (same pass count) — *2026-06-17 box: all green (after restoring `.git` via real clone — see `ssh.md` §5/§6)*
 - [x] **3. Load OpenVLA-7B in bf16**, one forward on a dummy image+instruction — *verify:* a valid action vector; **fits on one 24 GB card** (the registered precision runs) — *2026-06-17 box ✓: `openvla/openvla-7b` bf16+sdpa on cuda:0, valid 7-DoF action, peak VRAM 14.46 GiB reserved / 23.5 GiB (no flash-attn); `scripts/smoke_openvla_load.py`, commit `a24b77a`/`87e9a3f`*
-- [ ] **4. One LIBERO episode** (EGL) with the bf16 policy — *verify:* rollout completes; log schema matches the state-adapter / metric side
+- [ ] 🔄 **4. One LIBERO episode** (EGL) with the bf16 policy — *verify:* rollout completes; log schema matches the state-adapter / metric side — *2026-06-18 box: LIBERO + openvla cloned & installed; **import gate GREEN** (`import libero, experiments.robot.robot_utils` → `helpers OK`) after the two gotchas in the Step 4 how-to below; **EGL render + episode run still pending** (step-4 plan Task 2c/2d)*
 - [ ] **5. Attach the goal-action detector (L2)** to that real rollout — *verify:* detector ingests real OpenVLA actions end-to-end
 - [ ] **6. GCG** — first a tiny run (few steps, 1 example), then the **D8 timing micro-bench** — *verify:* attack harness runs; record `s/target`, peak VRAM, max candidate-batch at 24 GB → **selects Branch N/N−/F (D8)**
 
@@ -91,6 +91,54 @@ OOM). If `sdpa` errors on the box, retry `--attn-impl eager`; flash-attn (`--att
 **separate** perf check (caveat L5), not required for this gate. The exact installed versions are captured into
 the smoke `run.json` (repro header). The full OpenVLA/LIBERO **source** install is **step 4** — this step needs
 only the HF model + the inference deps above.
+
+### Step 4 how-to (on the box, after step 3 — LIBERO + the OpenVLA eval helpers)
+
+`scripts/smoke_libero_episode.py` runs one `libero_spatial` episode with the bf16 LIBERO-finetuned policy and
+logs the `RolloutStep` schema to `results/_smoke/` (plan: `docs/plans/2026-06-18-libero-episode-bringup.md`).
+It reuses OpenVLA's verified eval helpers, so the **source install of both repos is this step**.
+
+```bash
+# 0) Clone both repos (codec-verified OpenVLA commit) and install LIBERO source into the .venv.
+#    ACTIVATE the .venv first so uv targets it, not the conda (base) env. uv pip env-discovery order is
+#    VIRTUAL_ENV > CONDA_PREFIX > .venv — with (base) active, a bare `uv pip install` would land in conda base.
+source ~/vla-injection/.venv/bin/activate
+cd ~ && git clone https://github.com/openvla/openvla.git && (cd openvla && git checkout c8f03f48)
+cd ~ && git clone https://github.com/Lifelong-Robot-Learning/LIBERO.git
+cd ~/vla-injection
+uv pip install -e ~/LIBERO        # see GOTCHA 1 — this alone does NOT make `import libero` work
+uv pip install -r ~/openvla/experiments/robot/libero/libero_requirements.txt
+
+# 1) The TF stack the eval-helper import chain needs, with the tfds→tensorflow-metadata cap (GOTCHA 2).
+uv pip install "tensorflow==2.15.0" "tensorflow_datasets==4.9.3" "tensorflow-metadata<1.16" "protobuf<5"
+
+# 2) Verify gate (a): the import chain (libero + OpenVLA helpers + prismatic/TF) loads.
+export MUJOCO_GL=egl
+PYTHONPATH=~/openvla:~/LIBERO ~/vla-injection/.venv/bin/python \
+  -c "import libero, experiments.robot.robot_utils; print('helpers OK')"
+
+# 3) Run the episode (verify gates b–d in the step-4 plan).
+PYTHONPATH=~/LIBERO uv run --no-sync python scripts/smoke_libero_episode.py --openvla-root ~/openvla
+```
+
+**Two step-4 gotchas (both hit 2026-06-18, both resolved):**
+
+1. **`import libero` fails after `uv pip install -e ~/LIBERO`** (`ModuleNotFoundError: No module named 'libero'`,
+   even though `uv pip show libero` reports it installed in the `.venv`). LIBERO's top-level `libero/` has **no
+   `__init__.py`** — it is a **PEP-420 namespace package**, importable only when the repo root is on `sys.path`.
+   pip's *legacy* `-e` adds that root via a `.pth` (so it works); **uv's PEP-660 editable** uses a finder/MAPPING
+   that does **not** expose the namespace package → `import libero` finds nothing. **Fix = put `~/LIBERO` on
+   `PYTHONPATH`** at both import and run time (the same mechanism we use for `~/openvla`'s `experiments`). The
+   editable install is harmless but does nothing useful — `PYTHONPATH=~/LIBERO` is the load-bearing part.
+   `smoke_libero_episode.py` only adds `--openvla-root` (openvla), so it **still needs `PYTHONPATH=~/LIBERO`**.
+   *(Alt: `touch ~/LIBERO/libero/__init__.py` then reinstall — makes it a regular package, but edits upstream.)*
+2. **protobuf `runtime_version` ImportError** deep in the helper import: `robot_utils` → `prismatic` (eager) →
+   `dlimp` → `tensorflow_datasets` → `tensorflow_metadata`. `tfds 4.9.3` caps nothing on `tensorflow-metadata`,
+   so pip pulled **tfmd 1.21.0**, whose `*_pb2.py` does `from google.protobuf import runtime_version` (protobuf
+   ≥5.26) — but the TF-2.15-correct protobuf is **4.25.x**. **Fix = `tensorflow-metadata<1.16` + `protobuf<5`**
+   (`tensorflow`/`tfds` were already the right 2.15.0/4.9.3 — recorded in `configs/env/requirements-gpu.txt`).
+   TF here is **import-only** (the VLA forward is torch/CUDA) → it runs no ops and steals no A5000 memory; the TF
+   startup `I/E/W` logs (oneDNN, cuDNN/cuFFT/cuBLAS "already registered", TF-TRT) are benign (`TF_CPP_MIN_LOG_LEVEL=3` to silence).
 
 ## After bring-up — the registered matrix runs here
 

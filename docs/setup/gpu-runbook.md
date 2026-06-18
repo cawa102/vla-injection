@@ -117,6 +117,13 @@ cd ..
 cd $REPO && pip install -e . && cd ..
 ```
 
+> **uv variant (CSB A5000 box) — two traps confirmed 2026-06-18, full how-to in `docs/gpu/CSB/plan.md` Step 4:**
+> (1) `uv pip install -e LIBERO` does **not** make `import libero` work — LIBERO's top `libero/` is a PEP-420
+> namespace package (no `__init__.py`); uv's PEP-660 editable won't expose it (the legacy `pip install -e .`
+> above does) → use **`PYTHONPATH=<repo>/LIBERO`**. (2) The eval-helper import chain pulls `tensorflow_datasets`,
+> and tfds 4.9.3 caps nothing on `tensorflow-metadata` → pip pulls a too-new tfmd (needs protobuf≥5.26) → pin
+> **`tensorflow-metadata<1.16` + `protobuf<5`** (`configs/env/requirements-gpu.txt`).
+
 **Capture the env** the moment it works (reproducibility):
 ```bash
 ENVDIR=results/$(date -u +%Y%m%dT%H%M%SZ)-env && mkdir -p $ENVDIR

@@ -36,7 +36,8 @@ einops
 huggingface_hub
 json-numpy
 jsonlines
-protobuf
+protobuf<5                   # <5: TF 2.15 stack uses protobuf 4.x (4.25.x on CSB A5000); only a too-new
+                             # tensorflow-metadata needs protobuf>=5.26 (`runtime_version`) — see TF stack note below.
 rich
 
 # --- flash-attn: build AFTER torch is installed (needs nvcc + matching CUDA).
@@ -47,12 +48,24 @@ rich
 # --- OpenVLA data dep (git) ---
 dlimp @ git+https://github.com/moojink/dlimp_openvla
 
-# --- TensorFlow stack (OpenVLA pulls these for dataset/IO; only needed if using
-#     the OpenVLA training/data pipeline — likely NOT for inference-only eval.
-#     Install only if a script imports them):
-# tensorflow==2.15.0
-# tensorflow_datasets==4.9.3
-# tensorflow_graphics==2021.12.3
+# --- TensorFlow stack — REQUIRED for the OpenVLA *eval-helper* import chain ---
+#     CONFIRMED on CSB A5000 (2026-06-18): the LIBERO eval helpers import as
+#       experiments.robot.robot_utils -> prismatic.__init__ (eager) -> ... -> dlimp
+#         -> tensorflow_datasets -> tensorflow_metadata
+#     so `import experiments.robot.robot_utils` (used by scripts/smoke_libero_episode.py) pulls the
+#     whole TF stack AT IMPORT TIME — NOT optional, despite the old "inference-only → likely NOT needed"
+#     note (which was wrong for the eval path). TF runs no ops here (the VLA forward is torch/CUDA) → it
+#     steals no GPU memory; it is import-only. The startup I/E/W logs (oneDNN, cuDNN/cuFFT/cuBLAS "already
+#     registered", TF-TRT) are benign — silence with TF_CPP_MIN_LOG_LEVEL=3 if desired.
+#
+#     GOTCHA (the one real trap): tfds 4.9.3 puts NO upper bound on tensorflow-metadata, so pip pulled
+#     tfmd 1.21.0, whose generated *_pb2.py does `from google.protobuf import runtime_version` (added in
+#     protobuf 5.26) → ImportError on the TF-2.15-correct protobuf 4.25.x. FIX = cap tfmd to the TF-2.15 era.
+#     Resolved on the box: tensorflow 2.15.0 + tfds 4.9.3 + tensorflow-metadata <1.16 + protobuf 4.25.x.
+tensorflow==2.15.0
+tensorflow_datasets==4.9.3
+tensorflow-metadata<1.16     # <1.16: tfds 4.9.3 caps nothing; tfmd 1.16+ needs protobuf>=5.26 (see GOTCHA)
+# tensorflow_graphics==2021.12.3   # NOT pulled by the eval import chain — add only if a script needs it
 
 # --- Embodiment Evasion Tax model-free core (mirrors pyproject.toml; already unit-tested locally) ---
 # numpy<2: torch 2.2.0 is built against the numpy-1.x ABI (numpy 2 → "Numpy is not available"

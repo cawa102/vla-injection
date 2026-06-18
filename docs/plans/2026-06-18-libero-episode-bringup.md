@@ -98,6 +98,18 @@ episode (Task 2). The extracted pure helper is the only part exercised by local 
 - *Verify:* `import libero`; `OffScreenRenderEnv(...)` builds; **`MUJOCO_GL=egl` initialises on the A5000** —
   a 1-frame `env.render`/obs grab returns an `agentview_image` array (this retires the EGL headless risk,
   `docs/gpu/CSB/plan.md` §Environment).
+- **Done 2026-06-18 (box) — import gate GREEN, two gotchas resolved (canonical commands now in
+  `docs/gpu/CSB/plan.md` Step 4 how-to; pins in `configs/env/requirements-gpu.txt`):**
+  1. `uv pip install -e ~/LIBERO` does **not** make `import libero` work — LIBERO's top `libero/` is a PEP-420
+     namespace package (no `__init__.py`); uv's PEP-660 editable finder won't expose it (pip's legacy `-e`
+     would, since it puts the repo root on `sys.path`). **→ `PYTHONPATH=~/LIBERO`** at import **and** run time
+     (the script only adds `--openvla-root`, so LIBERO still needs PYTHONPATH).
+  2. The eval-helper import chain (`robot_utils`→`prismatic`→`dlimp`→`tensorflow_datasets`→`tensorflow_metadata`)
+     needs the TF stack; tfds 4.9.3 caps nothing on tensorflow-metadata, so pip pulled tfmd 1.21.0 (wants
+     protobuf≥5.26) → `runtime_version` ImportError on protobuf 4.25.9. **→ `tensorflow-metadata<1.16` +
+     `protobuf<5`** (tensorflow 2.15.0 / tfds 4.9.3 already correct). `import libero, experiments.robot.robot_utils`
+     → `helpers OK`.
+  - **Still pending (2c–2d):** EGL `agentview_image` render on the A5000 + the actual episode run.
 
 **2b. Checkpoint switch + provenance.**
 - `huggingface-cli download openvla/openvla-7b-finetuned-libero-spatial` to `HF_HOME` (~14 GB, roomy disk).
@@ -132,7 +144,7 @@ episode (Task 2). The extracted pure helper is the only part exercised by local 
 ## Done-when (Step 4 exit)
 - [x] Task 1 green locally (core `.venv`): guard returns `2` CUDA-free, model-free seam tests pass (4), ruff
       clean; full suite 410 passed / 0 failed (2026-06-18).
-- [ ] Box: `import libero` + EGL `agentview_image` render OK on the A5000 (2a verify).
+- [ ] Box: `import libero` + EGL `agentview_image` render OK on the A5000 (2a verify). *(import chain GREEN 2026-06-18 via `PYTHONPATH=~/LIBERO` + `tensorflow-metadata<1.16`/`protobuf<5`; EGL render still pending.)*
 - [ ] Box: one `libero_spatial` task-0 episode completes; `results/_smoke/…-libero-episode-smoke/` written
       with the `RolloutStep` schema + repro header; a `PrivilegedState` constructs from the camera obs.
 - [ ] Tick `docs/gpu/CSB/plan.md` step 4 `[x]` with the run_id + peak VRAM; update playbook §1 You-Are-Here
