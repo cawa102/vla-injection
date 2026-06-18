@@ -54,9 +54,10 @@ What replaces them are honest **A5000-vs-A100/H100** caveats, not capability wal
 - [x] **3. Load OpenVLA-7B in bf16**, one forward on a dummy image+instruction — *verify:* a valid action vector; **fits on one 24 GB card** (the registered precision runs) — *2026-06-17 box ✓: `openvla/openvla-7b` bf16+sdpa on cuda:0, valid 7-DoF action, peak VRAM 14.46 GiB reserved / 23.5 GiB (no flash-attn); `scripts/smoke_openvla_load.py`, commit `a24b77a`/`87e9a3f`*
 - [x] **4. One LIBERO episode** (EGL) with the bf16 policy — *verify:* rollout completes; log schema matches the state-adapter / metric side — *2026-06-18 box ✓: `libero_spatial` task-0 episode **completed, 90 policy steps, success=True**, sdpa load, **peak VRAM 14.50 GiB / 23.5 GiB (fits one card)**; logged `RolloutStep` schema → `results/_smoke/2026-06-18T14-21-51Z-libero-episode-smoke`. EGL (`MUJOCO_GL=egl`) initialised + rendered on the A5000 → headless-render risk retired. Two install gotchas + the `--unnorm-key` finding in the Step 4 how-to below.*
 - [x] **5. Attach the goal-action detector (L2)** to that real rollout — *verify:* detector ingests real OpenVLA actions end-to-end — *2026-06-18 ✓ (offline on the mac, model-free, from the committed step-4 run dir — no box session needed): `scripts/attach_l2_to_rollout.py` + `src/evasion_tax/eval/rollout_io.py` (JSON→`Rollout` seam + D-5 provenance binding). Provenance validated (steps_sha256 `0deaf431…`), **state half** (90 per-step metric-A scores finite in [0,1], decision emitted) + **action half** ((90,7) finite, non-degenerate, D2 path exercised) → `results/_smoke/2026-06-18T15-23-29Z-l2-attach/l2_attach_report.json`. 27 new TDD tests (437 suite green). Wiring de-risk only — NO separation/calibration/deployable claim; benign metric-A scores NOT near zero is expected (the `engagement_radius`/`grasp_radius` placeholders don't match the real scene scale — report-only D-3 calibration input, NOT a re-pin).*
+- [ ] **5.5 GCG gradient prerequisite** (on the box, **before** step 6) — bf16 + flash_attn2 `.backward()` reaches the **input embeddings** — *verify:* the input-embedding gradient is **finite and non-zero** and peak VRAM fits one card — *run `scripts/smoke_openvla_gradient.py` on CSB; **NOT yet run on the box**. flash-attn implements its own backward kernels (separate from the step-3 forward) → this is the GCG "gradients are obtainable" premise; de-risk it before the step-6 attack loop. How-to below.*
 - [ ] **6. GCG** — first a tiny run (few steps, 1 example), then the **D8 timing micro-bench** — *verify:* attack harness runs; record `s/target`, peak VRAM, max candidate-batch at 24 GB → **selects Branch N/N−/F (D8)**
 
-Steps 1–5 de-risk the wiring; **step 6 produces registered measurements** (D4/D7/D8). If bf16 OOMs at step 3
+Steps 1–5.5 de-risk the wiring; **step 6 produces registered measurements** (D4/D7/D8). If bf16 OOMs at step 3
 (it should not at 24 GB) → fall back to memory relief on the 2nd card before any precision change.
 
 ### Step 3 how-to (on the box, after steps 1–2)
@@ -146,6 +147,27 @@ PYTHONPATH=~/LIBERO uv run --no-sync python scripts/smoke_libero_episode.py --op
    `*_no_noops`). Verify the key against the actual checkpoint, not the dataset name. *(Also benign here: a
    `[Warning]: datasets path .../datasets does not exist!` — the LIBERO demo datasets aren't needed for a policy
    rollout; the first-run `~/.libero/config.yaml` was created with defaults via `N`.)*
+
+### Step 5.5 how-to (on the box, before step 6 — the GCG gradient prerequisite)
+
+`scripts/smoke_openvla_gradient.py` loads OpenVLA-7B in **bf16 + flash_attention_2**, freezes every weight,
+drives a CE loss to a target action-token sequence, runs one `.backward()`, and checks the **input-embedding
+gradient** is finite and non-zero — the premise the step-6 GCG search rests on (flash-attn's backward kernels
+are separate from the step-3 forward, so this seam is unverified until now). Needs the flash-attn wheel from
+caveat L5 (prebuilt `cu122torch2.2cxx11abiFALSE-cp310` wheel — no compile, no nvcc).
+
+```bash
+export HF_HOME=<roomy-disk>/hf            # base model is ~14 GB; default ~/.cache may be too small
+uv run python scripts/smoke_openvla_gradient.py                  # bf16 + flash_attention_2 (default)
+uv run python scripts/smoke_openvla_gradient.py --attn-impl sdpa # cross-check without flash-attn
+```
+
+*Verify gate:* prints `PASS: finite non-zero input-embedding gradient … fit one card`. The weights are frozen
+(GCG never differentiates them), so peak VRAM reflects a real GCG backward step — gradient lives only on the
+input, not on ~14 GB of weight grads. The gradient is read via a forward hook that adds a `requires_grad`
+`delta` to the token embeddings (OpenVLA's multimodal `forward` owns `input_ids`→embeds and takes no external
+`inputs_embeds`), so `delta.grad == d(loss)/d(inputs_embeds)`. Logs write-once to `results/_smoke/`
+(non-registered bring-up smoke). If the gradient is all-zero or non-finite, fix it **before** the step-6 attack.
 
 ## After bring-up — the registered matrix runs here
 
