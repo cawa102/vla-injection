@@ -40,10 +40,18 @@ protobuf<5                   # <5: TF 2.15 stack uses protobuf 4.x (4.25.x on CS
                              # tensorflow-metadata needs protobuf>=5.26 (`runtime_version`) — see TF stack note below.
 rich
 
-# --- flash-attn: build AFTER torch is installed (needs nvcc + matching CUDA).
-#     OpenVLA results env used 2.5.5. Do NOT add to a one-shot `pip install -r`;
-#     install separately: `pip install "flash-attn==2.5.5" --no-build-isolation`
-# flash-attn==2.5.5          # [VERIFY ON THE GPU NODE] — separate build step
+# --- flash-attn: VERIFIED on CSB A5000 (2026-06-18). OpenVLA results env used 2.5.5.
+#     Source build (`pip install "flash-attn==2.5.5" --no-build-isolation`) FAILS on this box:
+#       it needs nvcc + CUDA_HOME, but CSB has only the driver (595) + torch's bundled cu121
+#       runtime — no CUDA toolkit and no sudo. → use the PREBUILT WHEEL (no nvcc):
+#       flash_attn-2.5.5+cu122torch2.2cxx11abiFALSE-cp310-cp310-linux_x86_64.whl
+#       (official Dao-AILab v2.5.5 release; cu122 wheel runs on cu121 torch + driver 595).
+#       cxx11abi must match torch (`python -c "import torch; print(torch._C._GLIBCXX_USE_CXX11_ABI)"`
+#       → False on the cu121 pip build → abiFALSE). Confirmed: flash-attn kernel launches, and
+#       OpenVLA loads `--attn-impl flash_attention_2` → valid 7-DoF action, peak 14.46 GiB reserved
+#       (== sdpa for a single forward; flash-attn's memory win is at GCG batch/seq scale, not here).
+#       Do NOT add to a one-shot `pip install -r` — install the wheel separately.
+# flash-attn==2.5.5          # prebuilt wheel only on CSB (see above); not a one-shot req line
 
 # --- OpenVLA data dep (git) ---
 dlimp @ git+https://github.com/moojink/dlimp_openvla

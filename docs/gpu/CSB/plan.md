@@ -162,7 +162,7 @@ hardware (no cross-HW mixing).
 | L2 | **Published H100 GCG timings do NOT transfer** | no A5000 OpenVLA-GCG prior exists → the M1 micro-bench is the **only** budget source; do not estimate cost from other GPUs. |
 | L3 | **Shared lab desktop** | other users + the GUI on GPU 1 → contention makes **timing unstable** unless a quiet/exclusive window is secured (matters for D8). |
 | L4 | **Single registered card** | one A5000 per claim; the 2nd card = memory relief / independent job only (no NVLink → PCIe). **No cross-card or cross-HW comparison within a claim.** |
-| L5 | **CUDA 13.2 / driver 595 newer than the pin** | `flash-attn` / cu121 torch must be verified on the box; record the exact working env (invariant #8). |
+| L5 | **CUDA 13.2 / driver 595 newer than the pin** | ✓ **VERIFIED 2026-06-18:** cu121 torch + `flash-attn 2.5.5` run on driver 595. flash-attn won't *build* here (no nvcc/CUDA_HOME, no sudo) → installed the **prebuilt cu122torch2.2cxx11abiFALSE-cp310 wheel** (no compile); OpenVLA `--attn-impl flash_attention_2` → valid action, peak 14.46 GiB (`configs/env/requirements-gpu.txt` flash-attn note; smoke `results/_smoke/2026-06-18T15-47-27Z-openvla-load-smoke`). |
 | L6 | **Not a Kelvin2 mirror** | if Kelvin2 is ever used it is **different HW** → its own separate registration, never merged with A5000 results. |
 
 ## Reproducibility (registered runs — full discipline)
