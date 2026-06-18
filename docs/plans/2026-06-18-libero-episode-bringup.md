@@ -117,17 +117,26 @@ episode (Task 2). The extracted pure helper is the only part exercised by local 
   VERIFY on the model card**, Llama-2 backbone note).
 - *Verify:* loads bf16 + fits one card (reuse the step-3 VRAM gate).
 
-**2c. Episode loop (fill `main`'s guarded body).**
-- Build env for `libero_spatial` task 0 via OpenVLA's `get_libero_env` (`camera_heights/widths` per recipe,
+**2c. Episode loop (`main`'s guarded body — written + verified vs `c8f03f48` on the mac 2026-06-18; runs on the box).**
+- Build env for `libero_spatial` task 0 via OpenVLA's `get_libero_env` (`resolution=256` per recipe,
   `MUJOCO_GL=egl`); `--center_crop True` semantics applied to the image (ESSENTIAL — fine-tunes used
   random-crop aug, `gpu-runbook` Step 3).
-- Settle: run the recipe's no-op/dummy actions for `--num-settle-steps` `[VERIFY count @ c8f03f48]`.
+- Settle: run the recipe's no-op/dummy actions for `--num-steps-wait` — **VERIFIED = 10** (`GenerateConfig.num_steps_wait`
+  @ c8f03f48). The settle steps are **extra** (recipe loops `t < max_steps + num_steps_wait`), so the policy keeps
+  the full `--max-steps` (220) budget — corrected in the script (was `range(max_steps)`, losing 10 policy steps).
 - Per step: preprocess `obs["agentview_image"]` (flip `[::-1, ::-1]` + resize 224 + center-crop) → `prompt =
   "In: What action should the robot take to {instruction}?\nOut:"` → `vla.predict_action(..., unnorm_key=
   libero_spatial_no_noops, do_sample=False)` → apply OpenVLA's gripper transforms
-  (`normalize_gripper_action` / `invert_gripper_action`) `[VERIFY]` → `env.step` → `build_rollout_step(obs,
-  action, ...)`. Stop at LIBERO `done` or `--max-steps`.
-- *Verify:* loop completes N steps with **no crash**; `done`/success flag captured.
+  (`normalize_gripper_action(…, binarize=True)` then `invert_gripper_action`) — **VERIFIED order** @ c8f03f48 →
+  `env.step` → `build_rollout_step(obs, action, ...)`. Stop at LIBERO `done` or `--max-steps`.
+- **Model-load divergence (VERIFIED + deliberate):** OpenVLA's `get_vla` **hardcodes**
+  `attn_implementation="flash_attention_2"`, which the box has not built (step 3 ran `sdpa`, caveat L5). The script
+  therefore loads directly (mirroring `smoke_openvla_load.py`) to honour `--attn-impl sdpa`, **not** via `get_model`.
+  For a hub id this is equivalent w.r.t. `norm_stats` (embedded; `get_vla`'s local `dataset_statistics.json` branch
+  is skipped for hub ids anyway). The preprocess/settle/gripper/action path stays verbatim (`get_action`,
+  `get_libero_image`, `quat2axisangle`). **If you instead want flash-attn on the box**, build/verify `flash-attn`
+  first (L5), then pass `--attn-impl flash_attention_2`.
+- *Verify (on the box):* loop completes N steps with **no crash**; `done`/success flag captured.
 
 **2d. Write-once log + verify gate.**
 - `RunLogger("results/_smoke").start("libero-episode-smoke", config=..., seed=...)`; write: `steps` (the

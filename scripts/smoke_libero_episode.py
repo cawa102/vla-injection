@@ -151,8 +151,10 @@ def _run_episode(args: argparse.Namespace) -> int:
 
     Kept out of ``main`` so all heavy/box-only imports happen here, after the guard,
     leaving the module importable (and :func:`build_rollout_step` testable) on a
-    CUDA-free host. The loop mirrors ``run_libero_eval.py`` @ c8f03f48; the cfg-field
-    coupling to OpenVLA's helpers is finalized against the repo on the box (Task 2c).
+    CUDA-free host. The loop, preprocessing, settle, gripper transforms and action call
+    mirror ``run_libero_eval.py`` @ c8f03f48 (cfg-field coupling verified against that
+    pinned source). The only deliberate divergence is the model load: we load directly to
+    honour ``--attn-impl`` (sdpa) instead of OpenVLA's ``get_vla`` (hardcodes flash-attn).
     """
     # OpenVLA's LIBERO eval helpers live in its repo's experiments/ tree (not a wheel).
     if args.openvla_root:
@@ -166,24 +168,27 @@ def _run_episode(args: argparse.Namespace) -> int:
         get_libero_dummy_action,
         get_libero_env,
         get_libero_image,
-    )
-    from experiments.robot.openvla_utils import (  # type: ignore[import-not-found]
-        get_processor,
+        quat2axisangle,
     )
     from experiments.robot.robot_utils import (  # type: ignore[import-not-found]
         get_action,
         get_image_resize_size,
-        get_model,
         invert_gripper_action,
         normalize_gripper_action,
     )
     from libero.libero import benchmark  # type: ignore[import-not-found]
+    from transformers import (  # type: ignore[import-not-found]
+        AutoModelForVision2Seq,
+        AutoProcessor,
+    )
 
     seed_everything(args.seed)
     git_commit = capture_env().get("git_commit")
 
-    # cfg the OpenVLA helpers read (run_libero_eval GenerateConfig subset, @ c8f03f48;
-    # exact field set finalized against the repo on the box — Task 2c).
+    # cfg the OpenVLA helpers (get_action / get_image_resize_size) read — the
+    # run_libero_eval GenerateConfig subset, verified against the pinned source @ c8f03f48:
+    # get_action reads model_family/pretrained_checkpoint/unnorm_key/center_crop;
+    # get_image_resize_size reads model_family. (task_suite_name is for our own use below.)
     cfg = SimpleNamespace(
         model_family="openvla",
         pretrained_checkpoint=args.model,
@@ -195,8 +200,21 @@ def _run_episode(args: argparse.Namespace) -> int:
     )
 
     print(f"[{STAGE}] loading {args.model} (bf16, attn={args.attn_impl}) on {args.device} ...")
-    model = get_model(cfg)
-    processor = get_processor(cfg)
+    # Load directly (mirrors the verified step-3 smoke) rather than via OpenVLA's get_vla(),
+    # which hardcodes attn_implementation="flash_attention_2" — the box has not built
+    # flash-attn (step 3 ran sdpa; plan.md caveat L5), so honour --attn-impl here. For an HF
+    # hub id the action norm_stats are embedded (step 3 called predict_action with no manual
+    # stats), and get_vla's local dataset_statistics.json branch is skipped for a hub id
+    # anyway, so loading here is equivalent w.r.t. norm_stats. The action/preprocess path
+    # (get_action -> get_vla_action, gripper transforms, get_libero_image) stays verbatim.
+    processor = AutoProcessor.from_pretrained(args.model, trust_remote_code=True)
+    model = AutoModelForVision2Seq.from_pretrained(
+        args.model,
+        attn_implementation=args.attn_impl,
+        torch_dtype=torch.bfloat16,
+        low_cpu_mem_usage=True,
+        trust_remote_code=True,
+    ).to(torch.device(args.device))
     resize_size = get_image_resize_size(cfg)
 
     benchmark_dict = benchmark.get_benchmark_dict()
@@ -229,7 +247,9 @@ def _run_episode(args: argparse.Namespace) -> int:
     steps: list[dict] = []
     success = False
     dummy = get_libero_dummy_action(cfg.model_family)
-    for t in range(args.max_steps):
+    # Match run_libero_eval @ c8f03f48: it loops `t < max_steps + num_steps_wait`, so the
+    # no-op settle steps are EXTRA — the policy still gets the full --max-steps (220) budget.
+    for t in range(args.max_steps + args.num_steps_wait):
         if t < args.num_steps_wait:
             obs, _, _, _ = env.step(dummy)
             continue
@@ -237,7 +257,11 @@ def _run_episode(args: argparse.Namespace) -> int:
         observation = {
             "full_image": img,
             "state": np.concatenate(
-                (obs["robot0_eef_pos"], obs["robot0_eef_quat"], obs["robot0_gripper_qpos"])
+                (
+                    obs["robot0_eef_pos"],
+                    quat2axisangle(obs["robot0_eef_quat"]),
+                    obs["robot0_gripper_qpos"],
+                )
             ),
         }
         action = get_action(cfg, model, observation, task_description, processor=processor)
