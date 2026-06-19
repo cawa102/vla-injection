@@ -77,6 +77,12 @@ _BRANCH_LOCK_CONDITION = (
 )
 # D6-4: named-not-dropped deferred micro-bench items (L1 probe not yet on GPU).
 _DEFERRED = "deferred (L1 not on GPU)"
+# DB-3: max_candidate_batch is a VRAM ceiling (hardware characterisation), NOT the branch
+# decider — the compute branch stays provisional + hard-F default regardless of this number.
+_MAX_BATCH_NOTE = (
+    "max_candidate_batch is a 24 GB VRAM ceiling (hardware characterisation), NOT "
+    "branch-critical (DB-3): the compute branch stays provisional + hard-F default regardless."
+)
 
 
 def build_microbench_record(
@@ -89,6 +95,8 @@ def build_microbench_record(
     device_name: str,
     seed: int,
     exclusive_gpu: bool,
+    s_per_target_loop: dict | None = None,
+    speedup_k: float | None = None,
 ) -> dict:
     """Assemble the registered D8 micro-bench record (the measurement half of §8).
 
@@ -97,15 +105,24 @@ def build_microbench_record(
     so no gap is silently dropped. The §8 *header* (git commit, full env capture,
     created-UTC) is written by :class:`~evasion_tax.repro.RunLogger` into ``run.json``.
 
+    Per DB-2, the **true-batch** timing is the official ``s_per_target`` while the loop
+    baseline (``s_per_target_loop``) + measured ``speedup_k = loop/batch`` are recorded
+    alongside as an ablation. ``max_candidate_batch`` is framed as a VRAM ceiling, **not**
+    a branch decider (``max_batch_note``, DB-3).
+
     Args:
         gcg_config: The pinned GCG config (``GcgConfig`` as a dict).
-        timing_summary: Output of :func:`summarise_timings`.
+        timing_summary: Output of :func:`summarise_timings` for the **true-batch** path
+            (the official D8 sizing number, DB-2).
         peak_vram_gib: Peak reserved VRAM during the timed run.
         max_candidate_batch: Largest candidate-batch B that fit 24 GB.
         steps_to_success: Per-target steps-to-success distribution.
         device_name: Which A5000 (the registered card).
         seed: Pinned seed.
         exclusive_gpu: Whether the GPU was exclusive during the timed run (D6-10).
+        s_per_target_loop: :func:`summarise_timings` for the loop baseline/ablation
+            (DB-2); ``None`` when not measured this run.
+        speedup_k: Measured ``loop / true-batch`` speedup (DB-2); ``None`` if not computed.
 
     Returns:
         The measurement record dict for write-once ``results/``.
@@ -117,8 +134,11 @@ def build_microbench_record(
         "seed": seed,
         "gcg_config": gcg_config,
         "s_per_target": timing_summary,
+        "s_per_target_loop": s_per_target_loop,
+        "speedup_k": speedup_k,
         "peak_vram_gib": peak_vram_gib,
         "max_candidate_batch": max_candidate_batch,
+        "max_batch_note": _MAX_BATCH_NOTE,
         "steps_to_success": list(steps_to_success),
         "exclusive_gpu": exclusive_gpu,
         "branch_status": "provisional",

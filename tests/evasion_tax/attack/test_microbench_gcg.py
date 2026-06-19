@@ -154,6 +154,27 @@ def test_build_microbench_record_carries_required_repro_fields():
     assert rec["s_per_target"]["median_s"] == 120.0
 
 
+def test_build_microbench_record_carries_loop_baseline_and_speedup():
+    # DB-2: register BOTH numbers. true-batch = official `s_per_target`; the loop number is
+    # a baseline/ablation (`s_per_target_loop`) and the measured speedup `k = loop/batch`.
+    mb = _load_microbench()
+    loop_summary = {"median_s": 17.47, "iqr_s": 0.3, "n": 1, "rel_iqr": 0.0, "reproducible": True}
+    rec = _record(mb, s_per_target_loop=loop_summary, speedup_k=3.2)
+
+    assert rec["s_per_target_loop"] == loop_summary  # loop ablation carried alongside
+    assert rec["speedup_k"] == 3.2
+    assert rec["s_per_target"]["median_s"] == 120.0  # official sizing stays the true-batch number
+
+
+def test_build_microbench_record_frames_max_batch_as_hw_not_branch_critical():
+    # DB-3: max-B is a VRAM ceiling (hardware characterisation), never the branch decider.
+    mb = _load_microbench()
+    note = _record(mb)["max_batch_note"].lower()
+
+    assert "vram" in note or "ceiling" in note  # framed as a hardware ceiling
+    assert "not" in note and "branch" in note  # explicitly NOT branch-critical
+
+
 # --------------------------------------------------------------------------- #
 # assert_registered_run_valid: D6-10 clean-process / reproducibility gate       #
 # --------------------------------------------------------------------------- #
