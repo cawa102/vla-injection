@@ -43,25 +43,36 @@ both Gray Swan AI; GCG from Zou et al. *Universal and Transferable Attacks* (`ar
   **toy `LossGradientFn`** with a known optimum (mirrors `idealized_frontier.py` + `SyntheticDynamics`). The real
   OpenVLA loss/gradient is GPU-only and guarded (`cuda_available()` → `gpu_required_message` → exit 2, never a
   silent no-op), like every existing GPU script.
-- **D6-3 — Tiny-run success = harness runs + loss strictly decreases + target reached.** The tiny run (1 task,
-  1 target, few steps) passes iff the GCG loop runs end-to-end, the CE loss is **monotone non-increasing** and
-  ends materially below its start, **and** the 7 target action tokens become the argmax (or the loss falls below
-  a pinned threshold). It is **NOT** an ASR claim and **NOT** a closed-loop attacked rollout — it is the harness
-  wiring de-risk (the GCG analogue of step 5's attach gate). `results/_smoke/` (non-registered bring-up smoke).
+- **D6-3 — Tiny-run gate = WIRING faithfulness (pass/fail); attack-effect is EXPLORATORY (Codex #2).** Monotone
+  incumbent loss is just GCG's keep-best bookkeeping, and target-argmax on one arbitrary target can fail for an
+  unlucky prompt/target/`search_width` — so neither is a faithful pass/fail signal. The tiny run's **pass/fail**
+  is the **wiring** set: correct tensor shapes; the suffix token span decodes to the intended adversarial text
+  under the **real** processor/tokenizer; `loss_of` on a batch equals per-candidate single evaluation
+  (batched-loss equivalence); and the projected one-hot gradient **sign** agrees with measured one-token-swap loss
+  deltas (the Task-2 finite-difference gate, D6-9). Target-action argmax / loss-below-pinned on one example is
+  recorded as an **exploratory** smoke observation, **not** a gate. It is **NOT** an ASR claim and **NOT** a
+  closed-loop rollout. Any tiny-run config escalation (`n_steps`/`search_width`) is **pre-registered before
+  running**, never tuned reactively. `results/_smoke/` (non-registered bring-up smoke).
 - **D6-4 — Micro-bench scope = `s/target` + peak VRAM + max candidate-batch B @ 24 GB, on our harness, registered.**
   A few targets, one pinned GCG config; sweep B upward to the largest that fits 24 GB; record median `s/target`,
   peak VRAM, max B, steps-to-success distribution → write-once `results/` with the full §8 repro header
-  (this is a **real result**, plan.md "step 6 produces registered measurements"). The other M1-micro-bench items
-  — **L1 activation/attention extraction overhead** and **adaptive-GCG-against-the-probe-score** cost (D7/#5) —
-  are **DEFERRED**: the L1 probe is not yet on GPU (M2/M3), so they are **named here, not silently dropped**, and
-  measured when L1 lands. LIBERO rollout throughput was already observed at step 4 (90 steps / episode, 14.5 GiB).
-- **D6-5 — Branch selection uses measured non-adaptive `s/target` as the primary cost driver; conservative on
-  borderline.** The affordable matrix (§2) is computed from the measured `s/target` against the remaining
-  calendar. Because the **adaptive** (M4) cost cannot be measured until L1 exists, it is **estimated** as
-  `adaptive_mult × s/target` (pre-register `adaptive_mult` from the GCG-step-count literature / RoboGCG's 30–110
-  steps-to-success; refine when L1 lands). If the matrix sits **within ~20% of a branch boundary, pick the more
-  conservative branch** (N→N−, N−→F). The selected branch + the numbers are logged to playbook §1/§2/§10 and
-  CSB plan.md step 6 is ticked. **M3/H6-A is delivered in every branch** regardless (floor unchanged).
+  (this is a **real result**, plan.md "step 6 produces registered measurements"). Measured under a **clean-process
+  protocol (D6-10)** so an OOM during the batch sweep cannot fragment the allocator and contaminate the registered
+  timing. The other M1-micro-bench items — **L1 activation/attention extraction overhead** and
+  **adaptive-GCG-against-the-probe-score** cost (D7/#5) — are **DEFERRED**: the L1 probe is not yet on GPU (M2/M3),
+  so they are **named here, not silently dropped**, and measured when L1 lands. LIBERO rollout throughput was
+  already observed at step 4 (90 steps / episode, 14.5 GiB).
+- **D6-5 — Step 6 yields a PROVISIONAL capacity estimate; the branch is NOT locked here (Codex #1).** The H6-D
+  cross-layer tax (the headline) is sized by the **adaptive** GCG-against-the-probe cost, which **cannot be
+  measured until the L1 probe is on GPU** (D6-4). So step 6 computes a **provisional** affordable matrix from the
+  measured **non-adaptive** `s/target` and an **explicitly-labelled estimate** `adaptive_mult × s/target`
+  (`adaptive_mult` pre-registered from the GCG-step-count literature / RoboGCG's 30–110 steps-to-success). The
+  branch decision is **left UNLOCKED**: step 6 records a **provisional branch + a hard-F default** — *unless and
+  until the later adaptive-probe bench (M1/M2, same GPU seam) confirms N/N−, the committed branch is **F**
+  (oracle frontier, H6-A)*. Borderline (within ~20% of a boundary) → the more conservative branch. The provisional
+  estimate + the lock condition are logged to playbook §1/§2/§10; D8/Gate 5 stays **OPEN**; CSB plan.md step 6 is
+  ticked as *harness + non-adaptive bench done, branch provisional*. **M3/H6-A is delivered in every branch**
+  regardless (floor unchanged).
 - **D6-6 — Ethics: every optimised suffix is an adversarial artifact → quarantine.** Both the tiny-run and
   micro-bench suffixes are written under `artifacts/untrusted/` (gitignored), never auto-run, never committed
   (CLAUDE.md security-research ethics; `run_attack.py` docstring). Targets are **arbitrary low-level action-token
@@ -75,6 +86,20 @@ both Gray Swan AI; GCG from Zou et al. *Universal and Transferable Attacks* (`ar
   output" through the detector and triggers **no** `SchemaA` radius decision. The dated, benign-only,
   pre-registered re-pin rule (`docs/core/d3-radius-repin-preregistration.md`, invariant #2) must be **locked
   before M1 scores attacked rollouts through metric A** — flagged here, not actioned in step 6.
+- **D6-9 — GPU seam faithfulness gate BEFORE the tiny run (Codex #3).** The one-hot gradient
+  (`grad_inputs_embeds[suffix]` @ `W.T`) is only unit-tested on fake arrays; a wrong suffix span, tokenizer/template
+  offset, embedding dtype/cast, tied-embedding access, or a sign-convention slip all yield *plausible-but-wrong*
+  `[L,V]` gradients that would silently time an **unfaithful** search loop. Task 2 therefore adds a **real-model**
+  validation gate: for sampled (position, token) swaps, the projected gradient's **ranking/sign** must agree with
+  the **measured** one-token-swap loss delta (finite-difference), and the suffix span must **decode to the intended
+  adversarial text** under the real processor. This gate runs (on the box) **before** the tiny run and the bench;
+  if it fails, fix the seam before any timing — an unfaithful seam must not produce a branch-defining number.
+- **D6-10 — Clean-process micro-bench protocol (Codex #4).** A CUDA OOM fragments the allocator and pollutes the
+  subsequent peak-VRAM / timing of the same process. So the batch sweep runs **each `B` probe in a fresh
+  subprocess** (OOM recorded separately, never swallowed), and the **final `s/target` is timed at the selected
+  `B` in a clean process** on an **exclusive** GPU; record variance over repeats and **fail the run** if the GPU
+  is not exclusive or the numbers are not reproducible. The registered branch-defining number must come from an
+  uncontaminated process.
 
 ---
 
@@ -88,7 +113,8 @@ the D8 `s/target`/VRAM/max-batch micro-bench · the branch-selection computation
   attacked class fed through a rollout; step 6 stops at the optimised suffix + its argmax action).
 - **Scoring attacked output through metric-A / any detector** → M1/M2 (and gated on D6-8 / D-3 lock).
 - **Upstream RoboGCG faithful reproduction** (own env, published >90% ASR) → M1 cross-check (gpu-runbook Step 4).
-- **Adaptive-GCG-against-the-probe** and **L1 extraction overhead** micro-bench items → when L1 lands on GPU (D6-4).
+- **Adaptive-GCG-against-the-probe** and **L1 extraction overhead** micro-bench items, **and LOCKING the compute
+  branch** → when L1 lands on GPU; step 6 yields only a *provisional* branch + hard-F default (D6-4/D6-5).
 - **Semantic-redirect coherence** (D2 cross-task/wrong-object arm) → M1-gated (D2).
 - **Multi-position swap / attack buffer / mellowmax / probe-sampling** nanoGCG refinements → pre-registered
   stretch only (the MVP is single-position-swap GCG; add a refinement **only** if the tiny run won't converge).
@@ -223,11 +249,18 @@ sees the `[L,V]` array (so the core is torch-free and toy-testable).
   - implements `vocab_size`, `init_suffix_ids`, `token_gradient`, `loss_of` (the Task-1 Protocol).
   - pure helpers (unit-testable off-GPU): `suffix_span_in_ids(prompt_ids, suffix_len) -> slice`;
     `project_onehot_grad(grad_embeds_suffix: np.ndarray, embedding_matrix: np.ndarray) -> np.ndarray` (`[L,d]@[V,d].T`).
+  - **GPU faithfulness gate (D6-9):** `gradient_agrees_with_swaps(target, *, n_samples, rng) -> FaithfulnessReport`
+    — samples (position, token) swaps and checks the projected one-hot gradient's predicted **ranking/sign**
+    against the **measured** `loss_of` delta of the actual swap (finite-difference); `decode_span(target) -> str`
+    asserts the suffix span maps to the intended adversarial text under the real processor.
 
   **Test scenarios (model-free parts):** `project_onehot_grad` matches a hand-computed `[L,V]` for a tiny fake
   `W`/grad; `suffix_span_in_ids` locates the right token range for a known tokenisation; the real
   forward/gradient path **guards** off-GPU (`cuda_available()` false ⇒ the script/driver exits 2, no torch import
-  at module top). Real-model numerics are validated by the Task-3 tiny run on the box.
+  at module top). **On the box (D6-9 gate, BEFORE the tiny run):** `gradient_agrees_with_swaps` shows the projected
+  gradient's sign/ranking predicts measured one-token-swap loss deltas above chance, and `decode_span` returns the
+  intended adversarial text — the gate that the seam (span, dtype, tied embeddings, sign convention) is *faithful*,
+  not merely plausible.
 
   **Dependencies (GPU):** torch, transformers (`AutoModelForVision2Seq`/`AutoProcessor`), PIL — imported **inside**
   the guarded path, never at module top (so the module stays importable on the mac, like the smoke scripts).
@@ -249,16 +282,20 @@ sees the `[L,V]` array (so the core is torch-free and toy-testable).
   loss trajectory + whether the target tokens are argmax. **Quarantine the optimised suffix** →
   `artifacts/untrusted/` (D6-6). Log a non-registered smoke record → `results/_smoke/`.
 
-  **Test scenarios (verify gate):** harness runs to completion; `loss_history` strictly decreases and ends well
-  below start; `reached=True` (target tokens argmax) **or** loss < pinned threshold; peak VRAM < 24 GiB
-  (fits one card); suffix written to `artifacts/untrusted/`, nothing untrusted committed. Off-GPU ⇒ guard exits 2.
+  **Test scenarios (verify gate — WIRING is pass/fail, attack-effect is EXPLORATORY; D6-3/D6-9):** the Task-2
+  faithfulness gate passed first (gradient sign/ranking vs one-token-swap deltas; span decodes to the intended
+  text); harness runs to completion; `loss_of` batched == per-candidate (batched-loss equivalence); peak VRAM
+  < 24 GiB (fits one card); the suffix is written to `artifacts/untrusted/` and **nothing untrusted is committed**.
+  **Exploratory (recorded, NOT pass/fail):** the loss trajectory and whether the target tokens reach argmax /
+  loss < pinned threshold on the single example. Off-GPU ⇒ guard exits 2.
 
   **Dependencies:** Tasks 1+2; `evasion_tax.policy.action_codec`, `records.TargetActionSpec`, `repro.RunLogger`,
   `config` guard.
 
   **Notes:** Mirrors `smoke_openvla_gradient.py` structure (guard → heavy imports → run → write-once log → PASS/
-  FAIL). If it won't converge in a handful of steps, raise `n_steps`/`search_width` (a measurement, not a code
-  change) before reaching for a nanoGCG refinement.
+  FAIL). Convergence of the exploratory attack-effect is **not** the gate (D6-3). Any escalation of
+  `n_steps`/`search_width` is **pre-registered in this plan before the run** (a logged measurement decision),
+  never a reactive tweak; a nanoGCG refinement is the pre-registered stretch (scope list).
 
   **Commit:** `feat: CSB step-6 tiny GCG run — harness drives target action tokens on one example (smoke)`
 
@@ -269,19 +306,25 @@ sees the `[L,V]` array (so the core is torch-free and toy-testable).
   - Create: `tests/.../test_microbench_gcg.py` (the model-free aggregation/sweep logic only)
 
   **What:** Over a few targets at one **pinned** GCG config, time the harness and probe memory: median
-  **`s/target`**, **peak VRAM**, **max candidate-batch B at 24 GB** (sweep B upward, catch OOM, record the
-  largest that fits), steps-to-success distribution. Write a **registered** result to **write-once `results/`**
-  with the full §8 repro header (env capture, pinned seed, **which A5000**, bf16, CUDA/driver/torch, git commit).
+  **`s/target`**, **peak VRAM**, **max candidate-batch B at 24 GB**, steps-to-success distribution. **Clean-process
+  protocol (D6-10):** the batch sweep runs **each `B` probe in a fresh subprocess** (OOM recorded separately, never
+  swallowed); the **final `s/target` is timed at the selected `B` in a clean process** on an **exclusive** GPU;
+  record variance over repeats. Write a **registered** result to **write-once `results/`** with the full §8 repro
+  header (env capture, pinned seed, **which A5000**, bf16, CUDA/driver/torch, git commit) — and **fail the run** if
+  the GPU is not exclusive or `s/target` is not reproducible across repeats.
 
   **Interface (pure, testable off-GPU):**
-  - `summarise_timings(per_target_seconds: list[float]) -> dict` (median/IQR/n).
-  - `max_batch_that_fits(probe_fn, start, cap) -> int` (doubling/bisection sweep; `probe_fn` raises on OOM).
+  - `summarise_timings(per_target_seconds: list[float]) -> dict` (median/IQR/n + a reproducibility check across repeats).
+  - `max_batch_that_fits(probe_fn, start, cap) -> int` (doubling/bisection; `probe_fn` runs **one B in a fresh
+    subprocess** and raises on OOM — so allocator fragmentation cannot leak across probes, D6-10).
 
-  **Test scenarios:** `summarise_timings` median/IQR correct on a fixed list; `max_batch_that_fits` returns the
-  largest non-OOM B against a fake `probe_fn` whose OOM boundary is known; the run dict contains every §8 header
-  field; config validates; off-GPU ⇒ guard exits 2 (unchanged). **DEFERRED items logged, not dropped (D6-4):**
-  the record explicitly carries `l1_extraction_overhead: "deferred (L1 not on GPU)"` and
-  `adaptive_gcg_cost: "deferred"` so the gap is visible, never an implicit "covered everything".
+  **Test scenarios:** `summarise_timings` median/IQR correct on a fixed list **and flags a non-reproducible spread
+  across repeats**; `max_batch_that_fits` returns the largest non-OOM B against a fake `probe_fn` whose OOM
+  boundary is known **and never reuses a process across probes**; the run dict contains every §8 header field
+  **plus `branch_status: "provisional"` + the adaptive-bench lock condition (D6-5)**; config validates; off-GPU ⇒
+  guard exits 2 (unchanged). **DEFERRED items logged, not dropped (D6-4):** the record explicitly carries
+  `l1_extraction_overhead: "deferred (L1 not on GPU)"` and `adaptive_gcg_cost: "deferred"` so the gap is visible,
+  never an implicit "covered everything".
 
   **Dependencies:** Tasks 1+2; `repro.RunLogger`/`env_capture`, `config.load_config`.
 
@@ -298,24 +341,30 @@ sees the `[L,V]` array (so the core is torch-free and toy-testable).
   - Modify (after the box run, with the numbers): `docs/core/execution-playbook.md` (§1, §2 lock branch, §6
     D4/D7/D8 → RESOLVED, §7 M1, §10 decision log), `docs/gpu/CSB/plan.md` (tick step 6 + add a step-6 how-to).
 
-  **What:** Model-free arithmetic turning the measured `s/target` into the affordable matrix and the
-  **pre-registered** branch (§2 *Compute branches*; D6-5). Then record the selected branch + numbers in the docs.
+  **What:** Model-free arithmetic turning the measured **non-adaptive** `s/target` into a **provisional**
+  affordable matrix and a **provisional branch with a hard-F default** (§2 *Compute branches*; D6-5 — the branch
+  is **NOT locked** until the later adaptive-probe bench). Then record the provisional estimate + the lock
+  condition in the docs.
 
   **Interface:**
   - `affordable_matrix(s_per_target: float, calendar_seconds: float, *, seeds: int, per_target_overhead: float,
-    adaptive_mult: float) -> AffordableMatrix` (n_targets / n_tasks the budget supports).
-  - `select_branch(matrix: AffordableMatrix, *, thresholds, borderline_frac=0.2) -> Literal["N","N-","F"]`
-    (conservative on borderline, D6-5).
+    adaptive_mult: float) -> AffordableMatrix` (n_targets / n_tasks the budget supports; `adaptive_mult` is the
+    **estimated** multiplier, flagged estimate-not-measured in the result).
+  - `provisional_branch(matrix: AffordableMatrix, *, thresholds, borderline_frac=0.2, adaptive_measured=False)
+    -> BranchDecision` — returns `{branch, locked: False, default_if_unconfirmed: "F", lock_condition}`;
+    conservative on borderline (D6-5). It **refuses to return `locked=True`** while `adaptive_measured` is False.
 
   **Test scenarios:** matrix size = `floor(budget / (s_per_target * adaptive_mult + overhead))` on fixed inputs;
-  the three branch thresholds map to N / N− / F correctly; a value within `borderline_frac` of a boundary selects
-  the **more conservative** branch; missing/zero `s_per_target` raises (no silent default). The doc edits are not
-  unit-tested — they record the decision per playbook §11.
+  the three thresholds map to N / N− / F correctly; within `borderline_frac` of a boundary → the **more
+  conservative** branch; missing/zero `s_per_target` raises (no silent default); **`provisional_branch` never
+  returns `locked=True` when `adaptive_measured=False`, and always carries `default_if_unconfirmed="F"`** (D6-5).
+  The doc edits are not unit-tested — they record the provisional decision + lock condition per playbook §11.
 
   **Dependencies:** Task 4's logged `s/target`; pure NumPy.
 
   **Notes:** **M3/H6-A is delivered in every branch** — branch selection only sizes M4 (the H6-D tax), never the
-  floor. Log the branch decision to §10 with the numbers (Gate 5 / D8); this is the load-bearing M1 deliverable.
+  floor. Log the **provisional** branch + the hard-F default + the lock condition to §10 with the numbers
+  (Gate 5 / D8 stays **OPEN** until the adaptive bench confirms); the **locked** branch is a later M1/M2 deliverable.
 
   **Commit:** `feat: D8 branch selector + record selected Branch N/N−/F (playbook §1/§2/§10, CSB plan.md step 6)`
 
@@ -325,10 +374,13 @@ sees the `[L,V]` array (so the core is torch-free and toy-testable).
 
 1. **Now, on the mac (TDD, `/tdd`):** Task 0 (research) → Task 1 (core) → Task 2 *pure parts* → Task 4 *pure
    parts* → Task 5 *core* + tests. Full `src/evasion_tax` stays type-clean + ruff-clean; suite stays green.
-2. **On the CSB A5000 box (one session):** Task 2 real seam validated by Task 3 (tiny run) → Task 4 (registered
-   micro-bench, quiet window) → Task 5 *decision* (compute the branch, write the docs, tick step 6).
+2. **On the CSB A5000 box (one session):** Task 2 **seam-faithfulness gate** (D6-9, finite-difference vs token
+   swaps) → Task 3 tiny run (wiring gate, D6-3) → Task 4 registered micro-bench (clean-process, quiet/exclusive
+   window, D6-10) → Task 5 *provisional* branch + hard-F default, write the docs, tick step 6 as branch-provisional.
 
-**Verify gates (plan.md step 6):** (a) the GCG harness runs end-to-end; (b) `s/target`, peak VRAM, and max
-candidate-batch @ 24 GB are recorded to write-once `results/` with a §8 header; (c) **Branch N / N− / F is
-selected (D8)** and written into the playbook. Then **M1's GO/NO-GO (H1)** is the next milestone gate — out of
-step-6 scope.
+**Verify gates (plan.md step 6):** (a) the **seam-faithfulness gate** passes (D6-9) and the GCG harness runs
+end-to-end (wiring gate, D6-3); (b) `s/target`, peak VRAM, and max candidate-batch @ 24 GB are recorded to
+write-once `results/` with a §8 header under the **clean-process protocol** (D6-10); (c) a **provisional Branch
+N / N− / F + hard-F default + lock condition** is written into the playbook (the branch is **locked later**, once
+the adaptive-probe bench runs — D6-5; D8/Gate 5 stays OPEN). Then **M1's GO/NO-GO (H1)** is the next milestone
+gate — out of step-6 scope.
