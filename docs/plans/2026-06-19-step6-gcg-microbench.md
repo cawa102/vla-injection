@@ -301,7 +301,10 @@ sees the `[L,V]` array (so the core is torch-free and toy-testable).
 
   **Commit:** `feat: CSB step-6 tiny GCG run — harness drives target action tokens on one example (smoke)`
 
-- [ ] **Task 4: D8 timing micro-bench — fill `scripts/microbench_gcg.py` — on the box (REGISTERED)**
+- [x] **Task 4: D8 timing micro-bench — fill `scripts/microbench_gcg.py` — on the box (REGISTERED)**
+  <br>_(mac: `summarise_timings` / `max_batch_that_fits` / `build_microbench_record` /
+  `assert_registered_run_valid` TDD'd + clean-import guard; GPU `main()` body wired (subprocess batch-probe,
+  D6-10) — runs registered on the box. Off-GPU guard still exits 2.)_
 
   **Files:**
   - Modify: `scripts/microbench_gcg.py` (replace the `NotImplementedError` body)
