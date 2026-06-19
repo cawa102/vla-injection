@@ -292,7 +292,6 @@ def main(argv: list[str] | None = None) -> int:
 
     seed_everything(args.seed)
     device = torch.device(args.device)
-    model, processor = _load_frozen_openvla(torch, args.model, device, args.attn_impl)
 
     cfg = GcgConfig(
         suffix_len=args.suffix_len,
@@ -303,7 +302,10 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     # ---- subprocess batch-probe mode (D6-10): one B, fresh process, exit 3 on OOM.
+    # Loads its OWN model copy; the parent holds NO model during the sweep, else two
+    # ~14 GiB bf16 copies collide on one 24 GiB card (observed OOM at B=1).
     if args.probe_batch is not None:
+        model, processor = _load_frozen_openvla(torch, args.model, device, args.attn_impl)
         target = _build_target(
             np, model, processor, device,
             instruction=_DEFAULT_INSTRUCTION, suffix_len=cfg.suffix_len, seed=args.seed,
@@ -330,7 +332,9 @@ def main(argv: list[str] | None = None) -> int:
 
     max_batch = max_batch_that_fits(probe_fn, start=1, cap=args.batch_cap)
 
-    # ---- time s/target on a few targets in THIS (clean) process.
+    # ---- time s/target on a few targets in THIS (clean) process. Load the model NOW
+    # (after the sweep) so only one ~14 GiB copy is ever resident on the card.
+    model, processor = _load_frozen_openvla(torch, args.model, device, args.attn_impl)
     per_target_seconds: list[float] = []
     steps_to_success: list[int] = []
     peak_vram_gib = 0.0
