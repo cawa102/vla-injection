@@ -175,9 +175,13 @@ class OpenVlaGcgTarget:
         # Prompt length (everything that is NOT the teacher-forced target span).
         self._prompt_len = len(prefix_ids) + self._suffix_len + len(tail_ids)
 
-        # pixel_values: processor handles the image independently of the text.
+        # pixel_values: processor handles the image independently of the text. Cast to
+        # the model's (bf16) param dtype — the frozen vision encoder's Conv bias is bf16,
+        # so a float32 image errors ("Input type (float) and bias type (c10::BFloat16)
+        # should be the same"). Same idiom as smoke_openvla_gradient.py's bf16 cast.
         proc = processor(_PROMPT_PREFIX.format(instruction=instruction) + _PROMPT_TAIL, image)
-        self._pixel_values = proc["pixel_values"].to(device)
+        model_dtype = next(model.parameters()).dtype
+        self._pixel_values = proc["pixel_values"].to(device=device, dtype=model_dtype)
 
     # -- pure-ish helpers (still off-GPU-safe: tokenizer is CPU) --------------- #
 
