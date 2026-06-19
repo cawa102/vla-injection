@@ -86,20 +86,34 @@ class FaithfulnessReport:
     """Result of the D6-9 GPU seam-faithfulness gate.
 
     The projected one-hot gradient is only unit-tested on fake arrays; on the box
-    we check it predicts the *measured* one-token-swap loss delta (finite
-    difference), and that the suffix span decodes to the intended adversarial text.
+    we check that its **ranking is loss-aligned** — the gradient-recommended
+    (most-negative-grad) tokens reduce the measured CE loss and beat a random
+    control — and that the suffix span decodes to the intended adversarial text.
+    That is exactly the property GCG's top-k selection exploits; a wrong span /
+    projection / tied-embedding / sign flip destroys the recommended-beats-random
+    separation, so it still catches a broken seam. (A per-random-swap *sign* test is
+    ~chance even for a correct gradient — the first-order model is over-optimistic,
+    predicting most swaps help when only the recommended ones do; that is why GCG
+    evaluates candidates instead of trusting the gradient. ``sign_agreement`` is kept
+    as a reported diagnostic, **not** a pass/fail signal.)
 
     Attributes:
-        n_samples: Number of (position, token) swaps sampled.
-        sign_agreement: Fraction of swaps where the projected gradient's predicted
-            loss-change **sign** matched the measured finite-difference delta.
+        n_samples: Number of (position, token) probes sampled.
+        sign_agreement: Diagnostic — fraction of random swaps where the projected
+            gradient's predicted loss-change sign matched the measured delta.
+        recommended_mean_delta: Mean measured Δloss of gradient-recommended tokens
+            (top-k most-negative grad). Faithful ⇒ clearly negative.
+        random_mean_delta: Mean measured Δloss of random control tokens.
         decoded_suffix: The suffix span decoded under the real processor.
-        passed: ``sign_agreement`` is above chance (the seam is faithful, not merely
-            plausible — span, dtype, tied embeddings, sign convention all hold).
+        passed: The recommended tokens reduce loss **and** beat the random control
+            (the gradient ranking is loss-aligned — the seam is faithful, not merely
+            plausible: span, dtype, tied embeddings, sign convention all hold).
     """
 
     n_samples: int
     sign_agreement: float
+    recommended_mean_delta: float
+    random_mean_delta: float
     decoded_suffix: str
     passed: bool
 
@@ -305,35 +319,53 @@ class OpenVlaGcgTarget:
         return self._tokenizer.decode(ids.tolist())
 
     def gradient_agrees_with_swaps(
-        self, *, n_samples: int, rng: np.random.Generator
+        self, *, n_samples: int, rng: np.random.Generator, gate_top_k: int = 16
     ) -> FaithfulnessReport:
-        """Check the projected gradient's sign predicts measured one-token-swap deltas.
+        """Check the projected gradient's **ranking** is loss-aligned (D6-9).
 
-        For ``n_samples`` random (position, token) swaps of the init suffix, compare
-        ``sign(g[i, v_new] - g[i, v_old])`` (the linearised predicted loss change of
-        the swap) with ``sign(loss(swapped) - loss(init))`` (finite difference). A
-        faithful seam agrees well above chance; a wrong span / dtype / tied-embedding
-        / sign slip does not (D6-9).
+        For ``n_samples`` sampled positions, compare the measured loss change of a
+        **gradient-recommended** token (drawn from the ``gate_top_k`` most-negative
+        ``g[i, ·]`` — the pool GCG's top-k selection samples) against a **random
+        control** token. A faithful seam's recommended tokens reduce the CE loss and
+        beat the random control; a wrong span / dtype / tied-embedding / sign flip
+        destroys that separation. The per-random-swap *sign* match is computed too,
+        but only as a reported diagnostic — it is ~chance even for a correct gradient
+        (first-order over-optimism), so it is not the gate (see ``FaithfulnessReport``).
         """
         base = self._init_suffix
         grad = self.token_gradient(base)  # [L, V]
         base_loss = self._loss_single(base)
-        agree = 0
+        k = min(int(gate_top_k), self._vocab_size)
+        rec_deltas: list[float] = []
+        rnd_deltas: list[float] = []
+        sign_agree = 0
         for _ in range(n_samples):
             pos = int(rng.integers(0, self._suffix_len))
-            new_tok = int(rng.integers(0, self._vocab_size))
-            predicted = float(grad[pos, new_tok] - grad[pos, int(base[pos])])
-            swapped = base.copy()
-            swapped[pos] = new_tok
-            measured = self._loss_single(swapped) - base_loss
-            if (predicted < 0) == (measured < 0):
-                agree += 1
-        sign_agreement = agree / n_samples if n_samples else 0.0
+            topk = np.argpartition(grad[pos], k - 1)[:k]  # k most-negative grads
+            rec_tok = int(rng.choice(topk))
+            rnd_tok = int(rng.integers(0, self._vocab_size))
+            rec = base.copy()
+            rec[pos] = rec_tok
+            rnd = base.copy()
+            rnd[pos] = rnd_tok
+            d_rec = self._loss_single(rec) - base_loss
+            d_rnd = self._loss_single(rnd) - base_loss
+            rec_deltas.append(d_rec)
+            rnd_deltas.append(d_rnd)
+            # diagnostic only: first-order sign prediction vs measured (random swap).
+            predicted = float(grad[pos, rnd_tok] - grad[pos, int(base[pos])])
+            if (predicted < 0) == (d_rnd < 0):
+                sign_agree += 1
+        rec_mean = float(np.mean(rec_deltas)) if rec_deltas else 0.0
+        rnd_mean = float(np.mean(rnd_deltas)) if rnd_deltas else 0.0
+        sign_agreement = sign_agree / n_samples if n_samples else 0.0
         return FaithfulnessReport(
             n_samples=n_samples,
             sign_agreement=sign_agreement,
+            recommended_mean_delta=rec_mean,
+            random_mean_delta=rnd_mean,
             decoded_suffix=self.decode_span(base),
-            passed=sign_agreement > 0.5,
+            passed=(rec_mean < 0.0 and rec_mean < rnd_mean),
         )
 
     def batched_matches_single(self, candidate_suffixes: np.ndarray, *, atol: float = 1e-3) -> bool:

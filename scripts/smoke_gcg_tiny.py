@@ -131,8 +131,10 @@ def main(argv: list[str] | None = None) -> int:
     torch.cuda.reset_peak_memory_stats(device)
     report = target.gradient_agrees_with_swaps(n_samples=_FAITHFULNESS_SAMPLES, rng=rng)
     print(
-        f"[{STAGE}] faithfulness: sign-agreement {report.sign_agreement:.2f} over "
-        f"{report.n_samples} swaps, decoded={report.decoded_suffix!r} -> passed={report.passed}"
+        f"[{STAGE}] faithfulness (D6-9): recommended Δloss {report.recommended_mean_delta:+.3f} "
+        f"vs random {report.random_mean_delta:+.3f} over {report.n_samples} probes "
+        f"(sign-agreement {report.sign_agreement:.2f}, diagnostic only); "
+        f"decoded={report.decoded_suffix!r} -> passed={report.passed}"
     )
 
     cfg = GcgConfig(
@@ -171,8 +173,10 @@ def main(argv: list[str] | None = None) -> int:
             search_width=cfg.search_width, seed=cfg.seed,
         ),
         "target_action_token_ids": target_action_ids.tolist(),
-        # WIRING gate (pass/fail).
-        "faithfulness_sign_agreement": report.sign_agreement,
+        # WIRING gate (pass/fail): the gradient ranking is loss-aligned (D6-9).
+        "faithfulness_recommended_mean_delta": report.recommended_mean_delta,
+        "faithfulness_random_mean_delta": report.random_mean_delta,
+        "faithfulness_sign_agreement": report.sign_agreement,  # diagnostic only.
         "faithfulness_passed": report.passed,
         "batched_matches_single": batched_ok,
         "peak_vram_gib": round(peak_vram_gib, 3),
