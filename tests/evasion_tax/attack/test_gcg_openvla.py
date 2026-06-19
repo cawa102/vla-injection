@@ -14,7 +14,79 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from evasion_tax.attack.gcg_openvla import project_onehot_grad, suffix_span_in_ids
+from evasion_tax.attack.gcg_openvla import (
+    per_sequence_ce,
+    project_onehot_grad,
+    suffix_span_in_ids,
+)
+
+# --------------------------------------------------------------------------- #
+# per_sequence_ce: HF-style shifted, ignore-masked, per-row MEAN cross-entropy  #
+# (the contract the GPU true-batch `loss_of` mirrors on `out.logits`)           #
+# --------------------------------------------------------------------------- #
+
+
+def test_per_sequence_ce_matches_hand_computed_mean():
+    # B=1, T=3, V=2. Causal shift predicts labels[:, 1:] from logits[:, :-1], so the
+    # last logit row and the first label are dropped; positions 0,1 contribute.
+    logits = np.array([[[2.0, 0.0], [0.0, 1.0], [9.0, 9.0]]])  # [1, 3, 2]
+    labels = np.array([[-100, 0, 1]])  # [1, 3]; labels[0,0] dropped by the shift
+
+    out = per_sequence_ce(logits, labels)
+
+    # CE_t = logaddexp(l0, l1) - l_true:
+    #   pos0: logits [2,0], true=0 -> log(e^2+1) - 2     = 0.12692801
+    #   pos1: logits [0,1], true=1 -> log(1+e) - 1       = 0.31326169
+    # reduction='mean' over the 2 valid positions -> 0.22009485 (sum would be 0.44).
+    assert out.shape == (1,)
+    assert out[0] == pytest.approx(0.22009485, abs=1e-6)
+
+
+def test_per_sequence_ce_fully_ignored_row_is_zero_without_nan():
+    # Row 0 has a valid target (the hand-computed row); row 1 is fully ignore-masked.
+    logits = np.array(
+        [
+            [[2.0, 0.0], [0.0, 1.0], [9.0, 9.0]],
+            [[1.0, 1.0], [1.0, 1.0], [1.0, 1.0]],
+        ]
+    )  # [2, 3, 2]
+    labels = np.array([[-100, 0, 1], [-100, -100, -100]])  # row 1: every position masked
+
+    out = per_sequence_ce(labels=labels, logits=logits)
+
+    assert not np.isnan(out).any()  # no NaN leak from the 0/0 row
+    assert out[0] == pytest.approx(0.22009485, abs=1e-6)  # valid row unaffected
+    assert out[1] == 0.0  # fully-ignored row documented as 0.0
+
+
+def test_per_sequence_ce_shift_drops_last_logit_and_first_label():
+    # Regression guard for the causal shift: corrupting the LAST logit position and the
+    # FIRST label must NOT change the result — both are dropped by predict-t-from-t-1.
+    logits = np.array([[[2.0, 0.0], [0.0, 1.0], [1000.0, -1000.0]]])  # pos 2 corrupted
+    labels = np.array([[7, 0, 1]])  # labels[0,0]=7 corrupted (out-of-vocab, dropped by shift)
+
+    out = per_sequence_ce(logits, labels)
+
+    assert out[0] == pytest.approx(0.22009485, abs=1e-6)  # identical to the un-corrupted row
+
+
+def test_per_sequence_ce_single_row_equals_its_batched_row():
+    # Regression guard: each row is reduced independently, so a single-row slice equals
+    # that row inside a batch (the "single-row == scalar HF-style mean" property).
+    logits = np.array(
+        [
+            [[2.0, 0.0], [0.0, 1.0], [0.5, 0.5]],
+            [[1.0, -1.0], [3.0, 0.0], [0.0, 2.0]],
+            [[0.0, 0.0], [1.0, 1.0], [2.0, 2.0]],
+        ]
+    )  # [3, 3, 2]
+    labels = np.array([[-100, 0, 1], [-100, 1, 0], [0, 1, -100]])
+
+    batched = per_sequence_ce(logits, labels)
+
+    for i in range(logits.shape[0]):
+        single = per_sequence_ce(logits[i : i + 1], labels[i : i + 1])
+        assert single[0] == pytest.approx(batched[i], abs=1e-12)
 
 # --------------------------------------------------------------------------- #
 # project_onehot_grad: g[i,v] = (d loss / d e_i) · W[v,:]                       #

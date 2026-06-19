@@ -25,6 +25,43 @@ from typing import Any
 import numpy as np
 
 
+def per_sequence_ce(
+    logits: np.ndarray,
+    labels: np.ndarray,
+    *,
+    ignore_index: int = -100,
+) -> np.ndarray:
+    """Per-sequence mean cross-entropy (the contract the true-batch ``loss_of`` mirrors).
+
+    Causal-LM shift: predict ``labels[:, 1:]`` from ``logits[:, :-1]``; per-row mean CE.
+    Mirrors ``CrossEntropyLoss(ignore_index=-100, reduction='mean')`` applied per
+    sequence, so the batched path equals the per-candidate ``out.loss`` path. The GPU
+    ``loss_of`` runs the torch equivalent on ``out.logits``.
+
+    Args:
+        logits: ``[B, T, V]`` next-token logits.
+        labels: ``[B, T]`` target ids, ``ignore_index`` where masked.
+        ignore_index: Label value excluded from the per-row mean.
+
+    Returns:
+        ``[B]`` mean CE over the non-ignored shifted positions of each row.
+    """
+    logits = np.asarray(logits, dtype=np.float64)
+    labels = np.asarray(labels)
+    shift_logits = logits[:, :-1, :]  # [B, T-1, V]
+    shift_labels = labels[:, 1:]  # [B, T-1]
+    m = shift_logits.max(axis=-1, keepdims=True)
+    log_probs = shift_logits - (m + np.log(np.exp(shift_logits - m).sum(axis=-1, keepdims=True)))
+    valid = shift_labels != ignore_index  # [B, T-1]
+    safe_labels = np.where(valid, shift_labels, 0)  # in-bounds gather index for masked rows
+    true_lp = np.take_along_axis(log_probs, safe_labels[..., None], axis=-1)[..., 0]
+    ce = np.where(valid, -true_lp, 0.0)  # [B, T-1]; ignored positions contribute nothing
+    counts = valid.sum(axis=-1)  # [B] non-ignored positions per row
+    totals = ce.sum(axis=-1)  # [B]
+    # Per-row mean; a fully-ignored row (count 0) is documented as 0.0, never NaN.
+    return np.where(counts > 0, totals / np.maximum(counts, 1), 0.0)
+
+
 def project_onehot_grad(
     grad_embeds_suffix: np.ndarray, embedding_matrix: np.ndarray
 ) -> np.ndarray:
@@ -291,13 +328,38 @@ class OpenVlaGcgTarget:
             )
         return float(out.loss.detach().float())
 
-    def loss_of(self, candidate_suffixes: np.ndarray) -> np.ndarray:
-        """``[B, L]`` candidates → ``[B]`` CE losses (no grad, peak-VRAM tracked).
+    def _target_span_ce_torch(self, logits: Any) -> Any:
+        """Torch per-row mean CE over the trailing target span (equiv. of :func:`per_sequence_ce`).
 
-        MVP batched path = a loop of the 5.5-verified single forward; a tighter
-        single-forward batched CE is a box optimisation gated by the D6-3 wiring
-        check (``loss_of`` batch == per-candidate single — :meth:`batched_matches_single`).
-        Resets/reads CUDA peak stats so Task 4 can record peak VRAM per call.
+        OpenVLA fuses image patches into the sequence, so ``out.logits`` (length ``S``)
+        includes the vision positions; the teacher-forced target tokens stay the **final**
+        ``n_target`` positions (built ``prefix ⊕ suffix ⊕ tail ⊕ target``), independent of how
+        many patches are inserted. So per-row CE is read from the ``n_target`` positions that
+        *predict* the target tokens (``S-n_target-1 .. S-2``, predict-t-from-t-1) — exactly the
+        non-ignored set OpenVLA's own ``out.loss`` uses, without needing the vision-token count.
+        The batch-1 equality to :meth:`_loss_single` is the on-box ``batched_matches_single``
+        gate (D6-3/DB-4).
+        """
+        import torch  # type: ignore[import-not-found]
+
+        n_target = int(self._target_action_ids.shape[0])
+        target = torch.tensor(self._target_action_ids, device=self._device, dtype=torch.long)
+        pred_logits = logits[:, -n_target - 1 : -1, :].float()  # [B, n_target, V]
+        log_probs = torch.log_softmax(pred_logits, dim=-1)
+        idx = target.view(1, -1, 1).expand(log_probs.shape[0], -1, 1)  # [B, n_target, 1]
+        true_lp = log_probs.gather(-1, idx).squeeze(-1)  # [B, n_target]
+        return (-true_lp).mean(dim=-1)  # [B] mean CE over the target span
+
+    def loss_of(self, candidate_suffixes: np.ndarray) -> np.ndarray:
+        """``[B, L]`` candidates → ``[B]`` CE losses via ONE true-batch forward (no grad).
+
+        Candidates are fixed-length (``prefix ⊕ suffix(L) ⊕ tail ⊕ target``, identical length
+        and label mask), so they stack to ``[B, seq]`` with no padding and run through a single
+        ``torch.no_grad()`` forward. Per-row CE is read from ``out.logits`` by
+        :meth:`_target_span_ce_torch` — **not** ``out.loss``, which mean-reduces across the
+        batch. The batch-1 loop :meth:`_loss_single` is retained as the reference the
+        :meth:`batched_matches_single` gate checks (D6-3/DB-4). Resets/reads CUDA peak so Task 4
+        records peak VRAM per call.
         """
         import torch  # type: ignore[import-not-found]
 
@@ -306,8 +368,26 @@ class OpenVlaGcgTarget:
             raise ValueError(
                 f"candidate_suffixes must be [B, {self._suffix_len}], got {cands.shape}"
             )
+        full = np.stack([self._full_ids(row) for row in cands])  # [B, seq]
+        labels_np = np.stack([self._labels(row) for row in full])  # [B, seq]
+        input_ids = torch.tensor(full, device=self._device, dtype=torch.long)
+        attn = torch.ones_like(input_ids)
+        labels = torch.tensor(labels_np, device=self._device, dtype=torch.long)
+        # One observation broadcast across the batch; forward only reads pixel_values (no
+        # in-place write), so an expand+contiguous view is safe and non-aliasing.
+        pixel_values = self._pixel_values.expand(
+            input_ids.shape[0], *self._pixel_values.shape[1:]
+        ).contiguous()
+
         torch.cuda.reset_peak_memory_stats(self._device)
-        losses = np.array([self._loss_single(row) for row in cands], dtype=float)
+        with torch.no_grad():
+            out = self._model(
+                input_ids=input_ids,
+                attention_mask=attn,
+                pixel_values=pixel_values,
+                labels=labels,
+            )
+        losses = self._target_span_ce_torch(out.logits).detach().float().cpu().numpy().astype(float)
         self._last_peak_bytes = int(torch.cuda.max_memory_allocated(self._device))
         return losses
 
