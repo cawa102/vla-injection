@@ -273,7 +273,10 @@ sees the `[L,V]` array (so the core is torch-free and toy-testable).
 
   **Commit:** `feat: OpenVLA GCG loss/gradient seam (one-hot grad via step-5.5 hook; GPU-guarded, TDD pure parts)`
 
-- [ ] **Task 3: tiny-run driver (harness works) — on the box**
+- [x] **Task 3: tiny-run driver (harness works) — on the box**
+  <br>_(mac: guarded `scripts/smoke_gcg_tiny.py` written — D6-9 gate first, then `run_gcg`, wiring checks
+  (batched-equivalence, peak VRAM < 24 GiB), suffix quarantined to gitignored `artifacts/untrusted/`,
+  non-registered `results/_smoke/` log. Off-GPU guard exits 2; clean import (no torch). **Runs on the box.**)_
 
   **Files:**
   - Create: `scripts/smoke_gcg_tiny.py`
