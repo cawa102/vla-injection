@@ -233,7 +233,9 @@ sees the `[L,V]` array (so the core is torch-free and toy-testable).
 
   **Commit:** `feat: model-free GCG search core (one-hot top-k + candidate-batch loop, TDD)`
 
-- [ ] **Task 2: OpenVLA loss/gradient seam (`LossGradientFn` for the real model) — GPU-only**
+- [x] **Task 2: OpenVLA loss/gradient seam (`LossGradientFn` for the real model) — GPU-only**
+  <br>_(mac: pure helpers `project_onehot_grad` / `suffix_span_in_ids` + no-torch-at-top guard TDD'd; GPU
+  `OpenVlaGcgTarget` + D6-9 faithfulness gate written guarded, faithful to step 5.5 — runs/validated on the box.)_
 
   **Files:**
   - Create: `src/evasion_tax/attack/gcg_openvla.py`

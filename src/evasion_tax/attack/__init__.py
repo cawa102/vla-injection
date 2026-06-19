@@ -34,6 +34,12 @@ from evasion_tax.attack.gcg import (
     select_best,
     top_k_candidates,
 )
+from evasion_tax.attack.gcg_openvla import (
+    FaithfulnessReport,
+    OpenVlaGcgTarget,
+    project_onehot_grad,
+    suffix_span_in_ids,
+)
 from evasion_tax.attack.idealized_frontier import (
     AttackResult,
     IdealizedActionAttacker,
@@ -45,20 +51,24 @@ __all__ = [
     "AttackResult",
     "AttackScenario",
     "Dynamics",
+    "FaithfulnessReport",
     "Frontier",
     "FrontierPoint",
     "GcgConfig",
     "GcgResult",
     "IdealizedActionAttacker",
     "LossGradientFn",
+    "OpenVlaGcgTarget",
     "RealDynamics",
     "Scorer",
     "SyntheticDynamics",
     "asr_at_evasion",
     "pareto_frontier",
+    "project_onehot_grad",
     "run_gcg",
     "sample_candidates",
     "select_best",
+    "suffix_span_in_ids",
     "top_k_candidates",
     "trace_frontier",
 ]
