@@ -18,6 +18,14 @@ from evasion_tax.eval.branch_select import (
     provisional_branch,
 )
 
+_OK = dict(
+    s_per_target=100.0,
+    calendar_seconds=10_000.0,
+    seeds=2,
+    per_target_overhead=20.0,
+    adaptive_mult=3.0,
+)
+
 
 def _matrix(n_attacks: int) -> AffordableMatrix:
     return AffordableMatrix(
@@ -62,6 +70,33 @@ def test_affordable_matrix_rejects_non_positive_s_per_target(bad):
             per_target_overhead=20.0,
             adaptive_mult=3.0,
         )
+
+
+@pytest.mark.parametrize(
+    "override",
+    [
+        {"calendar_seconds": 0.0},
+        {"adaptive_mult": 0.0},
+        {"seeds": 0},
+        {"per_target_overhead": -1.0},
+    ],
+)
+def test_affordable_matrix_rejects_other_bad_inputs(override):
+    with pytest.raises(ValueError):
+        affordable_matrix(**{**_OK, **override})
+
+
+@pytest.mark.parametrize(
+    "kwargs", [{"n_for_full": 5, "n_for_reduced": 0}, {"n_for_full": 10, "n_for_reduced": 10}]
+)
+def test_branch_thresholds_validate(kwargs):
+    with pytest.raises(ValueError):
+        BranchThresholds(**kwargs)
+
+
+def test_provisional_branch_rejects_negative_borderline_frac():
+    with pytest.raises(ValueError):
+        provisional_branch(_matrix(200), thresholds=_THR, borderline_frac=-0.1)
 
 
 # --------------------------------------------------------------------------- #
