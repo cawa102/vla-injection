@@ -29,6 +29,12 @@ both Gray Swan AI; GCG from Zou et al. *Universal and Transferable Attacks* (`ar
 
 ---
 
+> **Superseded in part (2026-06-19):** this plan records step 6 **as executed on the batch-1 loop MVP** (tasks
+> below are `[x]` and stay that way). The "defer the true-batch CE" choice (D6-2/D6-4 *Notes*, the `loss_of` loop)
+> is **superseded** by @docs/plans/2026-06-19-step6-truebatch-lossof.md — true-batch `loss_of` is implemented and
+> becomes the **official D8 measurement** (loop kept as an ablation baseline) before the registered run. Every
+> other decision here (D6-1, D6-3, D6-5..D6-10) stands unchanged.
+
 ## Decisions (pre-registered — design-fork-handling: decide deeply + record, don't multiple-choice ask)
 
 - **D6-1 — Build our OWN minimal GCG harness on the step-5.5 seam; do NOT run upstream RoboGCG for step 6.**
