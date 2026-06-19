@@ -21,6 +21,13 @@ per-rollout score arrays:
 
 from __future__ import annotations
 
+from evasion_tax.eval.branch_select import (
+    AffordableMatrix,
+    BranchDecision,
+    BranchThresholds,
+    affordable_matrix,
+    provisional_branch,
+)
 from evasion_tax.eval.figures import make_figures, results_table_to_dict
 from evasion_tax.eval.harness import ConditionRow, ResultsTable, run_condition_matrix
 from evasion_tax.eval.metrics import (
@@ -41,11 +48,15 @@ from evasion_tax.eval.power import (
 from evasion_tax.eval.splits import assert_disjoint
 
 __all__ = [
+    "AffordableMatrix",
+    "BranchDecision",
+    "BranchThresholds",
     "ConditionRow",
     "OperatingPoint",
     "PowerStatus",
     "ResultsTable",
     "abort_rate",
+    "affordable_matrix",
     "annotate_operating_points",
     "assert_disjoint",
     "benign_degradation",
@@ -53,6 +64,7 @@ __all__ = [
     "detection_latency_summary",
     "make_figures",
     "proportion_ci",
+    "provisional_branch",
     "required_benign_n",
     "results_table_to_dict",
     "roc_auc",

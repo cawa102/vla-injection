@@ -338,7 +338,10 @@ sees the `[L,V]` array (so the core is torch-free and toy-testable).
 
   **Commit:** `feat: D8 GCG timing micro-bench — s/target, peak VRAM, max candidate-batch @ 24GB (registered)`
 
-- [ ] **Task 5: branch-selection computation + decision**
+- [x] **Task 5: branch-selection computation + decision**
+  <br>_(mac: `affordable_matrix` / `provisional_branch` + `AffordableMatrix` / `BranchThresholds` / `BranchDecision`
+  TDD'd — never locks without an adaptive measurement, hard-F default, conservative borderline. The doc edits
+  (playbook §1/§2/§10, CSB plan.md step 6) are **after the box run**, with the numbers.)_
 
   **Files:**
   - Create: `src/evasion_tax/eval/branch_select.py`
