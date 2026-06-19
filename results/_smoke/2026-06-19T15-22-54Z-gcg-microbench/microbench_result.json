@@ -1,0 +1,30 @@
+{
+  "adaptive_gcg_cost": "deferred (L1 not on GPU)",
+  "branch_lock_condition": "Branch is PROVISIONAL: locked only once the adaptive GCG-against-the-probe bench (M1/M2, same GPU seam) confirms N/N\u2212; until then the committed branch is the hard-F default (oracle frontier, H6-A).",
+  "branch_status": "provisional",
+  "device_name": "NVIDIA RTX A5000",
+  "dtype": "bfloat16",
+  "exclusive_gpu": true,
+  "gcg_config": {
+    "n_steps": 5,
+    "search_width": 32,
+    "seed": 42,
+    "suffix_len": 20,
+    "top_k": 256
+  },
+  "l1_extraction_overhead": "deferred (L1 not on GPU)",
+  "max_candidate_batch": 2,
+  "peak_vram_gib": 16.062,
+  "s_per_target": {
+    "iqr_s": 0.0,
+    "median_s": 17.474584337091073,
+    "n": 1,
+    "rel_iqr": 0.0,
+    "reproducible": true
+  },
+  "seed": 42,
+  "stage": "microbench_gcg",
+  "steps_to_success": [
+    5
+  ]
+}
