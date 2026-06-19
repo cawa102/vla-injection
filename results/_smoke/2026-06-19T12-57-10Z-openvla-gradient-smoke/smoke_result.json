@@ -1,0 +1,38 @@
+{
+  "action_dim": 7,
+  "attn_impl": "flash_attention_2",
+  "card_total_gib": 23.549,
+  "device": "cuda:0",
+  "device_name": "NVIDIA RTX A5000",
+  "dtype": "bfloat16",
+  "fits_one_card": true,
+  "grad_finite": true,
+  "grad_max_abs": 26.875,
+  "grad_nonzero": true,
+  "grad_norm": 97.17218780517578,
+  "grad_norm_prompt": 76.02369689941406,
+  "grad_shape": [
+    1,
+    26,
+    4096
+  ],
+  "instruction": "pick up the red block",
+  "loss": 18.44916343688965,
+  "loss_finite": true,
+  "model": "openvla/openvla-7b",
+  "peak_vram_allocated_gib": 15.372,
+  "peak_vram_reserved_gib": 15.488,
+  "prompt_len": 19,
+  "seed": 42,
+  "stage": "smoke_openvla_gradient",
+  "target_action_token_ids": [
+    31967,
+    31935,
+    31903,
+    31871,
+    31839,
+    31807,
+    31775
+  ],
+  "weights_frozen": true
+}
