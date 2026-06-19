@@ -205,7 +205,7 @@ sees the `[L,V]` array (so the core is torch-free and toy-testable).
 
   **Commit:** `docs: step 6 Task 0 — faithful GCG algorithm + RoboGCG suffix-template research notes`
 
-- [ ] **Task 1: model-free GCG search core**
+- [x] **Task 1: model-free GCG search core**
 
   **Files:**
   - Create: `src/evasion_tax/attack/gcg.py`
