@@ -88,7 +88,7 @@ def per_sequence_ce(
 
 ## Tasks
 
-- [ ] **Task 1: true-batch `loss_of` (pure CE reference TDD'd; GPU body guarded) — mac + box**
+- [x] **Task 1: true-batch `loss_of` (pure CE reference TDD'd; GPU body guarded) — mac + box**
 
   **Files:**
   - Modify: `src/evasion_tax/attack/gcg_openvla.py` (add `per_sequence_ce`; rewrite `loss_of` to one batched forward)
