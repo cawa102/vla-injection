@@ -183,7 +183,7 @@ sees the `[L,V]` array (so the core is torch-free and toy-testable).
 
 ## Tasks
 
-- [ ] **Task 0: Research & Reuse (no code) — port-faithful GCG algorithm + suffix template**
+- [x] **Task 0: Research & Reuse (no code) — port-faithful GCG algorithm + suffix template**
 
   **Files:** Notes appended to this plan under a `## Task 0 notes` heading (no source yet).
 
@@ -384,3 +384,56 @@ write-once `results/` with a §8 header under the **clean-process protocol** (D6
 N / N− / F + hard-F default + lock condition** is written into the playbook (the branch is **locked later**, once
 the adaptive-probe bench runs — D6-5; D8/Gate 5 stays OPEN). Then **M1's GO/NO-GO (H1)** is the next milestone
 gate — out of step-6 scope.
+
+---
+
+## Task 0 notes — faithful GCG algorithm + RoboGCG suffix-template research (2026-06-19)
+
+> Reuse the **algorithm**, not the harness (D6-1). Sources read directly (raw GitHub + arXiv facts already
+> verified in `docs/references/README.md` §RoboGCG). Anything not directly read is marked **[VERIFY]** — never
+> fabricated (academic-integrity rule).
+
+### A. nanoGCG — `GraySwanAI/nanoGCG`, `nanogcg/gcg.py` (read 2026-06-19)
+
+- **Licence: MIT** — `LICENSE` reads "Copyright (c) 2024 Gray Swan AI". **Porting the algorithm is permitted**
+  with attribution (record it in the ported module docstring).
+- **Defaults** (`GCGConfig`): `num_steps=250`, `search_width=512`, `topk=256`, `n_replace=1`, `buffer_size=0`,
+  `use_mellowmax=False`. → our MVP pins **single-position swap (`n_replace=1`)**, **`top_k=256`**; `n_steps` /
+  `search_width` are per-run knobs (tiny run small; bench a pinned budget). Buffer + mellowmax = **pre-registered
+  stretch** (scope list), not in the MVP.
+- **One-hot token gradient** (the load-bearing math, matches our `gcg.py` contract):
+  `optim_ids_onehot = one_hot(optim_ids, num_classes=num_embeddings)` → `onehot @ embedding_weights`
+  `(1, n_optim, vocab) @ (vocab, embed_dim) → (1, n_optim, embed_dim)` → backprop → `optim_ids_onehot_grad`
+  `[1, n_optim, vocab]`. This is **identical** to our seam's `grad_inputs_embeds[suffix] @ W.T` (`token_gradient`
+  contract, plan "One-hot gradient" block): both give `g[i,v] = (∂loss/∂e_i)·W[v,:]`.
+- **Candidate sampling (per step):** `sampled_ids_pos = argsort(rand((search_width, n_optim)))[..., :n_replace]`
+  (random position(s) per candidate); `topk_ids = (-grad).topk(topk, dim=1).indices` (per position); each chosen
+  position gets a **uniform random** token from its top-k. → our `sample_candidates` = single random position +
+  random top-k token per candidate.
+- **Select / incumbent:** `optim_ids = sampled_ids[loss.argmin()]` — argmin candidate loss; the buffer (when
+  `buffer_size>0`) keeps the best-k. Our MVP keeps a **single incumbent** (`best_suffix_ids` monotone, Task 1).
+- **Sign convention (verified):** `(-grad).topk(...)` ⇒ GCG picks the tokens with the **most negative** gradient
+  (largest predicted loss **decrease**). → our `top_k_candidates` selects **most-negative** `g[i,·]` (plan contract).
+
+### B. RoboGCG — paper `arXiv:2506.03350` (facts already verified) + repo `eliotjones1/robogcg` (read 2026-06-19)
+
+- **Attack shape (paper §4, verified in `docs/references/README.md`):** white-box GCG-optimised **textual** suffix,
+  applied **once at rollout start**, eliciting an attacker-chosen low-level action. 7-DoF × 256 bins → **256^7**
+  actions. **Single-step** attack; matches found in **30–110 GCG steps** (~3–10 min/success on H100). Target is an
+  **arbitrary low-level action** (control authority), **not** semantic harm — matches D6-6/D6-7.
+- **Repo licence: NOT stated.** `api.github.com/.../git/trees/main?recursive=1` shows **no `LICENSE` file at root**
+  → **[VERIFY]** before porting *any* repo code (confirms the gpu-runbook `[VERIFY]`). We did **not** port repo
+  code — only the (MIT) nanoGCG algorithm + the paper's published method — so this does not block step 6.
+- **OpenVLA prompt template (read from `experiments/single_step/model_utils.py`):**
+  `"In: What action should the robot take to {task_description}?\nOut: "`. This **matches**
+  `scripts/smoke_openvla_gradient.py:_PROMPT_TEMPLATE` (`"In: What action should the robot take to {instruction}?\nOut:"`)
+  except RoboGCG has a **trailing space after `Out:`** — a one-token offset to **[VERIFY on the box]** against the
+  real processor (the Task-2 `decode_span` faithfulness check covers exactly this).
+- **Action tokeniser:** `ActionTokenizer(32000, 256, norm_stats)` in `model_utils.py` → vocab base **32000**, **256**
+  bins (consistent with `action_codec.py` and the smoke script's `vocab_size - 1 - bin` id formula).
+- **Exact suffix placement (offset of the adversarial tokens relative to `{task_description}`):** **[VERIFY on the
+  box]** — lives in `experiments/single_step/run_experiment.py` / `experiment_runner.py`, **not read here**
+  (WebFetch surfaced only the file tree + helpers). Standard GCG appends the suffix **after the request text**; for
+  OpenVLA the natural placement is after `{task_description}`, before `?\nOut:`. This is a **GPU-seam (Task 2/3)**
+  concern — the model-free core (Task 1) only sees a `suffix_span` slice — so it is named, not blocking; the Task-2
+  faithfulness gate (D6-9, `suffix_span_in_ids` + `decode_span`) pins the real offset on the box.
