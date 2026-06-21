@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GCGはどうやって"呪文"を作るのか</title>
+<!--
+  GCG explainer deck — self-study teaching artifact (docs/, no src/, no model run).
+  Single self-contained file: <style> theme/fragments · <body> 12 slides · <script> nav + anim drivers.
+  All shown numbers come from JS constants (DRY) reusing this project's real smoke-log values.
+  Build plan: docs/plans/2026-06-21-gcg-explainer-slides.md
+-->
+<style>
+/* ============================================================ *
+ * THEME TOKENS                                                 *
+ * ============================================================ */
+:root {
+  --bg:    #0b0f1a;   /* deep navy-black */
+  --bg2:   #131a2b;   /* panel */
+  --bg3:   #1c263d;   /* raised cell */
+  --fg:    #e6ebf5;
+  --muted: #8a96b0;
+  --green: #43d17a;   /* loss going down / good direction */
+  --red:   #ff5470;   /* most-negative gradient / chosen candidate */
+  --blue:  #5b9dff;   /* neutral accent */
+  --gold:  #ffcf5c;   /* secondary highlight */
+  --line:  #2a3550;
+  --mono:  "SF Mono", "JetBrains Mono", Menlo, Consolas, "Courier New", monospace;
+  --sans:  -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", "Segoe UI", sans-serif;
+  --radius: 12px;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; }
+body {
+  background: radial-gradient(1200px 800px at 70% -10%, #16203a 0%, var(--bg) 60%);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: clamp(16px, 1.7vw, 22px);
+  line-height: 1.55;
+}
+
+/* ============================================================ *
+ * SLIDE FRAME                                                  *
+ * ============================================================ */
+#deck { position: fixed; inset: 0; }
+
+.slide {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  padding: 6vh 8vw 12vh;
+  opacity: 0; visibility: hidden;
+  transform: scale(0.99);
+  transition: opacity .45s ease, transform .45s ease;
+  text-align: center;
+}
+.slide.active { opacity: 1; visibility: visible; transform: none; }
+
+.slide h1 { font-size: clamp(28px, 4.4vw, 56px); font-weight: 800; margin: 0 0 .4em; letter-spacing: .01em; }
+.slide h2 { font-size: clamp(22px, 3vw, 38px); font-weight: 700; margin: 0 0 .7em; }
+.slide p  { margin: .35em 0; max-width: 60ch; }
+.caption  { color: var(--muted); font-size: .92em; max-width: 64ch; }
+.kbd { font-family: var(--mono); background: var(--bg3); border: 1px solid var(--line);
+       border-radius: 6px; padding: .05em .45em; font-size: .9em; }
+.mono { font-family: var(--mono); }
+.green { color: var(--green); }  .red { color: var(--red); }  .blue { color: var(--blue); }  .gold { color: var(--gold); }
+.dim { color: var(--muted); }
+
+/* slide title chip (top-left) + counter (top-right) */
+.topbar { position: fixed; top: 2.4vh; left: 0; right: 0; display: flex; justify-content: space-between;
+          align-items: center; padding: 0 3vw; font-family: var(--mono); font-size: 14px; color: var(--muted);
+          pointer-events: none; z-index: 30; }
+.topbar .title { color: var(--blue); }
+
+/* ============================================================ *
+ * FRAGMENTS (hand-rolled reveal.js-style)                      *
+ * ============================================================ */
+.fragment { opacity: 0; transform: translateY(10px); transition: opacity .4s ease, transform .4s ease; }
+.fragment.visible { opacity: 1; transform: none; }
+
+/* ============================================================ *
+ * PROGRESS DOTS + HINT                                         *
+ * ============================================================ */
+#dots { position: fixed; bottom: 3.2vh; left: 0; right: 0; display: flex; gap: 9px;
+        justify-content: center; z-index: 30; }
+#dots .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--line);
+             cursor: pointer; transition: background .25s, transform .25s; }
+#dots .dot:hover { background: var(--muted); }
+#dots .dot.active { background: var(--blue); transform: scale(1.35); }
+
+#hint { position: fixed; bottom: 2.6vh; right: 3vw; font-family: var(--mono); font-size: 12px;
+        color: var(--muted); z-index: 30; opacity: .8; }
+
+/* ============================================================ *
+ * SHARED COMPONENTS (filled per task)                          *
+ * ------------------------------------------------------------ *
+ * .token-strip  — Task 2 / hero slides                         *
+ * .matrix       — Task 3                                        *
+ * .pipeline     — Task 4                                        *
+ * .loss-bar     — Task 5                                        *
+ * ============================================================ */
+</style>
+</head>
+<body>
+
+<div class="topbar"><span class="title" id="slideTitle">—</span><span id="slideCounter">1 / 12</span></div>
+
+<div id="deck">
+  <!-- 12 slides; content filled by Tasks 2–5. Each carries data-title for the topbar. -->
+  <section class="slide" data-title="title"></section>          <!-- #1  Title -->
+  <section class="slide" data-title="setup"></section>          <!-- #2  Setup -->
+  <section class="slide" data-title="discrete"></section>       <!-- #3  Discrete-token problem -->
+  <section class="slide" data-title="core-idea"></section>      <!-- #4  Core idea -->
+  <section class="slide" data-title="onehot×W"></section>       <!-- #5  onehot × W = row pluck -->
+  <section class="slide" data-title="backprop"></section>       <!-- #6  backprop chain -->
+  <section class="slide" data-title="swap-scores"></section>    <!-- #7  toy swap-scores -->
+  <section class="slide" data-title="step ①"></section>         <!-- #8  HERO: one GCG step -->
+  <section class="slide" data-title="loop ②"></section>         <!-- #9  HERO: loop iteration -->
+  <section class="slide" data-title="gibberish"></section>      <!-- #10 why gibberish -->
+  <section class="slide" data-title="real dims"></section>      <!-- #11 mapping to real thing -->
+  <section class="slide" data-title="summary"></section>        <!-- #12 summary ↔ code -->
+</div>
+
+<div id="dots"></div>
+<div id="hint"><span class="kbd">→</span>/<span class="kbd">Space</span> 次へ · <span class="kbd">←</span> 戻る · <span class="kbd">F</span> 全画面</div>
+
+<script>
+"use strict";
+
+/* ============================================================ *
+ * SHARED DATA CONTRACT  (single source of truth — DRY)         *
+ * Consumed by Tasks 1/3/5. Render from these; never hard-code  *
+ * the numbers into markup.                                     *
+ * ============================================================ */
+
+// Real tiny-run loss trajectory
+// — results/_smoke/2026-06-19T15-10-36Z-gcg-tiny-smoke/smoke_result.json
+const LOSS_HISTORY = [15.60, 14.46, 13.08, 12.71, 12.38, 12.08, 11.35, 10.47, 10.09, 9.73, 9.52];
+const FINAL_SUFFIX = "xforum x x mang im x x x x x egg x robot x x明� He flower";
+
+// Real dimensions (step-3 / step-5.5 smoke logs + GcgConfig)
+const DIMS = { V: 32000, d: 4096, L: 20, topK: 256 };
+
+// Toy worked example from the 2026-06-21 session (V=5, d=3)
+const TOY_VOCAB = ["cat", "dog", "x", "run", "sky"];
+const TOY_W = [           // [V=5][d=3] embedding matrix
+  [ 0.10, -0.20,  0.05],
+  [-0.30,  0.10,  0.40],
+  [ 0.02,  0.01, -0.03],  // current token at position i = "x" (index 2)
+  [ 0.50, -0.10,  0.20],
+  [-0.05,  0.30, -0.15],
+];
+const TOY_GRAD_E = [1.2, -0.5, 0.8];   // d(loss)/d(e_i)
+const TOY_CUR_TOKEN = 2;               // "x"
+// Expected (computed on screen by swapScores, NOT hard-coded):
+//   grad_e · W[v] → [0.26, -0.09, -0.005, 0.81, -0.33] ; argmin = index 4 ("sky"), flares red
+
+/* ============================================================ *
+ * NAVIGATION ENGINE                                            *
+ * ============================================================ */
+const slides = Array.from(document.querySelectorAll('.slide'));
+const dotsWrap = document.getElementById('dots');
+const titleEl = document.getElementById('slideTitle');
+const counterEl = document.getElementById('slideCounter');
+let current = 0;
+
+// Per-slide "enter" handlers, registered by Tasks 4/5 to (re)start animations.
+const slideEnterHandlers = {};   // { [index]: () => void }
+
+// Build progress dots.
+slides.forEach((_, i) => {
+  const dot = document.createElement('div');
+  dot.className = 'dot';
+  dot.addEventListener('click', () => goTo(i, true));   // jump shows the slide fully revealed
+  dotsWrap.appendChild(dot);
+});
+const dots = Array.from(dotsWrap.children);
+
+function updateChrome() {
+  dots.forEach((d, i) => d.classList.toggle('active', i === current));
+  titleEl.textContent = slides[current].dataset.title || '';
+  counterEl.textContent = (current + 1) + ' / ' + slides.length;
+}
+
+// Show slide `i`. revealAll=true reveals every fragment at once (used when jumping
+// back/forward so a visited slide isn't shown half-empty).
+function goTo(i, revealAll = false) {
+  if (i < 0 || i >= slides.length) return;
+  slides[current].classList.remove('active');
+  current = i;
+  const s = slides[current];
+  s.classList.add('active');
+  s.querySelectorAll('.fragment').forEach(f => f.classList.toggle('visible', revealAll));
+  updateChrome();
+  const handler = slideEnterHandlers[current];
+  if (handler) handler();
+}
+
+// Reveal the next hidden fragment on the current slide; else advance to next slide.
+function next() {
+  const hidden = slides[current].querySelector('.fragment:not(.visible)');
+  if (hidden) { hidden.classList.add('visible'); return; }
+  if (current < slides.length - 1) goTo(current + 1, false);
+}
+
+// Hide the last revealed fragment; else retreat to previous slide (fully revealed).
+function prev() {
+  const shown = slides[current].querySelectorAll('.fragment.visible');
+  if (shown.length) { shown[shown.length - 1].classList.remove('visible'); return; }
+  if (current > 0) goTo(current - 1, true);
+}
+
+function toggleFullscreen() {
+  if (document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen?.();
+}
+
+document.addEventListener('keydown', (e) => {
+  switch (e.key) {
+    case 'ArrowRight': case ' ': case 'PageDown': e.preventDefault(); next(); break;
+    case 'ArrowLeft':  case 'PageUp':             e.preventDefault(); prev(); break;
+    case 'f': case 'F':                           e.preventDefault(); toggleFullscreen(); break;
+    case 'Home':                                  e.preventDefault(); goTo(0, false); break;
+    case 'End':                                   e.preventDefault(); goTo(slides.length - 1, true); break;
+  }
+});
+
+/* ------------------------------------------------------------ *
+ * SLIDE BUILDERS — Tasks 2–5 register their content here.      *
+ * Keeping markup in JS lets every figure render from the data  *
+ * constants above (no duplicated numbers in HTML).             *
+ * ------------------------------------------------------------ */
+
+// (Task 1 stub) initial render
+goTo(0, false);
+</script>
+</body>
+</html>

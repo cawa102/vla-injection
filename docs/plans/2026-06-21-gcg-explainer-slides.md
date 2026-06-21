@@ -48,7 +48,7 @@ const TOY_CUR_TOKEN = 2;               // "x"
 
 ---
 
-- [ ] Task 1: Scaffold — shell, theme, navigation, fragment system, data constants
+- [x] Task 1: Scaffold — shell, theme, navigation, fragment system, data constants
 
 **Files:**
 - Create: `docs/slides/gcg-explainer.html`
