@@ -81,11 +81,11 @@ Keep theme tokens in CSS `:root` vars so all later slides inherit them.
 - Modify: `docs/slides/gcg-explainer.html` (fill the six static/light slides)
 
 **What:** The narrative slides with light or no animation.
-- **#1 Title** — "GCGはどうやって"呪文"を作るのか"; `FINAL_SUFFIX` glimpsed (fade-in).
+- **#1 Title** — "How GCG Crafts Its "Magic Spell""; `FINAL_SUFFIX` glimpsed (fade-in).
 - **#2 Setup** — token-strip `prefix(instruction) ⊕ [suffix] ⊕ tail ⊕ target`; suffix box blinks; arrow to
-  target; caption "攻撃面はsuffixの20トークンだけ / instructionとtargetは固定".
-- **#3 Discrete-token problem** — a number line with ticks 3192, 3193 and "3192.5 は無い → 傾き未定義".
-- **#4 Core idea** — two-stage diagram "① 勾配で提案 → ② forwardで検証"; the two arrows light alternately on
+  target; caption "the attack surface is only the 20 suffix tokens / instruction and target stay fixed".
+- **#3 Discrete-token problem** — a number line with ticks 3192, 3193 and "there is no 3192.5 → the slope is undefined".
+- **#4 Core idea** — two-stage diagram "① gradient proposes → ② forward verifies"; the two arrows light alternately on
   fragment reveal.
 - **#10 Why gibberish** — restate that selection is by **loss**, not meaning; show a swap landing on an
   unrelated word (reuse the #7 red winner idea).
@@ -112,10 +112,10 @@ alternate.
 - **#5 `onehot × W` = pluck a row** — draw `TOY_W` as a 5×3 grid; a one-hot column (1 at `TOY_CUR_TOKEN`)
   slides across and the matching row lifts/highlights out as `e_i`.
 - **#6 backprop chain** — lay `token → onehot → @W → embedding → Transformer → loss` in a line; on reveal, a
-  gradient "light" sweeps **right→left** to the input. Caption: 微分の対象は整数IDでなく連続な埋め込み。
+  gradient "light" sweeps **right→left** to the input. Caption: we differentiate the continuous embedding, not the integer token ID.
 - **#7 swap-scores** — show `grad_e = TOY_GRAD_E`; compute `score[v] = Σ_j grad_e[j]·TOY_W[v][j]` **in JS**
-  and render the five results appearing in order; flare `argmin` (`sky`, `-0.33`) red. Caption: 最も負＝最有力
-  置換候補。
+  and render the five results appearing in order; flare `argmin` (`sky`, `-0.33`) red. Caption: most negative = the
+  top swap candidate.
 
 **Interface (JS):**
 - `swapScores(gradE, W): number[]` — returns `grad_e @ Wᵀ`; used to populate #7 (must yield
@@ -144,7 +144,7 @@ On reveal/auto, colour runs through each block in turn; the candidate block visi
 suffix cell (`n_replace=1`); the final block marks the min-loss candidate.
 
 **Interface (JS):**
-- `playStep()` — drives the four-block highlight sequence; replayable via a "▷ 再生" control and on slide enter.
+- `playStep()` — drives the four-block highlight sequence; replayable via a "▷ replay" control and on slide enter.
 
 **Verify (browser):** entering #8 plays the sequence; each block lights in order; candidate generation changes
 one cell only; replay works.

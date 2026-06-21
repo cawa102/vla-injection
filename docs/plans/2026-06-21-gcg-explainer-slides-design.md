@@ -3,7 +3,7 @@
 > **What this is.** A design for a self-contained, animated HTML slide deck that explains **how GCG
 > generates an adversarial suffix** — the mechanism worked through in the 2026-06-21 session
 > (discrete-token problem → gradient-proposes / forward-verifies → one-hot gradient math → the loop).
-> **Audience: the author, for self-study** (technical terms OK, depth over brevity, Japanese).
+> **Audience: the author, for self-study** (technical terms OK, depth over brevity, English).
 > This is a **teaching/documentation artifact**, not experiment code — it lives under `docs/`, touches no
 > `src/`, runs no model, and makes no research claim. The numbers it shows are reused from this project's
 > real smoke logs and the toy worked-example, so it stays consistent with the codebase.
@@ -38,7 +38,7 @@ falls out" — with two **hero animations** carrying the intuition.
 
 | # | Slide | Animation |
 |---|-------|-----------|
-| 1 | Title — "GCGはどうやって"呪文"を作るのか" | finished suffix `xforum x x mang…` glimpsed |
+| 1 | Title — "How GCG Crafts Its "Magic Spell"" | finished suffix `xforum x x mang…` glimpsed |
 | 2 | Setup: `instruction ⊕ [suffix] ⊕ target`; only the suffix is attacked | suffix box blinks, arrow to target |
 | 3 | Why plain gradient descent fails (discrete tokens) | number line shows "no 3192.5 between 3192 and 3193" |
 | 4 | Core idea: **gradient proposes → forward verifies** (two stages) | the two arrows light alternately |
