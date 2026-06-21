@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>GCGはどうやって"呪文"を作るのか</title>
+<title>How GCG Crafts an Adversarial Suffix</title>
 <!--
   GCG explainer deck — self-study teaching artifact (docs/, no src/, no model run).
   Single self-contained file: <style> theme/fragments · <body> 12 slides · <script> nav + anim drivers.
@@ -92,13 +92,52 @@ body {
         color: var(--muted); z-index: 30; opacity: .8; }
 
 /* ============================================================ *
- * SHARED COMPONENTS (filled per task)                          *
- * ------------------------------------------------------------ *
- * .token-strip  — Task 2 / hero slides                         *
- * .matrix       — Task 3                                        *
- * .pipeline     — Task 4                                        *
- * .loss-bar     — Task 5                                        *
+ * SHARED COMPONENTS                                            *
  * ============================================================ */
+
+/* --- token-strip (#2, hero slides) --- */
+.token-strip { display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; justify-content: center; }
+.seg { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.seg-label { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.cells { display: flex; gap: 4px; }
+.cell { font-family: var(--mono); font-size: 14px; min-width: 1.7em; padding: .35em .5em; text-align: center;
+        background: var(--bg3); border: 1px solid var(--line); border-radius: 7px; }
+.seg.fixed .cell { color: var(--muted); }
+.seg.suffix .cell { color: var(--fg); border-color: var(--gold); }
+.seg.suffix.blink .cell { animation: blink 1.4s ease-in-out infinite; }
+@keyframes blink { 0%,100% { box-shadow: 0 0 0 0 rgba(255,207,92,0); }
+                   50% { box-shadow: 0 0 14px 2px rgba(255,207,92,.55); } }
+.flow-arrow { font-size: 24px; color: var(--blue); align-self: center; }
+
+/* --- #3 number line --- */
+.numline { position: relative; width: min(680px, 80vw); height: 120px; margin-top: 1em; }
+.numline .axis { position: absolute; top: 60px; left: 0; right: 0; height: 2px; background: var(--line); }
+.numline .tick { position: absolute; top: 44px; width: 2px; height: 34px; background: var(--fg); }
+.numline .tick .lab { position: absolute; top: 40px; left: 50%; transform: translateX(-50%);
+                      font-family: var(--mono); font-size: 14px; white-space: nowrap; }
+.numline .ghost { position: absolute; top: 18px; transform: translateX(-50%); text-align: center;
+                  font-family: var(--mono); color: var(--red); font-size: 14px; }
+.numline .ghost .x { font-size: 22px; display: block; }
+
+/* --- #4 two-stage boxes --- */
+.stages { display: flex; align-items: center; gap: 26px; margin: .6em 0; flex-wrap: wrap; justify-content: center; }
+.stage { background: var(--bg2); border: 2px solid var(--line); border-radius: var(--radius);
+         padding: 1.1em 1.4em; min-width: 230px; transition: border-color .3s, box-shadow .3s; }
+.stage .n { font-family: var(--mono); font-size: 14px; color: var(--muted); }
+.stage .t { font-size: 1.05em; font-weight: 700; margin-top: .2em; }
+.stage.lit.propose { border-color: var(--blue); box-shadow: 0 0 22px -4px var(--blue); }
+.stage.lit.verify  { border-color: var(--green); box-shadow: 0 0 22px -4px var(--green); }
+.stage-arrow { font-size: 30px; color: var(--muted); transition: color .3s; }
+.stage-arrow.lit { color: var(--fg); }
+
+/* --- #12 code-map table --- */
+.codemap { border-collapse: collapse; font-size: .92em; }
+.codemap td, .codemap th { border: 1px solid var(--line); padding: .55em .9em; text-align: left; }
+.codemap th { color: var(--muted); font-weight: 600; }
+.codemap .step { font-family: var(--mono); white-space: nowrap; }
+.codemap .fn { font-family: var(--mono); color: var(--green); }
+
+/* placeholders filled by later tasks:  .matrix (#5) · .pipeline (#8) · .loss-bar (#9) · .spark (#11) */
 </style>
 </head>
 <body>
@@ -122,7 +161,7 @@ body {
 </div>
 
 <div id="dots"></div>
-<div id="hint"><span class="kbd">→</span>/<span class="kbd">Space</span> 次へ · <span class="kbd">←</span> 戻る · <span class="kbd">F</span> 全画面</div>
+<div id="hint"><span class="kbd">→</span>/<span class="kbd">Space</span> next · <span class="kbd">←</span> back · <span class="kbd">F</span> fullscreen</div>
 
 <script>
 "use strict";
@@ -186,6 +225,7 @@ function updateChrome() {
 // back/forward so a visited slide isn't shown half-empty).
 function goTo(i, revealAll = false) {
   if (i < 0 || i >= slides.length) return;
+  clearAnims();                                   // stop any running per-slide animation
   slides[current].classList.remove('active');
   current = i;
   const s = slides[current];
@@ -226,12 +266,126 @@ document.addEventListener('keydown', (e) => {
 });
 
 /* ------------------------------------------------------------ *
- * SLIDE BUILDERS — Tasks 2–5 register their content here.      *
- * Keeping markup in JS lets every figure render from the data  *
- * constants above (no duplicated numbers in HTML).             *
+ * SLIDE BUILDERS                                               *
+ * Each builder returns the slide's innerHTML. Building markup  *
+ * in JS lets every figure render straight from the data        *
+ * constants above — no number is ever duplicated into markup.  *
  * ------------------------------------------------------------ */
+const builders = {};
 
-// (Task 1 stub) initial render
+// animation-timer bookkeeping (cleared by goTo → clearAnims)
+let _timers = [];
+function track(id) { _timers.push(id); return id; }
+function clearAnims() { _timers.forEach(id => { clearTimeout(id); clearInterval(id); }); _timers = []; }
+
+// small markup helpers
+const cellRow = (n, tok) => Array.from({ length: n }, () => `<span class="cell">${tok}</span>`).join('');
+
+/* ---- Task 2: narrative slides (#1,#2,#3,#4,#10,#12) ---- */
+
+// #1 Title
+builders[0] = () => `
+  <h1>How GCG Crafts Its <span class="gold">"Magic Spell"</span></h1>
+  <p class="fragment">An adversarial suffix, built one token swap at a time —
+     <span class="blue">gradient proposes</span>, <span class="green">forward verifies</span>.</p>
+  <p class="fragment mono dim" style="margin-top:1.5em; font-size:.78em; max-width:46ch; word-break:break-all;">${FINAL_SUFFIX}</p>
+  <p class="fragment caption">↑ the gibberish suffix this process actually produced (this project's tiny run)</p>
+`;
+
+// #2 Setup — attack surface
+builders[1] = () => `
+  <h2 class="fragment">The attack surface</h2>
+  <div class="token-strip fragment">
+    <div class="seg fixed"><div class="seg-label">instruction · fixed</div>
+      <div class="cells"><span class="cell">pick</span><span class="cell">up</span><span class="cell">the</span><span class="cell">cup</span></div></div>
+    <div class="flow-arrow">⊕</div>
+    <div class="seg suffix blink"><div class="seg-label">suffix · ${DIMS.L} tokens · ATTACKED</div>
+      <div class="cells">${cellRow(DIMS.L, 'x')}</div></div>
+    <div class="flow-arrow">⊕</div>
+    <div class="seg fixed"><div class="seg-label">template tail · fixed</div>
+      <div class="cells"><span class="cell">[/INST]</span></div></div>
+    <div class="flow-arrow">→</div>
+    <div class="seg fixed"><div class="seg-label">target action · fixed</div>
+      <div class="cells"><span class="cell">wrong</span><span class="cell">▶</span></div></div>
+  </div>
+  <p class="caption fragment">Only the <span class="gold">${DIMS.L} suffix tokens</span> are optimized. The instruction and the target action are held fixed — GCG searches for the suffix that makes the model emit the target.</p>
+`;
+
+// #3 Discrete-token problem
+builders[2] = () => `
+  <h2 class="fragment">Why ordinary gradient descent fails</h2>
+  <p class="fragment">A token is an <span class="gold">integer ID</span>, not a continuous knob.</p>
+  <div class="numline fragment">
+    <div class="axis"></div>
+    <div class="tick" style="left:30%"><span class="lab">3192 · "▁the"</span></div>
+    <div class="tick" style="left:70%"><span class="lab">3193 · "▁then"</span></div>
+    <div class="ghost" style="left:50%"><span class="x">✗</span>3192.5 ?</div>
+  </div>
+  <p class="fragment caption">Gradient descent nudges a parameter by a tiny ε. There is no token <span class="mono">3192.5</span> to step into → the slope <em>over token IDs</em> is <span class="red">undefined</span>.</p>
+`;
+
+// #4 Core idea — two stages (boxes alternate-glow once revealed)
+builders[3] = () => `
+  <h2 class="fragment">The core idea: two stages</h2>
+  <div class="stages">
+    <div class="stage propose fragment" id="stageA"><div class="n">stage ①</div><div class="t blue">Gradient proposes</div>
+      <div class="caption">cheap — one backward pass ranks every candidate swap</div></div>
+    <div class="stage-arrow fragment" id="arrA">→</div>
+    <div class="stage verify fragment" id="stageB"><div class="n">stage ②</div><div class="t green">Forward verifies</div>
+      <div class="caption">honest — real forward passes measure the true loss</div></div>
+  </div>
+  <p class="fragment caption">The gradient over the continuous <em>embedding</em> only <span class="blue">proposes</span> promising tokens; a real forward pass then <span class="green">verifies</span> which swap actually lowers the loss.</p>
+`;
+slideEnterHandlers[3] = () => {
+  const a = document.getElementById('stageA'), b = document.getElementById('stageB'), arr = document.getElementById('arrA');
+  if (!a || !b) return;
+  let propose = true;
+  track(setInterval(() => {
+    a.classList.toggle('lit', propose);
+    b.classList.toggle('lit', !propose);
+    arr.classList.add('lit');
+    propose = !propose;
+  }, 900));
+};
+
+// #10 Why gibberish
+builders[9] = () => `
+  <h2 class="fragment">Why the suffix is gibberish</h2>
+  <p class="fragment">Every swap is chosen by <span class="green">loss</span>, never by meaning.</p>
+  <p class="fragment">On slide 7, <span class="red">"sky"</span> won only because <span class="mono">grad·W</span> was the most negative — it had nothing to do with the sentence.</p>
+  <p class="fragment mono dim" style="font-size:.78em; max-width:46ch; word-break:break-all; margin-top:1em;">${FINAL_SUFFIX}</p>
+  <p class="fragment caption">${DIMS.L} tokens tuned purely to push the loss down → unreadable, but effective.</p>
+`;
+
+// #12 Summary ↔ code
+builders[11] = () => `
+  <h2 class="fragment">The 5 steps ↔ the code</h2>
+  <table class="codemap fragment">
+    <tr><th>step</th><th>what it does</th><th>function <span class="dim">· src/evasion_tax/attack/</span></th></tr>
+    <tr><td class="step">①</td><td>gradient of the loss w.r.t. the suffix one-hots</td><td class="fn">token_gradient()</td></tr>
+    <tr><td class="step">②</td><td>keep the top-${DIMS.topK} candidate tokens per position</td><td class="fn">top_k_candidates()</td></tr>
+    <tr><td class="step">③</td><td>sample B candidate suffixes (one position swapped)</td><td class="fn">sample_candidates()</td></tr>
+    <tr><td class="step">④</td><td>forward pass → CE loss of each candidate</td><td class="fn">loss_of()</td></tr>
+    <tr><td class="step">⑤</td><td>keep the lowest-loss candidate</td><td class="fn">select_best()</td></tr>
+  </table>
+  <p class="fragment caption">gcg.py = CPU reference · gcg_openvla.py = the OpenVLA seam (token_gradient / loss_of)</p>
+`;
+
+/* === Task 3 builders inserted below === */
+
+/* === Task 4 builder inserted below === */
+
+/* === Task 5 builders inserted below === */
+
+/* ------------------------------------------------------------ *
+ * BUILD & SHOW                                                 *
+ * ------------------------------------------------------------ */
+function buildAll() {
+  for (let i = 0; i < slides.length; i++) {
+    if (builders[i]) slides[i].innerHTML = builders[i]();
+  }
+}
+buildAll();
 goTo(0, false);
 </script>
 </body>

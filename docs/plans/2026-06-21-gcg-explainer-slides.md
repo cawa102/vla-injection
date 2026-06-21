@@ -75,7 +75,7 @@ Keep theme tokens in CSS `:root` vars so all later slides inherit them.
 
 ---
 
-- [ ] Task 2: Intro & closing slides (#1, #2, #3, #4, #10, #12)
+- [x] Task 2: Intro & closing slides (#1, #2, #3, #4, #10, #12)
 
 **Files:**
 - Modify: `docs/slides/gcg-explainer.html` (fill the six static/light slides)
