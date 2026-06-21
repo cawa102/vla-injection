@@ -199,7 +199,29 @@ body {
           border: 1px solid var(--line); border-radius: 8px; padding: .4em .95em; cursor: pointer; }
 .replay:hover { border-color: var(--blue); }
 
-/* placeholders filled by later task:  .loss-bar (#9) · .spark (#11) */
+/* --- #9 hero ②: loop + loss bar --- */
+.loop-suffix { display: flex; gap: 3px; flex-wrap: wrap; justify-content: center; font-family: var(--mono); margin-bottom: .7em; }
+.lcell { min-width: 1.5em; padding: .25em .35em; text-align: center; background: var(--bg3);
+         border: 1px solid var(--line); border-radius: 5px; font-size: 12px;
+         transition: background .2s, border-color .2s, color .2s; }
+.lcell.flash { background: var(--red); border-color: var(--red); color: #fff; animation: flashpulse .7s ease; }
+@keyframes flashpulse { 0% { transform: scale(1.3); } 100% { transform: scale(1); } }
+.lossbar-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: .4em; }
+.lossbar { width: 90px; height: 200px; background: var(--bg2); border: 1px solid var(--line);
+           border-radius: 8px; display: flex; align-items: flex-end; overflow: hidden; }
+.lossfill { width: 100%; background: linear-gradient(180deg, var(--blue), var(--green));
+            transition: height .9s cubic-bezier(.2,.7,.2,1); }
+.lossnum { font-family: var(--mono); font-size: 20px; color: var(--green); }
+.loop-ctrls { display: flex; gap: 8px; align-items: center; margin-top: 1em; flex-wrap: wrap; justify-content: center; }
+.loop-ctrls button { font-family: var(--mono); font-size: 13px; background: var(--bg3); color: var(--fg);
+                     border: 1px solid var(--line); border-radius: 7px; padding: .35em .7em; cursor: pointer; }
+.loop-ctrls button:hover { border-color: var(--blue); }
+
+/* --- #11 real-dimension mapping + sparkline --- */
+.dims { display: flex; gap: 26px; flex-wrap: wrap; justify-content: center; font-family: var(--mono); margin: .4em 0 1em; color: var(--muted); }
+.dims b { color: var(--fg); }
+.sparklab { fill: var(--blue); font-family: var(--mono); font-size: 13px; }
+.sparklab.end { fill: var(--green); }
 </style>
 </head>
 <body>
@@ -596,7 +618,116 @@ function playStep() {
 }
 slideEnterHandlers[7] = () => playStep();
 
-/* === Task 5 builders inserted below === */
+/* ---- Task 5: hero ② loop (#9) + real mapping (#11) ---- */
+
+// map a loss value to a bar height (%) from the real min/max — heights are DERIVED, never hard-coded.
+function barHeight(loss) {
+  const lo = Math.min(...LOSS_HISTORY), hi = Math.max(...LOSS_HISTORY);
+  return 12 + ((loss - lo) / (hi - lo)) * 88;     // lo → 12% (still visible), hi → 100%
+}
+
+// 10 swaps (one per loss transition) carrying an all-"x" suffix toward FINAL_SUFFIX's flavour.
+const LOOP_SWAPS = [
+  { pos: 0,  tok: 'xforum' }, { pos: 4,  tok: 'im' },     { pos: 3,  tok: 'mang' },
+  { pos: 10, tok: 'egg' },    { pos: 12, tok: 'robot' },  { pos: 16, tok: 'flower' },
+  { pos: 15, tok: 'He' },     { pos: 14, tok: '明' },      { pos: 6,  tok: 'forum' },
+  { pos: 9,  tok: 'mang' },
+];
+const loop = { i: 0, timer: null };
+
+// #9 Loop
+builders[8] = () => `
+  <h2>Hero ② — the loop drives the loss down</h2>
+  <div class="loop-suffix" id="loopSuffix"></div>
+  <div class="lossbar-wrap">
+    <div class="lossbar"><div class="lossfill" id="lossFill"></div></div>
+    <div class="lossnum" id="lossNum">loss —</div>
+  </div>
+  <div class="loop-ctrls">
+    <button onclick="playLoop()">▷ play</button>
+    <button onclick="loopPause()">⏸ pause</button>
+    <button onclick="loopStep()">⏭ step</button>
+    <button onclick="loopReset()">⟲ reset</button>
+    <span id="loopStat" class="dim"></span>
+  </div>
+  <p class="fragment caption">Each iteration runs hero ① once: one token <span class="red">flashes</span> and swaps, the loss
+    bar drops a notch. This replays the real tiny-run trajectory <span class="green">${LOSS_HISTORY[0].toFixed(2)} → ${LOSS_HISTORY[LOSS_HISTORY.length - 1].toFixed(2)}</span> over ${LOSS_HISTORY.length - 1} steps.</p>
+`;
+
+function loopRender() {
+  const cells = Array.from({ length: DIMS.L }, () => 'x');
+  for (let k = 0; k < loop.i; k++) { const s = LOOP_SWAPS[k]; if (s) cells[s.pos] = s.tok; }
+  const box = document.getElementById('loopSuffix'); if (!box) return;
+  box.innerHTML = cells.map((t, p) => `<span class="lcell" data-p="${p}">${t}</span>`).join('');
+  const loss = LOSS_HISTORY[loop.i];
+  document.getElementById('lossFill').style.height = barHeight(loss) + '%';
+  document.getElementById('lossNum').textContent = 'loss ' + loss.toFixed(2);
+  document.getElementById('loopStat').textContent = `step ${loop.i} / ${LOSS_HISTORY.length - 1}`;
+}
+
+// advance one iteration: apply the next swap, drop the bar, flash the swapped cell.
+function loopStep() {
+  if (loop.i >= LOSS_HISTORY.length - 1) { loopPause(); return; }
+  const s = LOOP_SWAPS[loop.i];
+  loop.i++;
+  loopRender();
+  const cell = document.querySelector(`#loopSuffix .lcell[data-p="${s.pos}"]`);
+  if (cell) { cell.classList.add('flash'); track(setTimeout(() => cell.classList.remove('flash'), 700)); }
+}
+
+function loopPause() { if (loop.timer) { clearInterval(loop.timer); loop.timer = null; } }
+function loopReset() { loopPause(); loop.i = 0; loopRender(); }
+
+// playLoop() — auto-play ~2 s/step (plan-named entry point; also the ▷ play button).
+function playLoop() {
+  loopPause();
+  if (loop.i >= LOSS_HISTORY.length - 1) loop.i = 0;
+  loopRender();
+  loop.timer = track(setInterval(() => {
+    if (loop.i >= LOSS_HISTORY.length - 1) { loopPause(); return; }
+    loopStep();
+  }, 2000));
+}
+slideEnterHandlers[8] = () => { loopReset(); playLoop(); };
+
+// #11 Real mapping — same LOSS_HISTORY drawn as a falling line
+builders[10] = () => {
+  const W = 520, H = 180, pad = 26;
+  const lo = Math.min(...LOSS_HISTORY), hi = Math.max(...LOSS_HISTORY);
+  const pts = LOSS_HISTORY.map((v, i) => {
+    const x = pad + i * (W - 2 * pad) / (LOSS_HISTORY.length - 1);
+    const y = pad + (1 - (v - lo) / (hi - lo)) * (H - 2 * pad);   // high loss → top, low → bottom
+    return [x, y];
+  });
+  const poly = pts.map(p => p.join(',')).join(' ');
+  const dots = pts.map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="3" fill="${i === pts.length - 1 ? 'var(--green)' : 'var(--blue)'}"/>`).join('');
+  const first = pts[0], last = pts[pts.length - 1];
+  return `
+    <h2>Mapping to the real thing</h2>
+    <div class="dims fragment">
+      <span>V = <b>${DIMS.V.toLocaleString()}</b> tokens</span>
+      <span>d = <b>${DIMS.d.toLocaleString()}</b> dims</span>
+      <span>L = <b>${DIMS.L}</b> suffix tokens</span>
+    </div>
+    <svg class="spark fragment" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
+      <polyline points="${poly}" fill="none" stroke="var(--green)" stroke-width="2.5"/>
+      ${dots}
+      <text x="${first[0]}" y="${first[1] - 8}" class="sparklab">${LOSS_HISTORY[0].toFixed(2)}</text>
+      <text x="${last[0] - 8}" y="${last[1] + 18}" class="sparklab end">${LOSS_HISTORY[LOSS_HISTORY.length - 1].toFixed(2)}</text>
+    </svg>
+    <p class="fragment caption">The same ${LOSS_HISTORY.length}-point trajectory as slide 9, shown as a line. From this project's tiny run
+      (<span class="mono">results/_smoke/…gcg-tiny-smoke</span>): loss ${LOSS_HISTORY[0].toFixed(2)} → ${LOSS_HISTORY[LOSS_HISTORY.length - 1].toFixed(2)} over ${LOSS_HISTORY.length - 1} steps — illustrative teaching values, not a new result.</p>
+  `;
+};
+slideEnterHandlers[10] = () => {
+  const pl = document.querySelector('.spark polyline'); if (!pl) return;
+  const len = pl.getTotalLength();
+  pl.style.transition = 'none';
+  pl.style.strokeDasharray = len;
+  pl.style.strokeDashoffset = len;
+  pl.getBoundingClientRect();   // force reflow
+  track(setTimeout(() => { pl.style.transition = 'stroke-dashoffset 1.6s ease'; pl.style.strokeDashoffset = 0; }, 100));
+};
 
 /* ------------------------------------------------------------ *
  * BUILD & SHOW                                                 *

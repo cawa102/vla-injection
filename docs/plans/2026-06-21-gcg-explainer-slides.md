@@ -157,7 +157,7 @@ one cell only; replay works.
 
 ---
 
-- [ ] Task 5: Hero ② — loop iteration (#9) + real mapping (#11)
+- [x] Task 5: Hero ② — loop iteration (#9) + real mapping (#11)
 
 **Files:**
 - Modify: `docs/slides/gcg-explainer.html`
