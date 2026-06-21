@@ -137,7 +137,44 @@ body {
 .codemap .step { font-family: var(--mono); white-space: nowrap; }
 .codemap .fn { font-family: var(--mono); color: var(--green); }
 
-/* placeholders filled by later tasks:  .matrix (#5) · .pipeline (#8) · .loss-bar (#9) · .spark (#11) */
+/* --- #5 one-hot × W = row pluck --- */
+.rowpluck { display: flex; align-items: center; gap: 18px; font-family: var(--mono); margin: .4em 0; flex-wrap: wrap; justify-content: center; }
+.onehot, .matrix { display: flex; flex-direction: column; gap: 4px; }
+.matrix .mrow { display: flex; gap: 4px; align-items: center; transition: transform .5s ease, box-shadow .5s ease, opacity .5s ease; }
+.mlabel { width: 3em; text-align: right; color: var(--muted); font-size: 13px; }
+.mcell, .ohcell { min-width: 3.4em; padding: .3em .4em; text-align: center; background: var(--bg3);
+                  border: 1px solid var(--line); border-radius: 6px; }
+.ohcell.one { color: var(--gold); border-color: var(--gold); }
+.matrix .mrow.pluck { transform: translateX(10px) scale(1.06); box-shadow: 0 0 18px -2px var(--gold); z-index: 2; }
+.matrix .mrow.pluck .mcell { border-color: var(--gold); color: var(--gold); }
+.matrix .mrow.dim { opacity: .3; }
+.eq { font-size: 1.4em; color: var(--muted); }
+.evec { display: flex; gap: 4px; opacity: 0; transition: opacity .5s ease; }
+.evec.show { opacity: 1; }
+.evec .mcell { border-color: var(--gold); color: var(--gold); }
+
+/* --- #6 backprop chain --- */
+.chain { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center;
+         font-family: var(--mono); margin: .6em 0; }
+.chain .node { padding: .5em .7em; border: 1px solid var(--line); border-radius: 8px; background: var(--bg2);
+               font-size: 14px; transition: box-shadow .35s, border-color .35s, color .35s; }
+.chain .node.grad { border-color: var(--red); color: var(--red); box-shadow: 0 0 18px -3px var(--red); }
+.chain .node.nodiff { border-style: dashed; color: var(--muted); }
+.chain .ar { color: var(--muted); }
+
+/* --- #7 swap-scores --- */
+.scores { display: flex; flex-direction: column; gap: 6px; font-family: var(--mono); margin-top: .4em; }
+.score-head { color: var(--muted); font-size: 14px; margin: .3em 0; }
+.score-row { display: flex; align-items: center; gap: 14px; opacity: 0; transform: translateX(-12px);
+             transition: opacity .35s, transform .35s; padding: .22em .6em; border-radius: 7px; }
+.score-row.show { opacity: 1; transform: none; }
+.score-row .tok { width: 4em; text-align: right; }
+.score-row .val { width: 5em; text-align: right; }
+.score-row.win { background: rgba(255,84,112,.14); }
+.score-row.win .val, .score-row.win .tok { color: var(--red); font-weight: 700; }
+.score-row .tag { color: var(--red); font-size: 13px; }
+
+/* placeholders filled by later tasks:  .pipeline (#8) · .loss-bar (#9) · .spark (#11) */
 </style>
 </head>
 <body>
@@ -371,7 +408,110 @@ builders[11] = () => `
   <p class="fragment caption">gcg.py = CPU reference · gcg_openvla.py = the OpenVLA seam (token_gradient / loss_of)</p>
 `;
 
-/* === Task 3 builders inserted below === */
+/* ---- Task 3: math slides (#5,#6,#7) ---- */
+
+// The deck's one real computation: score[v] = grad_e · W[v]  (= grad_e @ Wᵀ).
+function swapScores(gradE, W) {
+  return W.map(row => row.reduce((s, w, j) => s + gradE[j] * w, 0));
+}
+// display formatter: 3-dp, trailing zeros trimmed (0.260 → "0.26", -0.005 → "-0.005")
+function fmtScore(v) { const r = +v.toFixed(3); return r === 0 ? '0' : r.toString(); }
+
+// #5 one-hot × W = pluck a row
+builders[4] = () => {
+  const oh = TOY_VOCAB.map((_, i) =>
+    `<div class="ohcell ${i === TOY_CUR_TOKEN ? 'one' : ''}">${i === TOY_CUR_TOKEN ? 1 : 0}</div>`).join('');
+  const mat = TOY_W.map((row, i) => `
+    <div class="mrow" data-row="${i}">
+      <span class="mlabel">${TOY_VOCAB[i]}</span>
+      ${row.map(w => `<span class="mcell">${w.toFixed(2)}</span>`).join('')}
+    </div>`).join('');
+  const evec = TOY_W[TOY_CUR_TOKEN].map(w => `<span class="mcell">${w.toFixed(2)}</span>`).join('');
+  return `
+    <h2>What <span class="mono">one-hot × W</span> really is</h2>
+    <div class="rowpluck">
+      <div class="onehot">${oh}</div>
+      <span class="eq">×</span>
+      <div class="matrix" id="toyMatrix">${mat}</div>
+      <span class="eq">=</span>
+      <div class="evec" id="evec">${evec}</div>
+    </div>
+    <p class="fragment caption">A one-hot times the embedding matrix just <span class="gold">plucks one row</span>:
+      <span class="mono">e<sub>i</sub> = W[${TOY_CUR_TOKEN}]</span> — the embedding of the current token
+      "<span class="gold">${TOY_VOCAB[TOY_CUR_TOKEN]}</span>". That row is the continuous thing we can differentiate.</p>
+  `;
+};
+slideEnterHandlers[4] = () => {
+  const mat = document.getElementById('toyMatrix'); const evec = document.getElementById('evec');
+  if (!mat) return;
+  const rows = mat.querySelectorAll('.mrow');
+  rows.forEach(r => r.classList.remove('pluck', 'dim'));
+  evec.classList.remove('show');
+  track(setTimeout(() => rows.forEach(r => {
+    if (r.dataset.row === String(TOY_CUR_TOKEN)) r.classList.add('pluck'); else r.classList.add('dim');
+  }), 600));
+  track(setTimeout(() => evec.classList.add('show'), 1200));
+};
+
+// #6 backprop chain — gradient light sweeps right→left, stops at the integer token
+builders[5] = () => {
+  const nodes = [
+    { t: 'token (int)', diff: false },
+    { t: 'one-hot',     diff: true },
+    { t: '@ W',         diff: true },
+    { t: 'embedding e', diff: true },
+    { t: 'Transformer', diff: true },
+    { t: 'loss',        diff: true },
+  ];
+  const chain = nodes.map((n, i) => `<span class="node ${n.diff ? '' : 'nodiff'}" data-i="${i}">${n.t}</span>`)
+    .join('<span class="ar">→</span>');
+  return `
+    <h2><span class="mono">d(loss)/d(suffix)</span>: differentiate the embedding</h2>
+    <div class="chain" id="chain">${chain}</div>
+    <p class="fragment caption">Back-propagation sends the gradient <span class="red">right → left</span>. It reaches the continuous
+      <span class="mono">embedding e</span> and the <span class="mono">one-hot</span>, but stops at the
+      <span class="dim">integer token</span> — which is <span class="dim">non-differentiable</span> (slide 3).
+      So the gradient we actually use is <span class="mono">d(loss)/d(e_i)</span>.</p>
+  `;
+};
+slideEnterHandlers[5] = () => {
+  const chain = document.getElementById('chain'); if (!chain) return;
+  const nodes = Array.from(chain.querySelectorAll('.node'));
+  nodes.forEach(n => n.classList.remove('grad'));
+  // sweep a single glow right→left across the differentiable nodes (skip the int-token node)
+  const order = nodes.map((_, i) => i).reverse().filter(i => !nodes[i].classList.contains('nodiff'));
+  order.forEach((idx, k) => track(setTimeout(() => {
+    nodes.forEach(n => n.classList.remove('grad'));
+    nodes[idx].classList.add('grad');
+  }, 500 + k * 450)));
+};
+
+// #7 toy swap-scores — JS-computed, argmin flares red
+builders[6] = () => {
+  const scores = swapScores(TOY_GRAD_E, TOY_W);
+  const argmin = scores.indexOf(Math.min(...scores));
+  const rows = TOY_VOCAB.map((tok, v) => `
+    <div class="score-row ${v === argmin ? 'win' : ''}" data-v="${v}">
+      <span class="tok">${tok}</span>
+      <span class="dim">grad_e·W[${v}]</span>
+      <span class="val">${fmtScore(scores[v])}</span>
+      ${v === argmin ? '<span class="tag">← top swap candidate</span>' : ''}
+    </div>`).join('');
+  return `
+    <h2><span class="mono">grad_e @ Wᵀ</span> → a score for every token</h2>
+    <p>From slide 6: <span class="mono">grad_e = d(loss)/d(e<sub>i</sub>) = [${TOY_GRAD_E.join(', ')}]</span></p>
+    <div class="score-head">score[v] = Σ<sub>j</sub> grad_e[j] · W[v][j]</div>
+    <div class="scores" id="scores">${rows}</div>
+    <p class="fragment caption">The <span class="red">most-negative</span> score lowers the loss fastest → it is the top token to swap in.
+      Here that's "<span class="red">${TOY_VOCAB[argmin]}</span>" (${fmtScore(scores[argmin])}).</p>
+  `;
+};
+slideEnterHandlers[6] = () => {
+  const box = document.getElementById('scores'); if (!box) return;
+  const rows = Array.from(box.querySelectorAll('.score-row'));
+  rows.forEach(r => r.classList.remove('show'));
+  rows.forEach((r, k) => track(setTimeout(() => r.classList.add('show'), 300 + k * 420)));
+};
 
 /* === Task 4 builder inserted below === */
 

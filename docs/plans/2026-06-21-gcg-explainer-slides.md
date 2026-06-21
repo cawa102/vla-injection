@@ -103,7 +103,7 @@ alternate.
 
 ---
 
-- [ ] Task 3: Math slides (#5 onehot×W, #6 backprop chain, #7 toy swap-scores)
+- [x] Task 3: Math slides (#5 onehot×W, #6 backprop chain, #7 toy swap-scores)
 
 **Files:**
 - Modify: `docs/slides/gcg-explainer.html`
