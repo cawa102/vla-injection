@@ -133,7 +133,7 @@ winner.
 
 ---
 
-- [ ] Task 4: Hero ① — one GCG step (#8)
+- [x] Task 4: Hero ① — one GCG step (#8)
 
 **Files:**
 - Modify: `docs/slides/gcg-explainer.html`
