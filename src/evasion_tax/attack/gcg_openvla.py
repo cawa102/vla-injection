@@ -418,13 +418,16 @@ class OpenVlaGcgTarget:
     def loss_of(self, candidate_suffixes: np.ndarray) -> np.ndarray:
         """``[B, L]`` candidates → ``[B]`` CE losses via ONE true-batch forward (no grad).
 
-        Candidates are fixed-length (``prefix ⊕ suffix(L) ⊕ tail ⊕ target``, identical length
-        and label mask), so they stack to ``[B, seq]`` with no padding and run through a single
+        Candidates are fixed-length (``prefix ⊕ suffix(L) ⊕ tail ⊕ target``, identical length),
+        so they stack to ``[B, seq]`` with no padding and run through a single
         ``torch.no_grad()`` forward. Per-row CE is read from ``out.logits`` by
         :meth:`_target_span_ce_torch` — **not** ``out.loss``, which mean-reduces across the
-        batch. The batch-1 loop :meth:`_loss_single` is retained as the reference the
-        :meth:`batched_matches_single` gate checks (D6-3/DB-4). Resets/reads CUDA peak so Task 4
-        records peak VRAM per call.
+        batch. **``labels`` is intentionally NOT passed:** the model would then compute its own
+        (unused) full-vocab loss, materialising an fp32 ``shift_logits`` copy of ``[B, seq, V]``
+        that OOMs at large ``B`` on a 24 GB card; ``out.logits`` is identical with or without
+        ``labels``, so omitting it is a pure memory saving (the per-candidate :meth:`_loss_single`
+        reference still uses ``out.loss`` at ``B=1`` and the :meth:`batched_matches_single`
+        gate (D6-3/DB-4) confirms equality). Resets/reads CUDA peak so Task 4 records peak VRAM.
         """
         import torch  # type: ignore[import-not-found]
 
@@ -434,10 +437,8 @@ class OpenVlaGcgTarget:
                 f"candidate_suffixes must be [B, {self._suffix_len}], got {cands.shape}"
             )
         full = np.stack([self._full_ids(row) for row in cands])  # [B, seq]
-        labels_np = np.stack([self._labels(row) for row in full])  # [B, seq]
         input_ids = torch.tensor(full, device=self._device, dtype=torch.long)
         attn = torch.ones_like(input_ids)
-        labels = torch.tensor(labels_np, device=self._device, dtype=torch.long)
         # One observation broadcast across the batch; forward only reads pixel_values (no
         # in-place write), so an expand+contiguous view is safe and non-aliasing.
         pixel_values = self._pixel_values.expand(
@@ -450,7 +451,6 @@ class OpenVlaGcgTarget:
                 input_ids=input_ids,
                 attention_mask=attn,
                 pixel_values=pixel_values,
-                labels=labels,
             )
         losses = self._target_span_ce_torch(out.logits).detach().float().cpu().numpy().astype(float)
         self._last_peak_bytes = int(torch.cuda.max_memory_allocated(self._device))
