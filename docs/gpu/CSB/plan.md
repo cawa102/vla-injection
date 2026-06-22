@@ -169,6 +169,61 @@ input, not on ~14 GB of weight grads. The gradient is read via a forward hook th
 `inputs_embeds`), so `delta.grad == d(loss)/d(inputs_embeds)`. Logs write-once to `results/_smoke/`
 (non-registered bring-up smoke). If the gradient is all-zero or non-finite, fix it **before** the step-6 attack.
 
+### Step 6 how-to (on the box, after step 5.5 — the registered D8 budget-faithful s/step micro-bench)
+
+The **tiny GCG run** prerequisite is already green (`results/_smoke/2026-06-22T14-32-35Z-gcg-tiny-smoke`,
+DB-4 equivalence gate 8/8). What remains is the **registered** D8 micro-bench: `scripts/microbench_gcg.py`
+sweeps the max candidate-batch B at 24 GB (→ the HW-adapted `batch_size`, DC-2), times the direct `run_gcg`
+`s/target`, and — per the budget-faithful plan (`docs/plans/2026-06-22-step6-d8-robogcg-faithful-config.md`) —
+times one `token_gradient` (`t_grad`) + one `loss_of` at `B=eval_batch` (`t_fwd`) to compute the **analytic**
+`s/step(sw=512) = t_grad + ⌈512/eval_batch⌉·t_fwd` and `s/target(worst) = s/step·500` (early_stop OFF). It does
+**not** run the full 500-step sw=512 attack (eval mini-batching is deferred to M1 / Task D).
+
+**Pre-flight (D6-10 + L3):**
+- **Exclusive/quiet window.** GUI lives on GPU 1 → run on **`cuda:0`**; `nvidia-smi` shows cuda:0 idle except
+  this job. `--exclusive-gpu` is **mandatory** — the harness refuses to log a number from a shared process *or*
+  a non-reproducible timing (`assert_registered_run_valid`).
+- **Env already aligned** by steps 3–5.5 (`.venv` + the OpenVLA inference deps + the flash-attn 2.5.5 wheel, L5).
+  `export HF_HOME=<roomy-disk>/hf` (~14 GB base model). **No `MUJOCO_GL`** — the micro-bench uses a dummy-image
+  target, no LIBERO env.
+
+```bash
+export HF_HOME=<roomy-disk>/hf            # ~14 GB base-model cache (as in steps 3 / 5.5)
+cd ~/vla-injection
+uv run python scripts/microbench_gcg.py \
+  --config configs/example_m2.yaml \
+  --device cuda:0 --attn-impl flash_attention_2 \
+  --exclusive-gpu \
+  --seed 42 \
+  --search-width 32 --n-steps 5 --n-targets 3 --batch-cap 64 \
+  --faithful-search-width 512 --faithful-num-steps 500 \
+  --loop-baseline-s 17.475 --batch-calib-s 11.394 --calib-label n5/W32/1tgt
+```
+
+- `--eval-batch` is **omitted on purpose** → `eval_batch` defaults to the **measured max-B** (the HW-adapted
+  `batch_size`, DC-2; not RoboGCG's A100/H100 64). `--batch-cap 64` keeps the sweep tight (DC-2 expects max-B in
+  ≈32–48; B=64 ~28 GiB OOMs on 24 GB) — raise it only if B=64 unexpectedly fits.
+- `--search-width 32` is the **direct `run_gcg` cross-check** width (a known-fitting B≈max-B); `--n-steps 5` keeps
+  it cheap. The DB-2 ablation flags carry the standing 2026-06-22 calibration (loop 17.475 / true-batch 11.394 →
+  `speedup_k≈1.53`) **passed through** for the record — not re-measured this run.
+- If `--attn-impl flash_attention_2` errors, retry `--attn-impl sdpa` (the step-5.5 cross-check path). If `uv run`
+  prunes the lock-external GPU stack, fall back to `uv run --no-sync` (the step-4 workaround).
+
+*Verify gate:* prints `s/target median …s (n=3, reproducible=True)`, `peak VRAM … GiB`, `max candidate-batch
+B=<max-B>`, **and** `budget-faithful (sw=512/ns=500/eval_batch=<max-B>): t_grad=…s t_fwd=…s => s/step=…s,
+s/target(worst)=…s [analytic ESTIMATE]`; logs to **write-once `results/…-gcg-microbench/`** with the §8 repro
+header. **DC-4 cross-check:** the direct per-step cost (`run_gcg` `s/target` ÷ `steps_run`) at `sw=32` should
+≈ `t_grad + t_fwd` when the measured max-B (=`eval_batch`) is also ≈32; if max-B differs, optionally re-run with
+`--search-width <max-B>` for an exact one-chunk cross-check. Record the **card** + the **max-B** (=`batch_size`)
++ the **flash-attn version** (invariant #8; auto-captured in `run.json`).
+
+> The budget-faithful `s/target(worst)` then feeds **Task B** `branch_select` (provisional, hard-F default), and
+> **Task C** ticks step 6 + lands the DC-1…DC-6 divergence contract + the bf16/selection-regret/`speedup_k`
+> findings into `execution-playbook.md` §10 — **after** this run produces the registered number. The attack is
+> **RoboGCG-budget-faithful only** (sw=512/ns=500/topk=256/n_replace=1/early_stop); the token filters
+> (`allow_non_ascii`/`filter_ids`) + the suffix/mean-CE seam divergences remain open (DC-6) → do **not** call it a
+> "RoboGCG-faithful attack" yet.
+
 ## After bring-up — the registered matrix runs here
 
 Once steps 1–6 pass, M1–M4 run on this box (M1 GO/NO-GO → M2 floor → M3 H6-A oracle frontier → M4 H6-D tax if
