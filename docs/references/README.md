@@ -42,6 +42,27 @@ action), not dangerous-task success. Persistence up to ~28× nominal; environmen
 Table 2: SIMPLER real-image transfer overall ASR = 38.0%, HYDRA = 61.2%). Cross-*architecture* transfer
 (TraceVLA/CogACT/OpenPi0): **no better than random** instructions.
 
+**Attack hyperparameters (code-verified 2026-06-22, repo `eliotjones1/robogcg` read via GitHub API).** The
+single-step attack wraps GraySwanAI's **`nanoGCG`** library; all GCG knobs come from the
+`SingleStepConfig` defaults in `experiments/single_step/config.py` (the per-task `configs/<suite>/<suite>_0.json`
+files override only `model_name` / `unnorm_key` / seed-frame, **not** the GCG knobs).
+
+| Param | Default | Note |
+|---|---|---|
+| `num_steps` | **500** | *max* GCG iterations; `early_stop=True` ⇒ stops on target reach (matches the §4 "30–110 steps to success" above — 500 is the cap, not the typical run) |
+| `optim_str_init` | `"x"×20` → **20-token suffix** | suffix length |
+| `search_width` | **512** | candidates per step |
+| `batch_size` | 64 | forward-pass batch |
+| `topk` | **256** | top-k gradient tokens |
+| `n_replace` | 1 | tokens replaced per step (classic GCG) |
+| `allow_non_ascii` / `filter_ids` | False / True | suffix constrained to ASCII + re-tokenisation-safe |
+
+Variant configs (`*_x1`…`*_x20`, `*_solo`) are separate sweeps: e.g. `*_x10` sets `num_steps=100`, a 10-token
+suffix, `as_suffix=true`, `max_mag_actions_only=true`; `_solo` drops the benign `instruction` (suffix-only) vs
+non-solo which appends the suffix to a benign instruction. **EET microbench parity:** `suffix_len=20` and
+`top_k=256` match; our `n_steps`/`search_width` are deliberately tiny (timing probe for D8 extrapolation), not
+RoboGCG's 500×512 production budget.
+
 **Defenses (§5 "VLA defenses" + Table 3).** Borrowed LLM-jailbreak defenses, eval over 120 random one-hot
 target actions. ASR (%):
 
