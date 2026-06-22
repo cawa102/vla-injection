@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import dataclasses
+import math
 import sys
 from pathlib import Path
 
@@ -29,6 +30,36 @@ _EXIT_REQUIRES_GPU = 2
 # Spread above which repeated `s/target` timings are not reproducible enough to be a
 # branch-defining number (D6-10: the registered number must be reproducible).
 _MAX_REL_IQR = 0.5
+
+
+def faithful_s_step(
+    t_grad: float, t_fwd: float, *, search_width: int, eval_batch: int
+) -> float:
+    """RoboGCG budget-faithful seconds-per-step at a given ``search_width`` (DC-4).
+
+    One GCG step costs one ``token_gradient`` (``t_grad``) plus scoring all
+    ``search_width`` candidates through forwards of at most ``eval_batch`` each, i.e.
+    ``ceil(search_width / eval_batch)`` forwards of ``t_fwd``. Analytic — no full
+    attack is run; ``t_grad``/``t_fwd`` are timed once at ``B=eval_batch`` (Task A).
+
+    Args:
+        t_grad: Seconds for one ``token_gradient``.
+        t_fwd: Seconds for one ``loss_of`` forward at ``B=eval_batch``.
+        search_width: RoboGCG candidates scored per step (512 for the faithful budget).
+        eval_batch: Forward mini-batch size (the measured max-B on the card).
+
+    Returns:
+        ``t_grad + ceil(search_width / eval_batch) * t_fwd``.
+
+    Raises:
+        ValueError: If ``eval_batch < 1`` or ``search_width < 1`` (no silent
+            divide-by-zero / no zero-candidate budget).
+    """
+    if eval_batch < 1:
+        raise ValueError(f"eval_batch must be >= 1, got {eval_batch}")
+    if search_width < 1:
+        raise ValueError(f"search_width must be >= 1, got {search_width}")
+    return t_grad + math.ceil(search_width / eval_batch) * t_fwd
 
 
 def summarise_timings(
@@ -97,6 +128,7 @@ def build_microbench_record(
     exclusive_gpu: bool,
     s_per_target_loop: dict | None = None,
     speedup_k: float | None = None,
+    faithful: dict | None = None,
 ) -> dict:
     """Assemble the registered D8 micro-bench record (the measurement half of §8).
 
@@ -123,6 +155,9 @@ def build_microbench_record(
         s_per_target_loop: :func:`summarise_timings` for the loop baseline/ablation
             (DB-2); ``None`` when not measured this run.
         speedup_k: Measured ``loop / true-batch`` speedup (DB-2); ``None`` if not computed.
+        faithful: The RoboGCG budget-faithful s/step block (DC-4) —
+            ``{search_width, num_steps, eval_batch, t_grad_s, t_fwd_s, s_per_step,
+            s_per_target_worstcase}``; ``None`` when not measured this run.
 
     Returns:
         The measurement record dict for write-once ``results/``.
@@ -136,6 +171,7 @@ def build_microbench_record(
         "s_per_target": timing_summary,
         "s_per_target_loop": s_per_target_loop,
         "speedup_k": speedup_k,
+        "faithful": faithful,
         "peak_vram_gib": peak_vram_gib,
         "max_candidate_batch": max_candidate_batch,
         "max_batch_note": _MAX_BATCH_NOTE,
@@ -288,6 +324,25 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--batch-cap", type=int, default=512, help="largest candidate-batch swept")
     parser.add_argument("--exclusive-gpu", action="store_true", help="assert exclusive GPU (D6-10)")
     parser.add_argument(
+        "--faithful-search-width",
+        type=int,
+        default=512,
+        help="RoboGCG budget-faithful candidates/step for the analytic s/step (DC-1)",
+    )
+    parser.add_argument(
+        "--faithful-num-steps",
+        type=int,
+        default=500,
+        help="RoboGCG budget-faithful steps for the worst-case s/target (DC-4)",
+    )
+    parser.add_argument(
+        "--eval-batch",
+        type=int,
+        default=None,
+        help="forward mini-batch B for t_fwd / the s/step chunking; defaults to the "
+        "measured max-B (the HW-adapted batch_size, DC-2)",
+    )
+    parser.add_argument(
         "--loop-baseline-s",
         type=float,
         default=None,
@@ -373,14 +428,31 @@ def main(argv: list[str] | None = None) -> int:
     # ---- time s/target on a few targets in THIS (clean) process. Load the model NOW
     # (after the sweep) so only one ~14 GiB copy is ever resident on the card.
     model, processor = _load_frozen_openvla(torch, args.model, device, args.attn_impl)
+    # eval_batch (= the forward mini-batch for t_fwd and the s/step chunking) defaults to
+    # the measured max-B — the HW-adapted batch_size (DC-2), NOT RoboGCG's A100/H100 64.
+    eval_batch = args.eval_batch if args.eval_batch is not None else max_batch
     per_target_seconds: list[float] = []
     steps_to_success: list[int] = []
+    t_grads: list[float] = []  # one token_gradient per target (DC-4)
+    t_fwds: list[float] = []  # one loss_of at B=eval_batch per target (DC-4)
     peak_vram_gib = 0.0
     for i in range(args.n_targets):
         target = _build_target(
             np, model, processor, device,
             instruction=_DEFAULT_INSTRUCTION, suffix_len=cfg.suffix_len, seed=args.seed + i,
         )
+        # Budget-faithful s/step primitives: token_gradient/loss_of return numpy, which
+        # forces a device sync, so perf_counter brackets the real GPU time. Timed BEFORE
+        # the peak reset so peak_vram_gib stays the run_gcg peak (unchanged semantics).
+        if eval_batch >= 1:
+            init = target.init_suffix_ids()
+            tg0 = time.perf_counter()
+            target.token_gradient(init)
+            t_grads.append(time.perf_counter() - tg0)
+            candidates = np.tile(init, (eval_batch, 1))
+            tf0 = time.perf_counter()
+            target.loss_of(candidates)
+            t_fwds.append(time.perf_counter() - tf0)
         torch.cuda.reset_peak_memory_stats(device)
         t0 = time.perf_counter()
         result = run_gcg(target, cfg)
@@ -391,6 +463,25 @@ def main(argv: list[str] | None = None) -> int:
         )
 
     summary = summarise_timings(per_target_seconds)
+    # Budget-faithful analytic s/step (DC-4): median t_grad/t_fwd → s/step at sw=512,
+    # then worst-case s/target = s/step · num_steps (early_stop OFF; an ESTIMATE).
+    faithful = None
+    if t_grads and t_fwds:
+        t_grad_med = float(np.median(t_grads))
+        t_fwd_med = float(np.median(t_fwds))
+        s_step = faithful_s_step(
+            t_grad_med, t_fwd_med,
+            search_width=args.faithful_search_width, eval_batch=eval_batch,
+        )
+        faithful = {
+            "search_width": args.faithful_search_width,
+            "num_steps": args.faithful_num_steps,
+            "eval_batch": eval_batch,
+            "t_grad_s": t_grad_med,
+            "t_fwd_s": t_fwd_med,
+            "s_per_step": s_step,
+            "s_per_target_worstcase": s_step * args.faithful_num_steps,
+        }
     # DB-2 ablation: record the loop baseline + speedup_k (loop/true-batch) from the same-config
     # calibration (the true-batch path here is the official sizing number).
     s_per_target_loop = None
@@ -414,6 +505,7 @@ def main(argv: list[str] | None = None) -> int:
         exclusive_gpu=bool(args.exclusive_gpu),
         s_per_target_loop=s_per_target_loop,
         speedup_k=speedup_k,
+        faithful=faithful,
     )
     assert_registered_run_valid(record)  # D6-10: refuse a contaminated/noisy number.
 
@@ -424,6 +516,12 @@ def main(argv: list[str] | None = None) -> int:
     print(f"[{STAGE}] s/target median {summary['median_s']:.2f}s (n={summary['n']}, "
           f"reproducible={summary['reproducible']}), peak VRAM {peak_vram_gib:.2f} GiB, "
           f"max candidate-batch B={max_batch}")
+    if faithful is not None:
+        print(f"[{STAGE}] budget-faithful (sw={faithful['search_width']}/ns="
+              f"{faithful['num_steps']}/eval_batch={faithful['eval_batch']}): "
+              f"t_grad={faithful['t_grad_s']:.3f}s t_fwd={faithful['t_fwd_s']:.3f}s "
+              f"=> s/step={faithful['s_per_step']:.2f}s, s/target(worst)="
+              f"{faithful['s_per_target_worstcase']:.0f}s [analytic ESTIMATE]")
     print(f"[{STAGE}] logged -> {handle.dir}")
     return 0
 

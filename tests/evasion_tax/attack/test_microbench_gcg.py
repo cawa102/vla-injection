@@ -62,8 +62,44 @@ def test_summarise_timings_rejects_empty():
 
 
 # --------------------------------------------------------------------------- #
-# max_batch_that_fits: doubling/bisection sweep, no probe reuse (D6-10)         #
+# faithful_s_step: RoboGCG budget-faithful per-step cost (DC-4)                 #
 # --------------------------------------------------------------------------- #
+
+
+def test_faithful_s_step_chunks_search_width_over_eval_batch():
+    # sw=512 scored in eval_batch=32 chunks -> ceil(512/32)=16 forwards + one gradient.
+    mb = _load_microbench()
+    s_step = mb.faithful_s_step(2.0, 0.5, search_width=512, eval_batch=32)
+    assert s_step == 2.0 + 16 * 0.5  # t_grad + 16 * t_fwd
+
+
+def test_faithful_s_step_rejects_zero_eval_batch():
+    # A zero forward mini-batch is meaningless (and would divide by zero); fail loud.
+    mb = _load_microbench()
+    with pytest.raises(ValueError):
+        mb.faithful_s_step(2.0, 0.5, search_width=512, eval_batch=0)
+
+
+def test_faithful_s_step_rejects_zero_search_width():
+    # A faithful budget never scores zero candidates per step; fail loud, no silent 0.
+    mb = _load_microbench()
+    with pytest.raises(ValueError):
+        mb.faithful_s_step(2.0, 0.5, search_width=0, eval_batch=32)
+
+
+def test_faithful_s_step_at_search_width_equals_eval_batch_is_one_direct_step():
+    # DC-4 cross-check: when sw == eval_batch the analytic cost is a single forward,
+    # i.e. exactly the directly-timed run_gcg one-step cost t_grad + t_fwd.
+    mb = _load_microbench()
+    s_step = mb.faithful_s_step(2.0, 0.5, search_width=32, eval_batch=32)
+    assert s_step == 2.0 + 0.5  # 1 chunk
+
+
+def test_faithful_s_step_rounds_partial_final_chunk_up():
+    # ceil(512/48) = 11 forwards: the trailing partial chunk still costs a full t_fwd.
+    mb = _load_microbench()
+    s_step = mb.faithful_s_step(2.0, 0.5, search_width=512, eval_batch=48)
+    assert s_step == 2.0 + 11 * 0.5
 
 
 def _fake_probe(mb, boundary, calls):
@@ -164,6 +200,24 @@ def test_build_microbench_record_carries_loop_baseline_and_speedup():
     assert rec["s_per_target_loop"] == loop_summary  # loop ablation carried alongside
     assert rec["speedup_k"] == 3.2
     assert rec["s_per_target"]["median_s"] == 120.0  # official sizing stays the true-batch number
+
+
+def test_build_microbench_record_carries_faithful_block():
+    # DC-4: the budget-faithful s/step block (sw=512/ns=500 at the measured eval_batch)
+    # rides alongside the direct numbers; default None when not measured this run.
+    mb = _load_microbench()
+    faithful = {
+        "search_width": 512,
+        "num_steps": 500,
+        "eval_batch": 32,
+        "t_grad_s": 2.0,
+        "t_fwd_s": 0.5,
+        "s_per_step": 10.0,
+        "s_per_target_worstcase": 5000.0,
+    }
+    rec = _record(mb, faithful=faithful)
+    assert rec["faithful"] == faithful
+    assert _record(mb)["faithful"] is None  # absent when not measured
 
 
 def test_build_microbench_record_frames_max_batch_as_hw_not_branch_critical():
