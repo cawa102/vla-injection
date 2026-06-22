@@ -12,8 +12,10 @@ of GCG steps on the step-5.5 loss/gradient seam. It proves the search loop is
    and the suffix span decodes to the intended adversarial text under the real
    processor;
 2. the harness runs ``run_gcg`` to completion;
-3. ``loss_of`` on a batch equals per-candidate single evaluation (batched-loss
-   equivalence);
+3. the **strengthened equivalence gate** (DB-4): batched ``loss_of`` equals
+   per-candidate single evaluation in value **and** ``argmin`` (rank order) across
+   multiple batch sizes and suffix lengths on mixed-quality candidates, plus a
+   same-input determinism re-run;
 4. peak VRAM < 24 GiB (fits one A5000);
 5. the optimised suffix is **quarantined** to ``artifacts/untrusted/`` (D6-6) and
    nothing untrusted is committed.
@@ -38,11 +40,15 @@ from __future__ import annotations
 import argparse
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import _bootstrap  # noqa: F401  (import side effect: puts src/ on sys.path)
 import numpy as np  # noqa: E402
 
 from evasion_tax.config import cuda_available, gpu_required_message  # noqa: E402
+
+if TYPE_CHECKING:  # type-only; OpenVlaGcgTarget is imported at runtime inside main().
+    from evasion_tax.attack.gcg_openvla import OpenVlaGcgTarget
 
 STAGE = "smoke_gcg_tiny"
 _EXIT_REQUIRES_GPU = 2
@@ -52,6 +58,11 @@ _CARD_GIB = 24.0  # one RTX A5000.
 _TARGET_BINS = (32, 64, 96, 128, 160, 192, 224)
 _DEFAULT_INSTRUCTION = "pick up the red block"
 _FAITHFULNESS_SAMPLES = 24  # (position, token) swaps for the D6-9 finite-difference gate.
+_EQUIV_BATCH_SIZES = (1, 2, 8, 32)  # DB-4: batched==single across multiple B.
+_EQUIV_SUFFIX_LEN_EXTRA = 8  # DB-4: a 2nd suffix length beyond --suffix-len.
+_EQUIV_ATOL = 1e-3  # batched-vs-single tolerance (matches batched_matches_single).
+_DET_ATOL = 1e-3  # determinism re-run tolerance (bf16 forward, identical inputs).
+_GRAD_GATE_TOP_K = 16  # top-k pool for gradient-recommended candidates (matches the gate).
 
 
 def _quarantine_suffix(suffix_ids: np.ndarray, decoded: str, results_root: str) -> Path:
@@ -66,6 +77,39 @@ def _quarantine_suffix(suffix_ids: np.ndarray, decoded: str, results_root: str) 
     payload = {"suffix_token_ids": [int(x) for x in suffix_ids], "decoded_suffix": decoded}
     target.write_text(json.dumps(payload, indent=2) + "\n")
     return target
+
+
+def _mixed_quality_candidates(
+    target: OpenVlaGcgTarget,
+    *,
+    suffix_len: int,
+    b: int,
+    rng: np.random.Generator,
+    grad: np.ndarray | None = None,
+) -> np.ndarray:
+    """A ``[b, suffix_len]`` candidate set mixing init + gradient-recommended + random (DB-4).
+
+    A degenerate batch of identical rows makes batched==single trivially true and the
+    ``argmin`` meaningless, so the gate must span candidate *quality*: the benign init, a few
+    gradient-recommended top-k swaps (the pool GCG's selection samples), and random suffixes.
+    ``grad`` (the ``[L, V]`` one-hot gradient at the init suffix) is computed once per target
+    and reused across batch sizes.
+    """
+    init = target.init_suffix_ids()
+    if b == 1:
+        return init[None, :].copy()
+    g = target.token_gradient(init) if grad is None else grad
+    k = min(_GRAD_GATE_TOP_K, target.vocab_size)
+    rows = [init.copy()]
+    for _ in range(max(1, (b - 1) // 2)):
+        row = init.copy()
+        pos = int(rng.integers(0, suffix_len))
+        topk = np.argpartition(g[pos], k - 1)[:k]  # k most-negative grads
+        row[pos] = int(rng.choice(topk))
+        rows.append(row)
+    while len(rows) < b:
+        rows.append(rng.integers(0, target.vocab_size, size=suffix_len, dtype=np.int64))
+    return np.stack(rows[:b])
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -94,7 +138,7 @@ def main(argv: list[str] | None = None) -> int:
     from transformers import AutoModelForVision2Seq, AutoProcessor  # type: ignore[import-not-found]
 
     from evasion_tax.attack.gcg import GcgConfig, run_gcg
-    from evasion_tax.attack.gcg_openvla import OpenVlaGcgTarget
+    from evasion_tax.attack.gcg_openvla import OpenVlaGcgTarget, equivalence_verdict
     from evasion_tax.repro import RunLogger, seed_everything
 
     seed_everything(args.seed)
@@ -148,9 +192,56 @@ def main(argv: list[str] | None = None) -> int:
     # (2) run the tiny search to completion.
     result = run_gcg(target, cfg)
 
-    # (3) batched-loss equivalence wiring check.
-    init_batch = np.tile(target.init_suffix_ids(), (4, 1))
-    batched_ok = target.batched_matches_single(init_batch)
+    # (3) STRENGTHENED batched-vs-single equivalence + determinism gate (DB-4 / Codex (c)):
+    #     batched loss_of == per-candidate _loss_single across multiple B and suffix lengths,
+    #     on MIXED-QUALITY candidates, agreeing in value AND argmin (rank order); plus a
+    #     same-input determinism re-run. Value equality alone is necessary-not-sufficient —
+    #     GCG acts on the argmin (the old identical-row tile made the check trivially true).
+    suffix_lens = tuple(dict.fromkeys((args.suffix_len, _EQUIV_SUFFIX_LEN_EXTRA)))
+    equiv_checks: list[dict] = []
+    for slen in suffix_lens:
+        tgt = (
+            target
+            if slen == args.suffix_len
+            else OpenVlaGcgTarget(
+                model,
+                processor,
+                image=image,
+                instruction=args.instruction,
+                suffix_len=slen,
+                target_action_ids=target_action_ids,
+                device=device,
+            )
+        )
+        grad = tgt.token_gradient(tgt.init_suffix_ids())  # once per target, reused across B
+        for b in _EQUIV_BATCH_SIZES:
+            cands = _mixed_quality_candidates(tgt, suffix_len=slen, b=b, rng=rng, grad=grad)
+            batched = tgt.loss_of(cands)
+            single = np.array([tgt._loss_single(row) for row in cands], dtype=float)
+            chk = equivalence_verdict(single, batched, atol=_EQUIV_ATOL)
+            equiv_checks.append(
+                {
+                    "suffix_len": slen,
+                    "n": b,
+                    "max_abs_diff": chk.max_abs_diff,
+                    "allclose": chk.allclose,
+                    "argmin_match": chk.argmin_match,
+                    "passed": chk.passed,
+                }
+            )
+    equiv_all_ok = all(c["passed"] for c in equiv_checks)
+
+    # determinism: identical candidates evaluated twice ⇒ identical [B] within tolerance.
+    det_cands = _mixed_quality_candidates(
+        target,
+        suffix_len=args.suffix_len,
+        b=_EQUIV_BATCH_SIZES[-1],
+        rng=np.random.default_rng(args.seed),
+    )
+    det_chk = equivalence_verdict(
+        target.loss_of(det_cands), target.loss_of(det_cands), atol=_DET_ATOL
+    )
+    batched_ok = equiv_all_ok and det_chk.passed
 
     # (4) peak VRAM fits one card.
     peak_vram_gib = torch.cuda.max_memory_reserved(device) / _BYTES_PER_GIB
@@ -178,7 +269,15 @@ def main(argv: list[str] | None = None) -> int:
         "faithfulness_random_mean_delta": report.random_mean_delta,
         "faithfulness_sign_agreement": report.sign_agreement,  # diagnostic only.
         "faithfulness_passed": report.passed,
-        "batched_matches_single": batched_ok,
+        # WIRING gate (DB-4): batched loss_of == per-candidate single in value AND argmin,
+        # across B × suffix_len on mixed-quality candidates, plus a determinism re-run.
+        "batched_matches_single": batched_ok,  # overall (equivalence matrix AND determinism)
+        "equivalence_checks": equiv_checks,
+        "equivalence_all_passed": equiv_all_ok,
+        "determinism_max_abs_diff": det_chk.max_abs_diff,
+        "determinism_passed": det_chk.passed,
+        "equiv_atol": _EQUIV_ATOL,
+        "det_atol": _DET_ATOL,
         "peak_vram_gib": round(peak_vram_gib, 3),
         "fits_one_card": fits_one_card,
         # EXPLORATORY (recorded, NOT a gate — D6-3).
@@ -199,14 +298,21 @@ def main(argv: list[str] | None = None) -> int:
         f"[{STAGE}] peak VRAM {peak_vram_gib:.2f} GiB / {_CARD_GIB:.0f} GiB; "
         f"suffix quarantined -> {quarantined}"
     )
+    n_pass = sum(c["passed"] for c in equiv_checks)
+    print(
+        f"[{STAGE}] equivalence (DB-4): {n_pass}/{len(equiv_checks)} (B×suffix_len) "
+        f"batched==single in value+argmin; determinism Δ={det_chk.max_abs_diff:.2e} "
+        f"-> {'PASS' if batched_ok else 'FAIL'}"
+    )
     print(f"[{STAGE}] logged -> {handle.dir}")
 
-    # WIRING gate: faithfulness + batched-equivalence + fits one card.
+    # WIRING gate: faithfulness + strengthened batched-equivalence (DB-4) + fits one card.
     ok = report.passed and batched_ok and fits_one_card
     if not ok:
         reason = (
             "seam faithfulness gate failed (D6-9)" if not report.passed
-            else "batched loss != per-candidate single (wiring)" if not batched_ok
+            else "batched != single in value/argmin or determinism failed (DB-4 wiring)"
+            if not batched_ok
             else "peak VRAM exceeded one card"
         )
         print(f"[{STAGE}] FAIL: {reason}", file=sys.stderr)

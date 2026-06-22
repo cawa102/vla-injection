@@ -15,6 +15,8 @@ import numpy as np
 import pytest
 
 from evasion_tax.attack.gcg_openvla import (
+    EquivalenceCheck,
+    equivalence_verdict,
     per_sequence_ce,
     project_onehot_grad,
     suffix_span_in_ids,
@@ -87,6 +89,73 @@ def test_per_sequence_ce_single_row_equals_its_batched_row():
     for i in range(logits.shape[0]):
         single = per_sequence_ce(logits[i : i + 1], labels[i : i + 1])
         assert single[0] == pytest.approx(batched[i], abs=1e-12)
+
+# --------------------------------------------------------------------------- #
+# equivalence_verdict: batched-vs-single (and run-vs-run) closeness + argmin     #
+# agreement — the necessary-not-sufficient DB-4 hardening Codex flagged          #
+# --------------------------------------------------------------------------- #
+
+
+def test_equivalence_verdict_identical_vectors_pass():
+    losses = np.array([1.0, 0.5, 2.0])
+
+    chk = equivalence_verdict(losses, losses.copy())
+
+    assert isinstance(chk, EquivalenceCheck)
+    assert chk.n == 3
+    assert chk.max_abs_diff == 0.0
+    assert chk.allclose
+    assert chk.argmin_match
+    assert chk.passed
+
+
+def test_equivalence_verdict_within_atol_same_argmin_pass():
+    single = np.array([1.0, 0.5, 2.0])
+    batched = np.array([1.0004, 0.4996, 2.0003])  # < 1e-3 off; argmin still index 1
+
+    chk = equivalence_verdict(single, batched, atol=1e-3)
+
+    assert chk.allclose
+    assert chk.argmin_match
+    assert chk.passed
+
+
+def test_equivalence_verdict_close_values_but_swapped_argmin_fails():
+    # The DB-4 point: absolute closeness is necessary-NOT-sufficient. These two vectors
+    # agree within atol but pick DIFFERENT best candidates → GCG would select differently.
+    a = np.array([1.000, 1.001, 5.0])  # argmin 0
+    b = np.array([1.001, 1.000, 5.0])  # argmin 1
+
+    chk = equivalence_verdict(a, b, atol=1e-2)
+
+    assert chk.allclose  # within 1e-2
+    assert not chk.argmin_match  # but rank order disagrees
+    assert not chk.passed
+
+
+def test_equivalence_verdict_beyond_atol_fails():
+    a = np.array([1.0, 2.0, 3.0])
+    b = np.array([1.0, 2.0, 3.5])
+
+    chk = equivalence_verdict(a, b, atol=1e-3)
+
+    assert not chk.allclose
+    assert not chk.passed
+    assert chk.max_abs_diff == pytest.approx(0.5)
+
+
+@pytest.mark.parametrize(
+    ("a", "b"),
+    [
+        (np.array([1.0, 2.0]), np.array([1.0, 2.0, 3.0])),  # shape mismatch
+        (np.array([[1.0, 2.0]]), np.array([[1.0, 2.0]])),  # not 1-D
+        (np.array([]), np.array([])),  # empty
+    ],
+)
+def test_equivalence_verdict_rejects_bad_shapes(a, b):
+    with pytest.raises(ValueError):
+        equivalence_verdict(a, b)
+
 
 # --------------------------------------------------------------------------- #
 # project_onehot_grad: g[i,v] = (d loss / d e_i) · W[v,:]                       #

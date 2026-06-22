@@ -62,6 +62,71 @@ def per_sequence_ce(
     return np.where(counts > 0, totals / np.maximum(counts, 1), 0.0)
 
 
+@dataclass(frozen=True)
+class EquivalenceCheck:
+    """Verdict of one ``[B]`` loss-vector comparison (DB-4 batched-vs-single / determinism).
+
+    Absolute-loss closeness alone is **necessary-not-sufficient** (Codex 2026-06-19): GCG
+    selects the ``argmin`` candidate, so the batched ``loss_of`` must agree with the
+    per-candidate ``_loss_single`` reference both in **value** and in **rank order**. Reused
+    for the same-input determinism re-run.
+
+    Attributes:
+        n: Batch size (length of the compared vectors).
+        max_abs_diff: ``max |a - b|`` across the batch.
+        allclose: Whether the two vectors agree within ``atol``.
+        argmin_match: Whether both vectors pick the same ``argmin`` (rank-order agreement).
+    """
+
+    n: int
+    max_abs_diff: float
+    allclose: bool
+    argmin_match: bool
+
+    @property
+    def passed(self) -> bool:
+        """Value equality **and** rank-order agreement both hold."""
+        return self.allclose and self.argmin_match
+
+
+def equivalence_verdict(
+    loss_a: np.ndarray, loss_b: np.ndarray, *, atol: float = 1e-3
+) -> EquivalenceCheck:
+    """Compare two ``[B]`` loss vectors for absolute closeness + ``argmin`` agreement.
+
+    The batched ``loss_of`` must equal the per-candidate ``_loss_single`` path both in value
+    (``allclose`` within ``atol``) **and** in which candidate ranks best (``argmin``), since
+    GCG acts on the ``argmin`` — value equality alone is necessary-not-sufficient (DB-4). Also
+    used to check determinism (run vs identical-input re-run). Ties are broken by
+    :func:`numpy.argmin`'s first-occurrence rule.
+
+    Args:
+        loss_a: ``[B]`` reference losses (e.g. per-candidate single, or run 1).
+        loss_b: ``[B]`` comparison losses (e.g. batched, or run 2).
+        atol: Absolute tolerance for ``allclose``.
+
+    Returns:
+        An :class:`EquivalenceCheck`.
+
+    Raises:
+        ValueError: If the vectors are not 1-D, differ in shape, or are empty.
+    """
+    a = np.asarray(loss_a, dtype=float)
+    b = np.asarray(loss_b, dtype=float)
+    if a.ndim != 1 or b.ndim != 1:
+        raise ValueError(f"loss vectors must be 1-D, got {a.ndim}-D and {b.ndim}-D")
+    if a.shape != b.shape:
+        raise ValueError(f"loss vectors must match in shape, got {a.shape} vs {b.shape}")
+    if a.shape[0] == 0:
+        raise ValueError("loss vectors must be non-empty")
+    return EquivalenceCheck(
+        n=int(a.shape[0]),
+        max_abs_diff=float(np.max(np.abs(a - b))),
+        allclose=bool(np.allclose(a, b, atol=atol)),
+        argmin_match=int(np.argmin(a)) == int(np.argmin(b)),
+    )
+
+
 def project_onehot_grad(
     grad_embeds_suffix: np.ndarray, embedding_matrix: np.ndarray
 ) -> np.ndarray:
