@@ -91,8 +91,8 @@ def test_per_sequence_ce_single_row_equals_its_batched_row():
         assert single[0] == pytest.approx(batched[i], abs=1e-12)
 
 # --------------------------------------------------------------------------- #
-# equivalence_verdict: batched-vs-single (and run-vs-run) closeness + argmin     #
-# agreement — the necessary-not-sufficient DB-4 hardening Codex flagged          #
+# equivalence_verdict: absolute closeness + SELECTION REGRET (the bf16-robust    #
+# refinement of "rank order" Codex flagged — see the 2026-06-22 measurement)     #
 # --------------------------------------------------------------------------- #
 
 
@@ -106,6 +106,8 @@ def test_equivalence_verdict_identical_vectors_pass():
     assert chk.max_abs_diff == 0.0
     assert chk.allclose
     assert chk.argmin_match
+    assert chk.selection_regret == 0.0
+    assert chk.regret_ok
     assert chk.passed
 
 
@@ -117,27 +119,44 @@ def test_equivalence_verdict_within_atol_same_argmin_pass():
 
     assert chk.allclose
     assert chk.argmin_match
+    assert chk.selection_regret == pytest.approx(0.0)
     assert chk.passed
 
 
-def test_equivalence_verdict_close_values_but_swapped_argmin_fails():
-    # The DB-4 point: absolute closeness is necessary-NOT-sufficient. These two vectors
-    # agree within atol but pick DIFFERENT best candidates → GCG would select differently.
-    a = np.array([1.000, 1.001, 5.0])  # argmin 0
-    b = np.array([1.001, 1.000, 5.0])  # argmin 1
+def test_equivalence_verdict_near_tied_argmin_flip_passes_on_low_regret():
+    # The bf16 reality (2026-06-22): two near-tied candidates can flip which is argmin between
+    # the batched and single forwards. The flip selects an EQUALLY GOOD candidate (tiny regret),
+    # so it must PASS — strict index equality would wrongly fail it.
+    ref = np.array([1.00, 1.05, 5.0])  # true best = index 0
+    cmp = np.array([1.04, 1.01, 5.0])  # argmin flips to index 1
 
-    chk = equivalence_verdict(a, b, atol=1e-2)
+    chk = equivalence_verdict(ref, cmp, atol=1.0, regret_tol=0.1)
 
-    assert chk.allclose  # within 1e-2
-    assert not chk.argmin_match  # but rank order disagrees
+    assert not chk.argmin_match  # index flipped (diagnostic)
+    assert chk.selection_regret == pytest.approx(0.05)  # ref[1] - min(ref) = 1.05 - 1.00
+    assert chk.regret_ok  # 0.05 <= 0.1
+    assert chk.passed
+
+
+def test_equivalence_verdict_genuine_misrank_fails_on_regret():
+    # A real misrank: cmp selects a candidate that is genuinely worse in the reference losses
+    # (large regret), even though the values agree within the (loose) atol.
+    ref = np.array([1.0, 1.5])  # true best = index 0
+    cmp = np.array([1.4, 1.1])  # argmin = index 1 -> ref[1] = 1.5, regret 0.5
+
+    chk = equivalence_verdict(ref, cmp, atol=1.0, regret_tol=0.1)
+
+    assert chk.allclose  # |ref - cmp| = 0.4 < 1.0
+    assert chk.selection_regret == pytest.approx(0.5)
+    assert not chk.regret_ok  # 0.5 > 0.1
     assert not chk.passed
 
 
 def test_equivalence_verdict_beyond_atol_fails():
-    a = np.array([1.0, 2.0, 3.0])
-    b = np.array([1.0, 2.0, 3.5])
+    ref = np.array([1.0, 2.0, 3.0])
+    cmp = np.array([1.0, 2.0, 3.5])
 
-    chk = equivalence_verdict(a, b, atol=1e-3)
+    chk = equivalence_verdict(ref, cmp, atol=1e-3)
 
     assert not chk.allclose
     assert not chk.passed

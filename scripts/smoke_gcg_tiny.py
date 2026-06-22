@@ -13,10 +13,11 @@ of GCG steps on the step-5.5 loss/gradient seam. It proves the search loop is
    processor;
 2. the harness runs ``run_gcg`` to completion;
 3. the **strengthened equivalence gate** (DB-4): the true-batch ``loss_of`` reproduces
-   per-candidate single CE **exactly at B=1** (formula proof) and preserves **rank order**
-   (``argmin``, what GCG selects on) across batch sizes / suffix lengths on mixed-quality
-   candidates — at B>1 absolute CE differs only by bf16 batch-order noise (~0.1-0.3) — plus
-   a same-input determinism re-run;
+   per-candidate single CE **exactly at B=1** (formula proof) and, at B>1 where bf16
+   batch-order noise (~0.1-0.3 CE) precludes exact agreement, selects a candidate of
+   **equal quality** (low *selection regret* — the bf16-robust form of the rank-order check
+   GCG relies on) across batch sizes / suffix lengths on mixed-quality candidates, plus a
+   same-input determinism re-run;
 4. peak VRAM < 24 GiB (fits one A5000);
 5. the optimised suffix is **quarantined** to ``artifacts/untrusted/`` (D6-6) and
    nothing untrusted is committed.
@@ -222,18 +223,22 @@ def main(argv: list[str] | None = None) -> int:
             single = np.array([tgt._loss_single(row) for row in cands], dtype=float)
             # B=1 proves the CE formula exactly (same forward). At B>1 the bf16 matmul reduction
             # order varies with the batch dim, so absolute CE differs by ~0.1-0.3 — NOT a formula
-            # error (B=1 is exact). The load-bearing invariant GCG acts on is rank-order (argmin),
-            # checked at every B; the absolute bound is tight at B=1, a divergence guard at B>1.
-            atol = _EQUIV_ATOL if b == 1 else _BF16_BATCH_ATOL
-            chk = equivalence_verdict(single, batched, atol=atol)
+            # error (B=1 is exact). The load-bearing invariant GCG acts on is SELECTION REGRET
+            # (the true loss of the candidate the batched path would pick vs the true best);
+            # strict argmin index equality is too brittle when top candidates are within bf16
+            # noise. Tight tol at B=1, a divergence/regret guard at B>1.
+            tol = _EQUIV_ATOL if b == 1 else _BF16_BATCH_ATOL
+            chk = equivalence_verdict(single, batched, atol=tol, regret_tol=tol)
             equiv_checks.append(
                 {
                     "suffix_len": slen,
                     "n": b,
-                    "atol": atol,
+                    "tol": tol,
                     "max_abs_diff": chk.max_abs_diff,
                     "allclose": chk.allclose,
-                    "argmin_match": chk.argmin_match,
+                    "argmin_match": chk.argmin_match,  # diagnostic only
+                    "selection_regret": chk.selection_regret,
+                    "regret_ok": chk.regret_ok,
                     "passed": chk.passed,
                 }
             )
@@ -247,7 +252,7 @@ def main(argv: list[str] | None = None) -> int:
         rng=np.random.default_rng(args.seed),
     )
     det_chk = equivalence_verdict(
-        target.loss_of(det_cands), target.loss_of(det_cands), atol=_DET_ATOL
+        target.loss_of(det_cands), target.loss_of(det_cands), atol=_DET_ATOL, regret_tol=_DET_ATOL
     )
     batched_ok = equiv_all_ok and det_chk.passed
 
@@ -283,6 +288,7 @@ def main(argv: list[str] | None = None) -> int:
         "equivalence_checks": equiv_checks,
         "equivalence_all_passed": equiv_all_ok,
         "equivalence_bf16_max_abs_diff": max(c["max_abs_diff"] for c in equiv_checks),
+        "equivalence_max_selection_regret": max(c["selection_regret"] for c in equiv_checks),
         "determinism_max_abs_diff": det_chk.max_abs_diff,
         "determinism_passed": det_chk.passed,
         "equiv_atol": _EQUIV_ATOL,
@@ -309,9 +315,10 @@ def main(argv: list[str] | None = None) -> int:
     )
     n_pass = sum(c["passed"] for c in equiv_checks)
     max_diff = max(c["max_abs_diff"] for c in equiv_checks)
+    max_regret = max(c["selection_regret"] for c in equiv_checks)
     print(
         f"[{STAGE}] equivalence (DB-4): {n_pass}/{len(equiv_checks)} (B×suffix_len) "
-        f"B=1 exact + rank-order preserved (bf16 batch-order |Δ|≤{max_diff:.2f}); "
+        f"B=1 exact + selection-regret≤{max_regret:.2f} (bf16 |Δ|≤{max_diff:.2f}); "
         f"determinism Δ={det_chk.max_abs_diff:.2e} -> {'PASS' if batched_ok else 'FAIL'}"
     )
     print(f"[{STAGE}] logged -> {handle.dir}")

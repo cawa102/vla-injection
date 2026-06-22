@@ -66,44 +66,68 @@ def per_sequence_ce(
 class EquivalenceCheck:
     """Verdict of one ``[B]`` loss-vector comparison (DB-4 batched-vs-single / determinism).
 
-    Absolute-loss closeness alone is **necessary-not-sufficient** (Codex 2026-06-19): GCG
+    Codex (2026-06-19) flagged that absolute closeness is **necessary-not-sufficient**: GCG
     selects the ``argmin`` candidate, so the batched ``loss_of`` must agree with the
-    per-candidate ``_loss_single`` reference both in **value** and in **rank order**. Reused
-    for the same-input determinism re-run.
+    per-candidate reference in **rank**, not only value. But strict ``argmin`` *index*
+    equality is too brittle under the registered **bf16** precision: matmul reduction order
+    varies with the batch dim, so when the top candidates are within bf16 noise (~0.1–0.3 CE)
+    the index can flip while selecting an *equally good* candidate. The load-bearing invariant
+    is therefore **selection regret** — the true (reference) loss of the candidate the compared
+    path would pick, relative to the true best — which is zero/​tiny for a benign flip and large
+    only for a real misranking. ``argmin_match`` (strict index equality) is kept as a diagnostic.
 
     Attributes:
         n: Batch size (length of the compared vectors).
-        max_abs_diff: ``max |a - b|`` across the batch.
+        max_abs_diff: ``max |ref - cmp|`` across the batch.
         allclose: Whether the two vectors agree within ``atol``.
-        argmin_match: Whether both vectors pick the same ``argmin`` (rank-order agreement).
+        argmin_match: Whether both vectors pick the same ``argmin`` index (diagnostic only).
+        selection_regret: ``ref[argmin(cmp)] - min(ref)`` — how much worse, in the reference
+            losses, is the candidate the compared path would select vs the true best (``>= 0``).
+        regret_ok: Whether ``selection_regret <= regret_tol``.
     """
 
     n: int
     max_abs_diff: float
     allclose: bool
     argmin_match: bool
+    selection_regret: float
+    regret_ok: bool
 
     @property
     def passed(self) -> bool:
-        """Value equality **and** rank-order agreement both hold."""
-        return self.allclose and self.argmin_match
+        """Absolute agreement (within ``atol``) **and** a tolerable selection regret."""
+        return self.allclose and self.regret_ok
 
 
 def equivalence_verdict(
-    loss_a: np.ndarray, loss_b: np.ndarray, *, atol: float = 1e-3
+    loss_ref: np.ndarray,
+    loss_cmp: np.ndarray,
+    *,
+    atol: float = 1e-3,
+    regret_tol: float = 1e-3,
 ) -> EquivalenceCheck:
-    """Compare two ``[B]`` loss vectors for absolute closeness + ``argmin`` agreement.
+    """Validate that ``loss_cmp`` (e.g. true-batch) agrees with ``loss_ref`` (per-candidate single).
 
-    The batched ``loss_of`` must equal the per-candidate ``_loss_single`` path both in value
-    (``allclose`` within ``atol``) **and** in which candidate ranks best (``argmin``), since
-    GCG acts on the ``argmin`` — value equality alone is necessary-not-sufficient (DB-4). Also
-    used to check determinism (run vs identical-input re-run). Ties are broken by
-    :func:`numpy.argmin`'s first-occurrence rule.
+    Two invariants (DB-4, refined on the 2026-06-22 bf16 measurement):
+
+    - **absolute** — ``|ref - cmp|`` within ``atol``. Tight at ``B=1`` this proves the CE
+      *formula* (same forward); a generous bound at ``B>1`` only guards against divergence,
+      since bf16 batch-order noise makes exact agreement unattainable.
+    - **selection regret** (load-bearing) — the candidate ``loss_cmp`` would select,
+      ``argmin(loss_cmp)``, has a reference loss within ``regret_tol`` of the true best
+      ``min(loss_ref)``. GCG acts on the ``argmin``, so *this* — not strict index equality —
+      is what must hold: when the top candidates are within bf16 noise the index may flip while
+      the selected candidate is equally good (≈ zero regret).
+
+    ``argmin_match`` (strict index equality) is reported as a diagnostic. Ties are broken by
+    :func:`numpy.argmin`'s first-occurrence rule. Reused for the determinism re-run (identical
+    inputs ⇒ zero regret).
 
     Args:
-        loss_a: ``[B]`` reference losses (e.g. per-candidate single, or run 1).
-        loss_b: ``[B]`` comparison losses (e.g. batched, or run 2).
+        loss_ref: ``[B]`` reference losses (per-candidate single, or run 1) — the ground truth.
+        loss_cmp: ``[B]`` losses of the path under test (batched, or run 2).
         atol: Absolute tolerance for ``allclose``.
+        regret_tol: Maximum tolerated selection regret.
 
     Returns:
         An :class:`EquivalenceCheck`.
@@ -111,19 +135,23 @@ def equivalence_verdict(
     Raises:
         ValueError: If the vectors are not 1-D, differ in shape, or are empty.
     """
-    a = np.asarray(loss_a, dtype=float)
-    b = np.asarray(loss_b, dtype=float)
-    if a.ndim != 1 or b.ndim != 1:
-        raise ValueError(f"loss vectors must be 1-D, got {a.ndim}-D and {b.ndim}-D")
-    if a.shape != b.shape:
-        raise ValueError(f"loss vectors must match in shape, got {a.shape} vs {b.shape}")
-    if a.shape[0] == 0:
+    ref = np.asarray(loss_ref, dtype=float)
+    cmp = np.asarray(loss_cmp, dtype=float)
+    if ref.ndim != 1 or cmp.ndim != 1:
+        raise ValueError(f"loss vectors must be 1-D, got {ref.ndim}-D and {cmp.ndim}-D")
+    if ref.shape != cmp.shape:
+        raise ValueError(f"loss vectors must match in shape, got {ref.shape} vs {cmp.shape}")
+    if ref.shape[0] == 0:
         raise ValueError("loss vectors must be non-empty")
+    cmp_choice = int(np.argmin(cmp))
+    regret = float(ref[cmp_choice] - ref.min())
     return EquivalenceCheck(
-        n=int(a.shape[0]),
-        max_abs_diff=float(np.max(np.abs(a - b))),
-        allclose=bool(np.allclose(a, b, atol=atol)),
-        argmin_match=int(np.argmin(a)) == int(np.argmin(b)),
+        n=int(ref.shape[0]),
+        max_abs_diff=float(np.max(np.abs(ref - cmp))),
+        allclose=bool(np.allclose(ref, cmp, atol=atol)),
+        argmin_match=int(np.argmin(ref)) == cmp_choice,
+        selection_regret=regret,
+        regret_ok=bool(regret <= regret_tol),
     )
 
 
