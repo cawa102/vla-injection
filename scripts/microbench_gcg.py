@@ -288,6 +288,24 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--batch-cap", type=int, default=512, help="largest candidate-batch swept")
     parser.add_argument("--exclusive-gpu", action="store_true", help="assert exclusive GPU (D6-10)")
     parser.add_argument(
+        "--loop-baseline-s",
+        type=float,
+        default=None,
+        help="loop-ablation s/target measured at --calib-label (DB-2); recorded alongside the "
+        "true-batch official number",
+    )
+    parser.add_argument(
+        "--batch-calib-s",
+        type=float,
+        default=None,
+        help="true-batch s/target at the SAME config as --loop-baseline-s, for speedup_k",
+    )
+    parser.add_argument(
+        "--calib-label",
+        default=None,
+        help="config label for the loop/batch calibration (e.g. 'n5/W32/1tgt')",
+    )
+    parser.add_argument(
         "--probe-batch",
         type=int,
         default=None,
@@ -373,6 +391,18 @@ def main(argv: list[str] | None = None) -> int:
         )
 
     summary = summarise_timings(per_target_seconds)
+    # DB-2 ablation: record the loop baseline + speedup_k (loop/true-batch) from the same-config
+    # calibration (the true-batch path here is the official sizing number).
+    s_per_target_loop = None
+    speedup_k = None
+    if args.loop_baseline_s is not None:
+        s_per_target_loop = {
+            "median_s": args.loop_baseline_s,
+            "calib_label": args.calib_label,
+            "note": "engineering-tax ablation; loop per-candidate eval (DB-2)",
+        }
+        if args.batch_calib_s:
+            speedup_k = args.loop_baseline_s / args.batch_calib_s
     record = build_microbench_record(
         gcg_config=dataclasses.asdict(cfg),
         timing_summary=summary,
@@ -382,6 +412,8 @@ def main(argv: list[str] | None = None) -> int:
         device_name=torch.cuda.get_device_properties(device).name,
         seed=args.seed,
         exclusive_gpu=bool(args.exclusive_gpu),
+        s_per_target_loop=s_per_target_loop,
+        speedup_k=speedup_k,
     )
     assert_registered_run_valid(record)  # D6-10: refuse a contaminated/noisy number.
 
