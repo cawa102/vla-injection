@@ -1,0 +1,118 @@
+{
+  "batched_matches_single": false,
+  "best_loss": 10.881891250610352,
+  "decoded_best_suffix": "xplom du le x f x x x x x x op x x x.\r x co\u702c",
+  "det_atol": 0.001,
+  "determinism_max_abs_diff": 0.0,
+  "determinism_passed": true,
+  "device": "cuda:0",
+  "dtype": "bfloat16",
+  "equiv_atol": 0.001,
+  "equivalence_all_passed": false,
+  "equivalence_checks": [
+    {
+      "allclose": true,
+      "argmin_match": true,
+      "max_abs_diff": 2.86102294921875e-06,
+      "n": 1,
+      "passed": true,
+      "suffix_len": 20
+    },
+    {
+      "allclose": false,
+      "argmin_match": true,
+      "max_abs_diff": 0.2912454605102539,
+      "n": 2,
+      "passed": false,
+      "suffix_len": 20
+    },
+    {
+      "allclose": false,
+      "argmin_match": true,
+      "max_abs_diff": 0.12267494201660156,
+      "n": 8,
+      "passed": false,
+      "suffix_len": 20
+    },
+    {
+      "allclose": false,
+      "argmin_match": true,
+      "max_abs_diff": 0.18282508850097656,
+      "n": 32,
+      "passed": false,
+      "suffix_len": 20
+    },
+    {
+      "allclose": true,
+      "argmin_match": true,
+      "max_abs_diff": 0.0,
+      "n": 1,
+      "passed": true,
+      "suffix_len": 8
+    },
+    {
+      "allclose": false,
+      "argmin_match": true,
+      "max_abs_diff": 0.018171310424804688,
+      "n": 2,
+      "passed": false,
+      "suffix_len": 8
+    },
+    {
+      "allclose": false,
+      "argmin_match": true,
+      "max_abs_diff": 0.12524795532226562,
+      "n": 8,
+      "passed": false,
+      "suffix_len": 8
+    },
+    {
+      "allclose": false,
+      "argmin_match": true,
+      "max_abs_diff": 0.2566337585449219,
+      "n": 32,
+      "passed": false,
+      "suffix_len": 8
+    }
+  ],
+  "faithfulness_passed": true,
+  "faithfulness_random_mean_delta": -0.18752201398213705,
+  "faithfulness_recommended_mean_delta": -0.41704519589742023,
+  "faithfulness_sign_agreement": 0.5833333333333334,
+  "fits_one_card": true,
+  "gcg_config": {
+    "n_steps": 10,
+    "search_width": 32,
+    "seed": 42,
+    "suffix_len": 20,
+    "top_k": 256
+  },
+  "instruction": "pick up the red block",
+  "loss_history": [
+    15.597676277160645,
+    14.082374572753906,
+    13.24362850189209,
+    12.697671890258789,
+    12.21037769317627,
+    12.040635108947754,
+    12.040635108947754,
+    11.649648666381836,
+    11.499614715576172,
+    11.07307243347168,
+    10.881891250610352
+  ],
+  "model": "openvla/openvla-7b",
+  "n_steps_run": 10,
+  "peak_vram_gib": 21.314,
+  "seed": 42,
+  "stage": "smoke_gcg_tiny",
+  "target_action_token_ids": [
+    31967,
+    31935,
+    31903,
+    31871,
+    31839,
+    31807,
+    31775
+  ]
+}

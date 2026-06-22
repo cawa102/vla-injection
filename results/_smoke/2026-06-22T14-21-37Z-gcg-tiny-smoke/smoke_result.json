@@ -1,0 +1,127 @@
+{
+  "batched_matches_single": false,
+  "best_loss": 11.401256561279297,
+  "decoded_best_suffix": "xona tw x x fe x x x x x x fil fi x x xPay').\u702c",
+  "det_atol": 0.001,
+  "determinism_max_abs_diff": 0.0,
+  "determinism_passed": true,
+  "device": "cuda:0",
+  "dtype": "bfloat16",
+  "equiv_atol": 0.001,
+  "equivalence_all_passed": false,
+  "equivalence_bf16_max_abs_diff": 0.2566337585449219,
+  "equivalence_checks": [
+    {
+      "allclose": true,
+      "argmin_match": true,
+      "atol": 0.001,
+      "max_abs_diff": 2.86102294921875e-06,
+      "n": 1,
+      "passed": true,
+      "suffix_len": 20
+    },
+    {
+      "allclose": true,
+      "argmin_match": false,
+      "atol": 1.0,
+      "max_abs_diff": 0.13046932220458984,
+      "n": 2,
+      "passed": false,
+      "suffix_len": 20
+    },
+    {
+      "allclose": true,
+      "argmin_match": true,
+      "atol": 1.0,
+      "max_abs_diff": 0.12267494201660156,
+      "n": 8,
+      "passed": true,
+      "suffix_len": 20
+    },
+    {
+      "allclose": true,
+      "argmin_match": true,
+      "atol": 1.0,
+      "max_abs_diff": 0.18282508850097656,
+      "n": 32,
+      "passed": true,
+      "suffix_len": 20
+    },
+    {
+      "allclose": true,
+      "argmin_match": true,
+      "atol": 0.001,
+      "max_abs_diff": 0.0,
+      "n": 1,
+      "passed": true,
+      "suffix_len": 8
+    },
+    {
+      "allclose": true,
+      "argmin_match": true,
+      "atol": 1.0,
+      "max_abs_diff": 0.06996440887451172,
+      "n": 2,
+      "passed": true,
+      "suffix_len": 8
+    },
+    {
+      "allclose": true,
+      "argmin_match": true,
+      "atol": 1.0,
+      "max_abs_diff": 0.10243606567382812,
+      "n": 8,
+      "passed": true,
+      "suffix_len": 8
+    },
+    {
+      "allclose": true,
+      "argmin_match": true,
+      "atol": 1.0,
+      "max_abs_diff": 0.2566337585449219,
+      "n": 32,
+      "passed": true,
+      "suffix_len": 8
+    }
+  ],
+  "faithfulness_passed": true,
+  "faithfulness_random_mean_delta": -0.18752201398213705,
+  "faithfulness_recommended_mean_delta": -0.2274686098098755,
+  "faithfulness_sign_agreement": 0.5833333333333334,
+  "fits_one_card": true,
+  "gcg_config": {
+    "n_steps": 10,
+    "search_width": 32,
+    "seed": 42,
+    "suffix_len": 20,
+    "top_k": 256
+  },
+  "instruction": "pick up the red block",
+  "loss_history": [
+    15.597676277160645,
+    14.082374572753906,
+    13.268152236938477,
+    12.774761199951172,
+    12.269006729125977,
+    12.135212898254395,
+    12.051581382751465,
+    11.976731300354004,
+    11.773263931274414,
+    11.506269454956055,
+    11.401256561279297
+  ],
+  "model": "openvla/openvla-7b",
+  "n_steps_run": 10,
+  "peak_vram_gib": 21.314,
+  "seed": 42,
+  "stage": "smoke_gcg_tiny",
+  "target_action_token_ids": [
+    31967,
+    31935,
+    31903,
+    31871,
+    31839,
+    31807,
+    31775
+  ]
+}
