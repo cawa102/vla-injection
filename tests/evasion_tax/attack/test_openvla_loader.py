@@ -52,7 +52,14 @@ def test_public_signatures_match_the_call_sites():
         "instruction",
         "suffix_len",
         "seed",
+        "eval_batch",  # forwarded to OpenVlaGcgTarget so the bench's sw=512 fits 24 GB (DE-7)
     ]
+
+
+def test_build_target_eval_batch_defaults_to_none():
+    # Back-compat: the microbench constructs targets without eval_batch (the single-forward
+    # path), so the added knob must default to None.
+    assert inspect.signature(build_target).parameters["eval_batch"].default is None
 
 
 def test_default_instruction_is_the_step_5_5_target():

@@ -237,7 +237,7 @@ def target_span_argmax_matches(
 
   **Commit:** `feat: chunk loss_of candidate eval at eval_batch (sw=512 fits 24 GB; chunked==single gated)`
 
-- [ ] **Task 6: the early-stop bench driver `scripts/bench_early_stop.py` — mac core + box run**
+- [x] **Task 6: the early-stop bench driver `scripts/bench_early_stop.py` — mac core + box run**
 
   **Files:**
   - Create: `scripts/bench_early_stop.py`

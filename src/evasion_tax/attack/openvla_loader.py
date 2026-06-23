@@ -17,8 +17,15 @@ _TARGET_BINS = (32, 64, 96, 128, 160, 192, 224)  # reuse the step-5.5 arbitrary 
 DEFAULT_INSTRUCTION = "pick up the red block"
 
 
-def build_target(np_mod, model, processor, device, *, instruction, suffix_len, seed):
-    """Build one :class:`OpenVlaGcgTarget` (deterministic dummy image, fixed target)."""
+def build_target(
+    np_mod, model, processor, device, *, instruction, suffix_len, seed, eval_batch=None
+):
+    """Build one :class:`OpenVlaGcgTarget` (deterministic dummy image, fixed target).
+
+    ``eval_batch`` is forwarded to the target's :meth:`loss_of` candidate-eval chunking
+    (DE-7): ``None`` (the microbench default) keeps the single-forward path; the bench
+    passes an int so a ``search_width=512`` attack fits 24 GB.
+    """
     from PIL import Image  # type: ignore[import-not-found]  # noqa: E402
 
     from evasion_tax.attack.gcg_openvla import OpenVlaGcgTarget  # noqa: E402
@@ -35,6 +42,7 @@ def build_target(np_mod, model, processor, device, *, instruction, suffix_len, s
         suffix_len=suffix_len,
         target_action_ids=target_action_ids,
         device=device,
+        eval_batch=eval_batch,
     )
 
 
