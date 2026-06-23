@@ -129,7 +129,7 @@ def target_span_argmax_matches(
 
   **Commit:** `feat: OpenVlaGcgTarget.reached() — GPU forced-decode predicate as run_gcg reached_fn`
 
-- [ ] **Task 3: pure bench bookkeeping (outcome / summary / resume / realistic cost) — mac**
+- [x] **Task 3: pure bench bookkeeping (outcome / summary / resume / realistic cost) — mac**
 
   **Files:**
   - Create: `src/evasion_tax/attack/early_stop_bench.py`
