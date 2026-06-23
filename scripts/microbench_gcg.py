@@ -29,6 +29,11 @@ os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 import _bootstrap  # noqa: F401  (import side effect: puts src/ on sys.path)
 import numpy as np  # noqa: E402
 
+from evasion_tax.attack.openvla_loader import (  # noqa: E402
+    DEFAULT_INSTRUCTION,
+    build_target,
+    load_frozen_openvla,
+)
 from evasion_tax.config import cuda_available, gpu_required_message, load_config  # noqa: E402
 
 STAGE = "microbench_gcg"
@@ -273,46 +278,6 @@ def max_batch_that_fits(probe_fn, start: int, cap: int) -> int:
 # Pinned bench knobs (one variable at a time; recorded in the run header).
 _BYTES_PER_GIB = 1024**3
 _EXIT_OOM = 3  # subprocess batch-probe exit code on CUDA OOM (clean-process, D6-10).
-_TARGET_BINS = (32, 64, 96, 128, 160, 192, 224)  # reuse the step-5.5 arbitrary target.
-_DEFAULT_INSTRUCTION = "pick up the red block"
-
-
-def _build_target(np_mod, model, processor, device, *, instruction, suffix_len, seed):
-    """Build one :class:`OpenVlaGcgTarget` (deterministic dummy image, fixed target)."""
-    from PIL import Image  # type: ignore[import-not-found]  # noqa: E402
-
-    from evasion_tax.attack.gcg_openvla import OpenVlaGcgTarget  # noqa: E402
-
-    rng = np_mod.random.default_rng(seed)
-    image = Image.fromarray(rng.integers(0, 256, size=(224, 224, 3), dtype=np_mod.uint8))
-    vocab_size = int(processor.tokenizer.vocab_size)
-    target_action_ids = np_mod.array([vocab_size - 1 - b for b in _TARGET_BINS], dtype=np_mod.int64)
-    return OpenVlaGcgTarget(
-        model,
-        processor,
-        image=image,
-        instruction=instruction,
-        suffix_len=suffix_len,
-        target_action_ids=target_action_ids,
-        device=device,
-    )
-
-
-def _load_frozen_openvla(torch_mod, model_id, device, attn_impl):
-    """Load + freeze bf16 OpenVLA-7B (the step-5.5 setup)."""
-    from transformers import AutoModelForVision2Seq, AutoProcessor  # type: ignore[import-not-found]
-
-    processor = AutoProcessor.from_pretrained(model_id, trust_remote_code=True)
-    model = AutoModelForVision2Seq.from_pretrained(
-        model_id,
-        attn_implementation=attn_impl,
-        torch_dtype=torch_mod.bfloat16,
-        low_cpu_mem_usage=True,
-        trust_remote_code=True,
-    ).to(device)
-    model.requires_grad_(False)
-    model.eval()
-    return model, processor
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -405,10 +370,10 @@ def main(argv: list[str] | None = None) -> int:
     # Loads its OWN model copy; the parent holds NO model during the sweep, else two
     # ~14 GiB bf16 copies collide on one 24 GiB card (observed OOM at B=1).
     if args.probe_batch is not None:
-        model, processor = _load_frozen_openvla(torch, args.model, device, args.attn_impl)
-        target = _build_target(
+        model, processor = load_frozen_openvla(torch, args.model, device, args.attn_impl)
+        target = build_target(
             np, model, processor, device,
-            instruction=_DEFAULT_INSTRUCTION, suffix_len=cfg.suffix_len, seed=args.seed,
+            instruction=DEFAULT_INSTRUCTION, suffix_len=cfg.suffix_len, seed=args.seed,
         )
         suffix = target.init_suffix_ids()
         batch = np.tile(suffix, (args.probe_batch, 1))
@@ -434,7 +399,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # ---- time s/target on a few targets in THIS (clean) process. Load the model NOW
     # (after the sweep) so only one ~14 GiB copy is ever resident on the card.
-    model, processor = _load_frozen_openvla(torch, args.model, device, args.attn_impl)
+    model, processor = load_frozen_openvla(torch, args.model, device, args.attn_impl)
     # eval_batch (= the forward mini-batch for t_fwd and the s/step chunking) defaults to
     # the measured max-B — the HW-adapted batch_size (DC-2), NOT RoboGCG's A100/H100 64.
     eval_batch = args.eval_batch if args.eval_batch is not None else max_batch
@@ -444,9 +409,9 @@ def main(argv: list[str] | None = None) -> int:
     t_fwds: list[float] = []  # one loss_of at B=eval_batch per target (DC-4)
     peak_vram_gib = 0.0
     for i in range(args.n_targets):
-        target = _build_target(
+        target = build_target(
             np, model, processor, device,
-            instruction=_DEFAULT_INSTRUCTION, suffix_len=cfg.suffix_len, seed=args.seed + i,
+            instruction=DEFAULT_INSTRUCTION, suffix_len=cfg.suffix_len, seed=args.seed + i,
         )
         # Budget-faithful s/step primitives: token_gradient/loss_of return numpy, which
         # forces a device sync, so perf_counter brackets the real GPU time. Timed BEFORE

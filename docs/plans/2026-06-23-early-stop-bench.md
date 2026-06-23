@@ -176,7 +176,7 @@ def target_span_argmax_matches(
 
   **Commit:** `feat: pure early-stop bench bookkeeping (outcome, distribution summary, resume helpers)`
 
-- [ ] **Task 4: extract the shared frozen-OpenVLA loader/target-builder — mac**
+- [x] **Task 4: extract the shared frozen-OpenVLA loader/target-builder — mac**
 
   **Files:**
   - Create: `src/evasion_tax/attack/openvla_loader.py` (move `_load_frozen_openvla` + `_build_target` +
