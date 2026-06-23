@@ -19,10 +19,49 @@ smoke scripts.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
+
+
+def chunked_losses(
+    full: np.ndarray,
+    eval_batch: int | None,
+    forward_fn: Callable[[np.ndarray], np.ndarray],
+) -> np.ndarray:
+    """Score ``[B, seq]`` rows in chunks of ``eval_batch``, concatenating per-chunk losses.
+
+    ``eval_batch=None`` ⇒ **one** ``forward_fn`` call over all rows (the single-forward
+    path, preserved bit-for-bit so the D8 ``sw=32`` path and its tests are unchanged). An
+    int ⇒ ``ceil(B/eval_batch)`` chunks scored in order and concatenated. Because per-row
+    CE is independent, the concatenated ``[B]`` equals the single-forward ``[B]`` — a pure
+    reassociation — so the GPU :meth:`OpenVlaGcgTarget.loss_of` fits 24 GB at
+    ``search_width=512`` by capping the per-forward batch (DE-7), peak VRAM becoming the
+    **max single-chunk** peak. This helper is torch-free; ``forward_fn`` owns the GPU work.
+
+    Args:
+        full: ``[B, seq]`` candidate rows (already concatenated prompt+target ids).
+        eval_batch: Chunk size; ``None`` for one forward over all rows.
+        forward_fn: ``rows -> [n]`` per-row losses for one chunk (the GPU forward).
+
+    Returns:
+        ``[B]`` per-row losses, row order preserved.
+
+    Raises:
+        ValueError: If ``eval_batch`` is an int ``< 1`` (no silent zero-chunk).
+    """
+    rows = np.asarray(full)
+    if eval_batch is None:
+        return np.asarray(forward_fn(rows))
+    if eval_batch < 1:
+        raise ValueError(f"eval_batch must be >= 1 or None, got {eval_batch}")
+    parts = [
+        np.asarray(forward_fn(rows[start : start + eval_batch]))
+        for start in range(0, rows.shape[0], eval_batch)
+    ]
+    return np.concatenate(parts)
 
 
 def per_sequence_ce(
@@ -278,6 +317,10 @@ class OpenVlaGcgTarget:
         device: A ``torch.device``.
         init_suffix_token_id: Initial suffix filler token id (default: a fixed
             benign token); the search overwrites these.
+        eval_batch: Candidate-eval chunk size for :meth:`loss_of` (DE-7). ``None``
+            (default) ⇒ one forward over all ``B`` candidates (the D8 ``sw=32`` path,
+            unchanged); an int ⇒ forward ``eval_batch`` candidates at a time so a
+            ``search_width=512`` attack fits 24 GB. Validated at use (:func:`chunked_losses`).
     """
 
     def __init__(
@@ -291,9 +334,11 @@ class OpenVlaGcgTarget:
         target_action_ids: np.ndarray,
         device: Any,
         init_suffix_token_id: int | None = None,
+        eval_batch: int | None = None,
     ) -> None:
         if suffix_len < 1:
             raise ValueError(f"suffix_len must be >= 1, got {suffix_len}")
+        self._eval_batch = eval_batch
         self._model = model
         self._processor = processor
         self._device = device
@@ -444,11 +489,14 @@ class OpenVlaGcgTarget:
         return (-true_lp).mean(dim=-1)  # [B] mean CE over the target span
 
     def loss_of(self, candidate_suffixes: np.ndarray) -> np.ndarray:
-        """``[B, L]`` candidates → ``[B]`` CE losses via ONE true-batch forward (no grad).
+        """``[B, L]`` candidates → ``[B]`` CE losses via no-grad forward(s) (DE-7 chunked).
 
         Candidates are fixed-length (``prefix ⊕ suffix(L) ⊕ tail ⊕ target``, identical length),
-        so they stack to ``[B, seq]`` with no padding and run through a single
-        ``torch.no_grad()`` forward. Per-row CE is read from ``out.logits`` by
+        so they stack to ``[B, seq]`` with no padding. With ``eval_batch=None`` they run through
+        a **single** ``torch.no_grad()`` forward (the D8 ``sw=32`` path, unchanged); with an int
+        they are forwarded ``eval_batch`` at a time and the per-chunk ``[b]`` losses concatenated
+        (:func:`chunked_losses`), so a ``search_width=512`` attack fits 24 GB — peak VRAM becomes
+        the max single-chunk peak (DE-7). Per-row CE is read from ``out.logits`` by
         :meth:`_target_span_ce_torch` — **not** ``out.loss``, which mean-reduces across the
         batch. **``labels`` is intentionally NOT passed:** the model would then compute its own
         (unused) full-vocab loss, materialising an fp32 ``shift_logits`` copy of ``[B, seq, V]``
@@ -465,22 +513,32 @@ class OpenVlaGcgTarget:
                 f"candidate_suffixes must be [B, {self._suffix_len}], got {cands.shape}"
             )
         full = np.stack([self._full_ids(row) for row in cands])  # [B, seq]
-        input_ids = torch.tensor(full, device=self._device, dtype=torch.long)
-        attn = torch.ones_like(input_ids)
-        # One observation broadcast across the batch; forward only reads pixel_values (no
-        # in-place write), so an expand+contiguous view is safe and non-aliasing.
-        pixel_values = self._pixel_values.expand(
-            input_ids.shape[0], *self._pixel_values.shape[1:]
-        ).contiguous()
+
+        def _forward_chunk(rows: np.ndarray) -> np.ndarray:
+            input_ids = torch.tensor(rows, device=self._device, dtype=torch.long)
+            attn = torch.ones_like(input_ids)
+            # One observation broadcast across the chunk; forward only reads pixel_values (no
+            # in-place write), so an expand+contiguous view is safe and non-aliasing.
+            pixel_values = self._pixel_values.expand(
+                input_ids.shape[0], *self._pixel_values.shape[1:]
+            ).contiguous()
+            with torch.no_grad():
+                out = self._model(
+                    input_ids=input_ids,
+                    attention_mask=attn,
+                    pixel_values=pixel_values,
+                )
+            losses = (
+                self._target_span_ce_torch(out.logits).detach().float().cpu().numpy().astype(float)
+            )
+            if self._eval_batch is not None:
+                # Return this chunk's reservation to the driver before the next chunk so the
+                # near-ceiling sw=512 sweep never accumulates fragmented blocks (DE-7).
+                torch.cuda.empty_cache()
+            return losses
 
         torch.cuda.reset_peak_memory_stats(self._device)
-        with torch.no_grad():
-            out = self._model(
-                input_ids=input_ids,
-                attention_mask=attn,
-                pixel_values=pixel_values,
-            )
-        losses = self._target_span_ce_torch(out.logits).detach().float().cpu().numpy().astype(float)
+        losses = chunked_losses(full, self._eval_batch, _forward_chunk)
         self._last_peak_bytes = int(torch.cuda.max_memory_allocated(self._device))
         return losses
 

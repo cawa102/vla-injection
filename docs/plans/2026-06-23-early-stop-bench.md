@@ -201,7 +201,7 @@ def target_span_argmax_matches(
 
   **Commit:** `refactor: extract shared frozen-OpenVLA loader/target-builder for reuse by the bench`
 
-- [ ] **Task 5: `loss_of` candidate-eval chunking (eval mini-batching, DE-7) — mac (TDD) + box fit-check**
+- [x] **Task 5: `loss_of` candidate-eval chunking (eval mini-batching, DE-7) — mac (TDD) + box fit-check**
 
   **Files:**
   - Modify: `src/evasion_tax/attack/gcg_openvla.py` (`OpenVlaGcgTarget.__init__` + `loss_of`)

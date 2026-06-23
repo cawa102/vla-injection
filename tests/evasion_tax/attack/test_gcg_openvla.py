@@ -16,6 +16,7 @@ import pytest
 
 from evasion_tax.attack.gcg_openvla import (
     EquivalenceCheck,
+    chunked_losses,
     equivalence_verdict,
     per_sequence_ce,
     project_onehot_grad,
@@ -217,6 +218,82 @@ def test_suffix_span_rejects_out_of_range_len(bad_len):
 # --------------------------------------------------------------------------- #
 # Guard: torch / transformers / PIL only inside methods, never at module top   #
 # --------------------------------------------------------------------------- #
+
+
+# --------------------------------------------------------------------------- #
+# chunked_losses: forward [B] rows in chunks of eval_batch, concatenate the     #
+# per-chunk losses (DE-7). The pure reassociation is tested off-GPU here; the    #
+# numerical/VRAM equivalence on the real bf16 model is the on-box fit-check.     #
+# --------------------------------------------------------------------------- #
+
+
+def _row_sum_forward(calls):
+    """Row-independent fake forward (stand-in for the GPU CE): row -> its sum.
+
+    Records each chunk's batch size so the chunk boundaries are observable. Being
+    row-independent, it has the exact property the real per-row CE has, so a wrong
+    boundary / order / drop is the only thing that can make chunked != single.
+    """
+
+    def forward(rows):
+        rows = np.asarray(rows)
+        calls.append(rows.shape[0])
+        return rows.sum(axis=1).astype(float)
+
+    return forward
+
+
+@pytest.mark.parametrize("eval_batch", [1, 8, 32])
+@pytest.mark.parametrize("n", [1, 8, 32, 50])
+@pytest.mark.parametrize("width", [20, 25])
+def test_chunked_losses_equals_single_forward(eval_batch, n, width):
+    # Chunking is a pure reassociation of independent per-row CE: the concatenated [B]
+    # equals the single-forward [B] for any chunk size, incl. B not divisible (50/32).
+    rng = np.random.default_rng(0)
+    full = rng.integers(0, 100, size=(n, width))
+
+    single = chunked_losses(full, None, _row_sum_forward([]))
+    chunked = chunked_losses(full, eval_batch, _row_sum_forward([]))
+
+    assert np.array_equal(chunked, single)
+    assert int(np.argmin(chunked)) == int(np.argmin(single))  # rank order preserved (DB-4)
+
+
+def test_chunked_losses_splits_non_divisible_batch_into_full_then_remainder():
+    # B=50, eval_batch=32 -> chunks of 32 then 18 (the trailing partial chunk).
+    full = np.arange(50 * 4).reshape(50, 4)
+    calls: list[int] = []
+
+    chunked_losses(full, 32, _row_sum_forward(calls))
+
+    assert calls == [32, 18]
+
+
+def test_chunked_losses_none_does_one_forward_over_all_rows():
+    # eval_batch=None preserves the single-forward path byte-for-byte: ONE call, all B.
+    full = np.arange(40 * 3).reshape(40, 3)
+    calls: list[int] = []
+
+    chunked_losses(full, None, _row_sum_forward(calls))
+
+    assert calls == [40]
+
+
+def test_chunked_losses_preserves_row_order():
+    # row i -> value i; the concatenated output must stay in row order across chunks.
+    full = np.arange(10).reshape(10, 1)
+
+    out = chunked_losses(full, 3, lambda r: np.asarray(r)[:, 0].astype(float))
+
+    assert out.tolist() == list(range(10))
+
+
+@pytest.mark.parametrize("bad", [0, -1])
+def test_chunked_losses_rejects_non_positive_eval_batch(bad):
+    # No silent default: a zero/negative chunk size is a programming error, fail loud.
+    full = np.zeros((4, 3))
+    with pytest.raises(ValueError):
+        chunked_losses(full, bad, _row_sum_forward([]))
 
 
 def test_seam_module_imports_no_torch_stack_at_module_top():
