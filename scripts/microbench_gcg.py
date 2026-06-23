@@ -454,6 +454,11 @@ def main(argv: list[str] | None = None) -> int:
             tg0 = time.perf_counter()
             target.token_gradient(init)
             t_grads.append(time.perf_counter() - tg0)
+            # The B=1 backward leaves reserved blocks the allocator keeps; free them so the
+            # B=eval_batch(=max-B) forward runs from the model-only baseline the forward-only
+            # max-B sweep assumed — else it OOMs at the razor-edge max-B (backward + forward
+            # reservations exceed 24 GB by a sliver).
+            torch.cuda.empty_cache()
             candidates = np.tile(init, (eval_batch, 1))
             tf0 = time.perf_counter()
             target.loss_of(candidates)

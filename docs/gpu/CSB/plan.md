@@ -204,15 +204,21 @@ uv run python scripts/microbench_gcg.py \
 - `--eval-batch` is **omitted on purpose** → `eval_batch` defaults to the **measured max-B** (the HW-adapted
   `batch_size`, DC-2; not RoboGCG's A100/H100 64). `--batch-cap 64` keeps the sweep tight (DC-2 expects max-B in
   ≈32–48; B=64 ~28 GiB OOMs on 24 GB) — raise it only if B=64 unexpectedly fits.
+  **Razor-edge caveat (2026-06-23):** the forward-only sweep picks the *largest* B that fits, so the timing
+  `loss_of` at that exact max-B has ~0 margin (observed B≈43 → ~23.1 GiB, OOM by ~10 MiB). If it OOMs, pass
+  **`--eval-batch 32`** (B=32 peaks 21.3 GiB, ~2 GiB margin) — the sweep still records max-B as the VRAM ceiling,
+  and `s/step` just uses ⌈512/32⌉=16 chunks (slightly conservative → biases the branch toward F, the safe default).
 - `--search-width 32` is the **direct `run_gcg` cross-check** width (a known-fitting B≈max-B); `--n-steps 5` keeps
   it cheap. The DB-2 ablation flags carry the standing 2026-06-22 calibration (loop 17.475 / true-batch 11.394 →
   `speedup_k≈1.53`) **passed through** for the record — not re-measured this run.
 - If `--attn-impl flash_attention_2` errors, retry `--attn-impl sdpa` (the step-5.5 cross-check path). If `uv run`
   prunes the lock-external GPU stack, fall back to `uv run --no-sync` (the step-4 workaround).
-- **OOM fix (2026-06-23):** the per-target `t_grad`/`t_fwd` timing forwards at `B≈max-B` reserved memory that the
-  caching allocator held across into `run_gcg`, fragmenting the 24 GB card → `run_gcg`'s `B=search_width` forward
-  OOM'd at `logits.float()` (1.16 GiB). Fixed by `torch.cuda.empty_cache()` between the timing forwards and
-  `run_gcg` (commit on `main`); `expandable_segments:True` above is the belt-and-suspenders.
+- **OOM fix (2026-06-23):** the per-target timing forwards reserved memory the caching allocator held across into
+  the next phase. Two passes: (1) `run_gcg`'s `B=search_width` forward OOM'd at `logits.float()` (1.16 GiB) on the
+  timing's *fragmented* leftover → `empty_cache()` before `run_gcg` + `expandable_segments:True`; (2) with
+  fragmentation gone the sweep then reached a higher max-B (~43) and the timing `loss_of(B=max-B)` OOM'd by ~10 MiB
+  because the preceding `token_gradient` (B=1 backward) reservation sat on top → `empty_cache()` **between**
+  `token_gradient` and `loss_of` too (commits on `main`). If a razor-edge max-B still OOMs, use `--eval-batch 32`.
 
 *Verify gate:* prints `s/target median …s (n=3, reproducible=True)`, `peak VRAM … GiB`, `max candidate-batch
 B=<max-B>`, **and** `budget-faithful (sw=512/ns=500/eval_batch=<max-B>): t_grad=…s t_fwd=…s => s/step=…s,
