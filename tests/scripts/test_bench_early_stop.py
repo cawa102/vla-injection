@@ -221,6 +221,37 @@ def test_arg_parser_no_resume_flag_disables_resume():
 
 
 # --------------------------------------------------------------------------- #
+# build_run_header: the §8 repro contract                                       #
+# --------------------------------------------------------------------------- #
+
+
+def test_build_run_header_carries_repro_fields():
+    bench = _load_bench()
+    args = bench.build_arg_parser().parse_args(
+        ["--config", "c.yaml", "--seed", "7", "--exclusive-gpu"]
+    )
+    env = {"git_commit": "abc123", "torch": "2.2.0", "cuda": "12.1", "driver": "12.4"}
+
+    header = bench.build_run_header(args, env)
+
+    assert header["dtype"] == "bfloat16"
+    assert header["seed"] == 7
+    assert header["early_stop"] is True
+    assert header["exclusive_gpu"] is True
+    assert header["eval_batch"] == 32
+    assert header["gcg_config"]["search_width"] == 512
+    assert header["env"] == env  # full §8 capture (git/torch/cuda/driver) rides along
+
+
+def test_quarantine_suffix_is_write_once_idempotent(tmp_path):
+    # A resumed restart must not clobber an already-quarantined suffix (DE-4/DE-5).
+    bench = _load_bench()
+    bench._quarantine_suffix(tmp_path, "t0", "first")
+    bench._quarantine_suffix(tmp_path, "t0", "second")
+    assert (tmp_path / "t0.txt").read_text() == "first"
+
+
+# --------------------------------------------------------------------------- #
 # Clean import: the model-free driver must not pull torch at import time         #
 # --------------------------------------------------------------------------- #
 
