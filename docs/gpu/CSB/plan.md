@@ -246,28 +246,39 @@ The box is **author-exclusive** (no contention) but **physically at the lab** �
 GPU-hours is no longer sharing; it is **(1) the job surviving after you close the tunnel and go home, (2) the
 machine not sleeping/shutting down, (3) crash/OOM babysitting**. Production **attack runs do NOT need an exclusive
 window** (only the D8 *timing* bench does, L3) → they can run unattended 24/7. We have **no sudo**, so use the
-sudo-free path:
+sudo-free path. **Verified on `ecs3-0202` (2026-06-23):** `uv`, `nohup`, `systemd-inhibit`, `nvidia-smi` are
+present; **`tmux`/`screen` are absent** and *not installable here* (no sudo, no system package manager, no
+`micromamba`/`conda` on PATH, and `uv` installs Python packages only) → **`nohup` is the default, not tmux.**
+`/etc/systemd/logind.conf` has `#KillUserProcesses=no` (commented = the compiled default **no**), so a `nohup`'d
+job **survives disconnect and full logout**; `Linger=no` but is **not needed** given that.
 
-1. **Detach the job from the tunnel/terminal → `tmux`.** Closing VS Code Remote Tunnel (or your laptop) drops the
-   terminal but **not** a `tmux` session (most distros default `KillUserProcesses=no`, so it survives logout).
-   Install sudo-free if absent: `micromamba install -c conda-forge tmux`.
+1. **Detach the job from the terminal/tunnel → `nohup … & disown`** (zero install). `nohup` ignores SIGHUP and
+   `disown` drops it from the shell job table, so closing VS Code Remote Tunnel / your laptop leaves it running
+   (KillUserProcesses=no ⇒ not reaped on session end). Redirect to a logfile (a backgrounded job has no terminal
+   for `tee`).
 2. **Stop idle-suspend for the job's lifetime → `systemd-inhibit`** (no sudo, scoped to the command):
    ```bash
-   tmux new -s eet
-   # inside tmux:
    export HF_HOME=<roomy-disk>/hf
    export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
-   systemd-inhibit --what=idle:sleep --who=eet --why="overnight GCG matrix" \
-     uv run python scripts/run_attack.py ...  2>&1 | tee results/<run>/log.txt
-   # Ctrl-b then d  → detach. Close the tunnel / go home. Next day: tmux attach -t eet
+   cd ~/vla-injection
+   nohup systemd-inhibit --what=idle:sleep --who=eet --why="overnight GCG matrix" \
+     uv run python <driver> ...  > results/<run>/log.txt 2>&1 &
+   disown
+   # check: tail -f results/<run>/log.txt ; then close the tunnel / go home.
+   # next day: tail the log, or `ps aux | grep <driver>` / `nvidia-smi`.
    ```
+   (The 2026-06-23 **persistence smoke** uses `scripts/microbench_gcg.py … --results-root results/_smoke` with a
+   longer `--n-steps`/`--n-targets`; the M1–M4 **production** driver is TBD — see the checkpoint requirement below.)
 3. **Do not shut down or GUI-log-out the box; the display may sleep (harmless to compute).**
 
-**Verify once on the box (I cannot check these remotely):**
-- `loginctl show-user $USER | grep KillUserProcesses` → must be `no` (else even tmux dies on disconnect →
-  `loginctl enable-linger $USER`, which may need an admin).
-- Whether the desktop **suspends/hibernates** on idle. A lab desktop usually does not; if it does and
-  `systemd-inhibit` is not enough, ask the admin to disable system suspend **once**.
+**Optional first-time proof** (the config already guarantees survival): `nohup sleep 600 >/tmp/k.log 2>&1 & disown; echo $!`
+→ disconnect → reconnect → `ps -p <PID>`.
+
+**Notes for portability.** Use the **numeric UID** for `loginctl` — the `@`-bearing username
+(`40473058@eeecs.qub.ac.uk`) breaks `loginctl show-user "$USER"`; `loginctl show-user "$(id -u)"` works. If ever
+moved to a box where `KillUserProcesses=yes`, run `loginctl enable-linger "$(id -u)"` (may need an admin) or keep
+the session from fully closing. Whether the desktop **suspends/hibernates** on idle: a lab desktop usually does
+not; if it does and `systemd-inhibit` is not enough, ask the admin to disable system suspend **once**.
 
 **Crash/OOM resilience (mandatory for the long matrices — we already hit razor-edge OOMs at max-B).** The M1–M4
 attack driver MUST **checkpoint per target**: write each finished suffix/outcome to write-once `results/`
