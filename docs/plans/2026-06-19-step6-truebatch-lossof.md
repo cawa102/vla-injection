@@ -116,7 +116,7 @@ def per_sequence_ce(
 
   **Commit:** `feat: true-batch loss_of for the GCG seam (per-seq CE from logits; pure ref TDD'd, GPU guarded)`
 
-- [ ] **Task 2: strengthen the on-box equivalence + determinism gate (DB-4) — box**
+- [x] **Task 2: strengthen the on-box equivalence + determinism gate (DB-4) — box**
 
   **Files:**
   - Modify: `scripts/smoke_gcg_tiny.py` (extend the wiring block; record the new checks)
@@ -141,7 +141,7 @@ def per_sequence_ce(
 
   **Commit:** `test: harden GCG batched-vs-single gate (multi-B/len, mixed-quality, rank-order, determinism)`
 
-- [ ] **Task 3: tiny-run revalidation + speedup calibration — box (non-registered)**
+- [x] **Task 3: tiny-run revalidation + speedup calibration — box (non-registered)**
 
   **Files:** none (re-run existing scripts).
 
@@ -160,7 +160,7 @@ def per_sequence_ce(
 
   **Commit:** (none — smoke artifacts are pushed for cross-box evidence; no source change.)
 
-- [ ] **Task 4: registered D8 micro-bench — true-batch official, loop ablation, real max-B — box (REGISTERED)**
+- [x] **Task 4: registered D8 micro-bench — true-batch official, loop ablation, real max-B — box (REGISTERED)** — *2026-06-23 ✓: `results/2026-06-23T13-34-55Z-gcg-microbench/` (A5000, bf16, flash_attn2, `exclusive_gpu=true`, reproducible n=3). true-batch official **s/step=33.19 s**, **s/target(worst, sw=512/ns=500, early_stop OFF)=16,595 s**; loop ablation 17.48 s → **speedup_k≈1.53**; **real max-B=43 @ 21.3 GiB** (< the `--batch-cap 64` → real VRAM ceiling, not the degenerate cap; framed as HW characterisation per DB-3). OOM fixes (empty_cache + expandable_segments, `--eval-batch 32`) committed `a3b7d0c`/`b1da360`.*
 
   **Files:**
   - Modify (only if needed): `scripts/microbench_gcg.py` — record **both** the true-batch result (official) and the
@@ -189,7 +189,7 @@ def per_sequence_ce(
 
   **Commit:** `feat: D8 registered micro-bench — true-batch official + loop ablation + real max-B @ 24GB`
 
-- [ ] **Task 5: branch computation + doc updates (with the numbers) — mac**
+- [x] **Task 5: branch computation + doc updates (with the numbers) — mac** — *2026-06-23 ✓: `branch_select` on the registered true-batch `s/target=16,595 s` against the **re-derived realistic calendar** (author-exclusive box → no contention; **2 cards** GO; ~125 GPU-h/wk/card; ~5-wk M3+M4 window; ~70 % → ~875 adaptive GPU-h; adaptive_mult=3 EST; seeds=3; thresholds N≥90 / N−≥30 runs) → **provisional Branch N− (62 runs / ~20 targets×3), hard-F default, locked=False**. Sensitivity: 1-card-worst-case→F; early-stop or 2 cards→N. Recorded to playbook §1/§2/§6(D8 RESOLVED-provisional)/§10; parent back-pointer already in place (`2026-06-19-step6-gcg-microbench.md` lines 33–36); CSB plan step 6 ticked + **unattended-run runbook** added (tmux/systemd-inhibit/per-target checkpoint). max-B framed as HW ceiling, not branch decider (DB-3). M3/H6-A floor unchanged.*
 
   **Files:**
   - Modify: `docs/plans/2026-06-19-step6-gcg-microbench.md` (add the back-pointer: D6-2/Task-2 true-batch

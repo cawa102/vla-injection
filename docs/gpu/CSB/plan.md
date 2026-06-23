@@ -55,7 +55,7 @@ What replaces them are honest **A5000-vs-A100/H100** caveats, not capability wal
 - [x] **4. One LIBERO episode** (EGL) with the bf16 policy — *verify:* rollout completes; log schema matches the state-adapter / metric side — *2026-06-18 box ✓: `libero_spatial` task-0 episode **completed, 90 policy steps, success=True**, sdpa load, **peak VRAM 14.50 GiB / 23.5 GiB (fits one card)**; logged `RolloutStep` schema → `results/_smoke/2026-06-18T14-21-51Z-libero-episode-smoke`. EGL (`MUJOCO_GL=egl`) initialised + rendered on the A5000 → headless-render risk retired. Two install gotchas + the `--unnorm-key` finding in the Step 4 how-to below.*
 - [x] **5. Attach the goal-action detector (L2)** to that real rollout — *verify:* detector ingests real OpenVLA actions end-to-end — *2026-06-18 ✓ (offline on the mac, model-free, from the committed step-4 run dir — no box session needed): `scripts/attach_l2_to_rollout.py` + `src/evasion_tax/eval/rollout_io.py` (JSON→`Rollout` seam + D-5 provenance binding). Provenance validated (steps_sha256 `0deaf431…`), **state half** (90 per-step metric-A scores finite in [0,1], decision emitted) + **action half** ((90,7) finite, non-degenerate, D2 path exercised) → `results/_smoke/2026-06-18T15-23-29Z-l2-attach/l2_attach_report.json`. 27 new TDD tests (437 suite green). Wiring de-risk only — NO separation/calibration/deployable claim; benign metric-A scores NOT near zero is expected (the `engagement_radius`/`grasp_radius` placeholders don't match the real scene scale — report-only D-3 calibration input, NOT a re-pin).*
 - [x] **5.5 GCG gradient prerequisite** (on the box, before step 6) — bf16 + flash_attn2 `.backward()` reaches the **input embeddings** — *verify:* the input-embedding gradient is **finite and non-zero** and peak VRAM fits one card — *2026-06-19 box ✓: `openvla/openvla-7b` bf16, **finite non-zero** input-embedding grad through **flash_attention_2** (‖g‖=97.2, prompt-region 76.0, max|g|=26.9; loss=18.45 to the target action tokens, grad shape [1,26,4096]), **peak VRAM 15.49 GiB / 23.5 GiB → fits one card** — frozen weights → only ~1 GiB over the step-3 forward, so a GCG backward step is cheap (≈8 GiB headroom for candidate batching at step 6). **sdpa cross-check matches** (‖g‖=91.7, loss=18.52). `scripts/smoke_openvla_gradient.py`; runs `results/_smoke/2026-06-19T12-57-10Z-openvla-gradient-smoke` (flash) / `…T12-57-30Z…` (sdpa), commit `0300670`. → the GCG "gradients are obtainable" premise **HOLDS**. How-to below.*
-- [ ] **6. GCG** — first a tiny run (few steps, 1 example), then the **D8 timing micro-bench** — *verify:* attack harness runs; record `s/target`, peak VRAM, max candidate-batch at 24 GB → **selects Branch N/N−/F (D8)**
+- [x] **6. GCG** — first a tiny run (few steps, 1 example), then the **D8 timing micro-bench** — *verify:* attack harness runs; record `s/target`, peak VRAM, max candidate-batch at 24 GB → **selects Branch N/N−/F (D8)** — *2026-06-23 box ✓ (REGISTERED):* tiny-run + DB-4 equivalence gate green (`results/_smoke/2026-06-22T14-32-35Z-gcg-tiny-smoke`, 8/8); D8 micro-bench (true-batch official, loop ablation) → **s/step=33.19 s**, **s/target(worst, sw=512/ns=500, early_stop OFF)=16,595 s ≈ 4.61 h**, **max-B=43** @ 21.3 GiB (VRAM ceiling, **not** branch-critical, DB-3), `speedup_k≈1.53` → `results/2026-06-23T13-34-55Z-gcg-microbench/`. **Provisional Branch = N−, hard-F default** (Task 5, playbook §10) — branch governed by the **unmeasured early-stop** distribution + the **2nd card**; locks only when the adaptive GCG-against-the-probe cost is measured (M1/M2). Unattended-run runbook below.
 
 Steps 1–5.5 de-risk the wiring; **step 6 produces registered measurements** (D4/D7/D8). If bf16 OOMs at step 3
 (it should not at 24 GB) → fall back to memory relief on the 2nd card before any precision change.
@@ -239,6 +239,41 @@ header. **DC-4 cross-check:** the direct per-step cost (`run_gcg` `s/target` ÷ 
 > **RoboGCG-budget-faithful only** (sw=512/ns=500/topk=256/n_replace=1/early_stop); the token filters
 > (`allow_non_ascii`/`filter_ids`) + the suffix/mean-CE seam divergences remain open (DC-6) → do **not** call it a
 > "RoboGCG-faithful attack" yet.
+
+## Unattended overnight / weekend runs (the M1–M4 matrices)
+
+The box is **author-exclusive** (no contention) but **physically at the lab** — so the binding limit on realised
+GPU-hours is no longer sharing; it is **(1) the job surviving after you close the tunnel and go home, (2) the
+machine not sleeping/shutting down, (3) crash/OOM babysitting**. Production **attack runs do NOT need an exclusive
+window** (only the D8 *timing* bench does, L3) → they can run unattended 24/7. We have **no sudo**, so use the
+sudo-free path:
+
+1. **Detach the job from the tunnel/terminal → `tmux`.** Closing VS Code Remote Tunnel (or your laptop) drops the
+   terminal but **not** a `tmux` session (most distros default `KillUserProcesses=no`, so it survives logout).
+   Install sudo-free if absent: `micromamba install -c conda-forge tmux`.
+2. **Stop idle-suspend for the job's lifetime → `systemd-inhibit`** (no sudo, scoped to the command):
+   ```bash
+   tmux new -s eet
+   # inside tmux:
+   export HF_HOME=<roomy-disk>/hf
+   export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+   systemd-inhibit --what=idle:sleep --who=eet --why="overnight GCG matrix" \
+     uv run python scripts/run_attack.py ...  2>&1 | tee results/<run>/log.txt
+   # Ctrl-b then d  → detach. Close the tunnel / go home. Next day: tmux attach -t eet
+   ```
+3. **Do not shut down or GUI-log-out the box; the display may sleep (harmless to compute).**
+
+**Verify once on the box (I cannot check these remotely):**
+- `loginctl show-user $USER | grep KillUserProcesses` → must be `no` (else even tmux dies on disconnect →
+  `loginctl enable-linger $USER`, which may need an admin).
+- Whether the desktop **suspends/hibernates** on idle. A lab desktop usually does not; if it does and
+  `systemd-inhibit` is not enough, ask the admin to disable system suspend **once**.
+
+**Crash/OOM resilience (mandatory for the long matrices — we already hit razor-edge OOMs at max-B).** The M1–M4
+attack driver MUST **checkpoint per target**: write each finished suffix/outcome to write-once `results/`
+**immediately** and **skip-if-exists** on restart, so a 02:00 OOM costs one target, not the night. Wrap the run in
+an auto-restart loop (`until uv run python … ; do sleep 10; done`) so a transient OOM self-recovers. This is a
+**design requirement** for the M3/M4 driver, recorded here so the calendar budget below is actually realisable.
 
 ## After bring-up — the registered matrix runs here
 
