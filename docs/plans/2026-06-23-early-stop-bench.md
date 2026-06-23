@@ -14,8 +14,11 @@ predicate (argmax forced-decode match over the target span), (2) a GPU-guarded `
 forwards once and calls the pure predicate, (3) a **pure** bench-bookkeeping module (per-target outcome / summary /
 resume helpers), and (4) a **checkpointed, resumable** driver script that runs each target through `run_gcg` with
 `reached_fn=target.reached`, writes each outcome write-once on completion (skip-if-exists on restart), quarantines
-each suffix, and aggregates the distribution. Built to run **unattended** (`nohup` + `systemd-inhibit`; per-target
-checkpoint + a shell `until` auto-restart loop), per `docs/gpu/CSB/plan.md` *Unattended runs*.
+each suffix, and aggregates the distribution. A prerequisite (5) **chunks `loss_of` candidate evaluation at
+`eval_batch`** so a *real* `search_width=512` attack fits 24 GB — without it `run_gcg(sw=512)` OOMs (the single
+512-wide forward materialises ~8 GiB of logits on top of the 14 GiB model; observed 2026-06-23). Built to run
+**unattended** (`nohup` + `systemd-inhibit`; per-target checkpoint + a shell `until` auto-restart loop), per
+`docs/gpu/CSB/plan.md` *Unattended runs*.
 
 **Tech Stack:** Python 3.10; NumPy (pure predicate + bookkeeping + tests); torch 2.2.0+cu121 / transformers 4.40.1 /
 bf16 OpenVLA-7B behind the CUDA guard (identical to `smoke_openvla_gradient.py` and the existing GCG seam).
@@ -45,6 +48,15 @@ bf16 OpenVLA-7B behind the CUDA guard (identical to `smoke_openvla_gradient.py` 
 - **DE-6 — Registered run, but `--exclusive-gpu` only nice-to-have.** This bench is **not** a timing bench (we want
   the steps distribution, not sub-second wall-time precision), but the box is author-exclusive so run exclusive and
   log the full §8 header; the realistic-cost number it yields **updates `branch_select`** so it is a real result.
+- **DE-7 — `loss_of` candidate-eval chunking is a PREREQUISITE for the faithful sw=512 attack (un-defers DB-5's
+  "eval mini-batching").** The current `loss_of` runs **one** forward over **all** `B` candidates, so `run_gcg` at
+  `search_width=512` materialises `logits [512, seq, V]` (~8 GiB) on top of the ~14 GiB model → **OOM on 24 GB**
+  (observed 2026-06-23: 23.47 GiB in use, 604 MiB alloc fails). The registered D8 only ran the direct loop at
+  **sw=32** (1 chunk, fits) and computed the sw=512 cost **analytically** (`⌈512/eval_batch⌉·t_fwd`). To run a
+  *real* early_stop sw=512 attack we must forward candidates **`eval_batch` at a time and concatenate the `[B]`
+  losses** — peak VRAM then becomes one chunk's, so sw=512 fits. This was explicitly deferred in the step-6 plan
+  (DB-5 / "eval mini-batching deferred to M1/Task D"); the bench un-defers it. **The D8 registered numbers are
+  unaffected** (they never ran `loss_of(512)`; `loss_of(32)` = 1 chunk = identical).
 
 ---
 
@@ -123,7 +135,7 @@ def target_span_argmax_matches(
   - Create: `src/evasion_tax/attack/early_stop_bench.py`
   - Test: `tests/evasion_tax/attack/test_early_stop_bench.py`
 
-  **What:** Pure dataclass + aggregation + resume helpers (no torch). The driver (Task 5) does only I/O + the GPU
+  **What:** Pure dataclass + aggregation + resume helpers (no torch). The driver (Task 6) does only I/O + the GPU
   loop around these.
 
   **Interface:**
@@ -172,7 +184,7 @@ def target_span_argmax_matches(
   - Modify: `scripts/microbench_gcg.py` (import the two helpers from the new module instead of defining them)
   - Test: `tests/evasion_tax/attack/test_openvla_loader.py` (guard/contract only; GPU body unchanged)
 
-  **What:** DRY: the bench driver (Task 5) needs the exact same frozen-bf16 load + target build as the microbench;
+  **What:** DRY: the bench driver (Task 6) needs the exact same frozen-bf16 load + target build as the microbench;
   avoid a second copy that can drift. Pure move + re-import; **no behaviour change** to the registered microbench.
 
   **Interface:** `load_frozen_openvla(...)`, `build_target(...)` (public names; keep signatures identical to the
@@ -189,7 +201,43 @@ def target_span_argmax_matches(
 
   **Commit:** `refactor: extract shared frozen-OpenVLA loader/target-builder for reuse by the bench`
 
-- [ ] **Task 5: the early-stop bench driver `scripts/bench_early_stop.py` — mac core + box run**
+- [ ] **Task 5: `loss_of` candidate-eval chunking (eval mini-batching, DE-7) — mac (TDD) + box fit-check**
+
+  **Files:**
+  - Modify: `src/evasion_tax/attack/gcg_openvla.py` (`OpenVlaGcgTarget.__init__` + `loss_of`)
+  - Test: `tests/evasion_tax/attack/test_gcg_openvla.py` (chunked-vs-single equivalence; pure where possible)
+
+  **What:** Make `loss_of` forward candidates in **chunks of `eval_batch`** and concatenate the per-chunk `[B]`
+  losses, so `run_gcg` at `search_width=512` fits 24 GB (DE-7). Add an `eval_batch: int | None = None` attribute to
+  `OpenVlaGcgTarget.__init__`: `None` ⇒ **one forward over all B** (current behaviour — preserves the D8 sw=32
+  path and the existing `batched_matches_single`/`per_sequence_ce` tests bit-for-bit); an int ⇒ loop over
+  `ceil(B/eval_batch)` chunks, `torch.cuda.empty_cache()` between chunks, peak VRAM = the **max single-chunk** peak
+  (that is the real 24 GB ceiling). Output `[B]` is identical to the single-forward path within `atol` regardless
+  of chunk size (chunking is a pure reassociation of independent per-row CE).
+
+  **Interface:**
+  - `OpenVlaGcgTarget(__init__ …, eval_batch: int | None = None)`.
+  - `loss_of(candidate_suffixes: np.ndarray) -> np.ndarray` — `[B, L] → [B]`, chunked at `eval_batch` when set.
+
+  **Test scenarios:**
+  - **Chunked == single:** `loss_of` with `eval_batch ∈ {1, 8, 32}` equals the `eval_batch=None` result (and the
+    per-candidate `_loss_single`) within `atol=1e-3`, across multiple B (incl. B not divisible by `eval_batch`,
+    e.g. B=50 / chunk 32 → chunks 32+18) and ≥2 suffix lengths.
+  - **Rank order preserved:** `argmin` of the chunked `[B]` == `argmin` of the single path (DB-4 spirit).
+  - **Determinism:** same seed/dtype ⇒ identical `[B]` across repeats.
+  - **Back-compat:** `eval_batch=None` is byte-for-byte the current behaviour (existing tests untouched & green).
+  - **(box fit-check, verify gate = the run):** a `run_gcg` at `search_width=512`, `eval_batch=32` completes with
+    **peak VRAM < 24 GiB** (the OOM at sw=512 is gone); a few steps suffice.
+
+  **Dependencies:** the existing `loss_of`/`_target_span_ce_torch`/`per_sequence_ce` seam; numpy.
+
+  **Notes:** Un-defers DB-5's "eval mini-batching" **only** for candidate evaluation — the `token_gradient`
+  (B=1 backward) path and target-position-only logits stay out of scope. The chunk size is the **HW-adapted
+  `batch_size`** (the measured max-B ≈ 32–43, DC-2). **Do not re-measure or alter the registered D8 record.**
+
+  **Commit:** `feat: chunk loss_of candidate eval at eval_batch (sw=512 fits 24 GB; chunked==single gated)`
+
+- [ ] **Task 6: the early-stop bench driver `scripts/bench_early_stop.py` — mac core + box run**
 
   **Files:**
   - Create: `scripts/bench_early_stop.py`
@@ -198,7 +246,8 @@ def target_span_argmax_matches(
 
   **What:** GPU-guarded driver. Parse args; if no CUDA → `gpu_required_message` + exit 2 (no silent no-op). Load the
   model once (Task 4). For `i in range(n_targets)`: `tid = target_id_for(seed, i)`; if `--resume` and
-  `is_target_done` → log skip + continue (DE-4); else build target (seed+i), reset CUDA peak, time `run_gcg(target,
+  `is_target_done` → log skip + continue (DE-4); else build target (seed+i) **with `eval_batch` chunking so the
+  sw=512 attack fits (Task 5)**, reset CUDA peak, time `run_gcg(target,
   cfg, reached_fn=target.reached)` (early_stop ON, DE-3), build a `TargetOutcome`, **write its JSON write-once** to
   `results/<run>/targets/<tid>.json`, and **quarantine** the suffix to `artifacts/untrusted/<run>/<tid>.txt`
   (DE-5). After the loop, read **all** per-target JSONs, `steps_to_success_summary(...)`, print
@@ -207,7 +256,8 @@ def target_span_argmax_matches(
 
   **Interface (CLI):**
   - `--config configs/example_m2.yaml --n-targets 5 --search-width 512 --n-steps 500 --seed 42`
-  - `--device cuda:0 --attn-impl flash_attention_2 --results-root results --exclusive-gpu`
+  - `--device cuda:0 --attn-impl flash_attention_2 --eval-batch 32 --results-root results --exclusive-gpu`
+    (`--eval-batch` = the candidate-eval chunk size from Task 5 → `--search-width 512` fits 24 GB, DE-7).
   - `--resume/--no-resume` (default **resume on**, DE-4).
 
   **Test scenarios (GPU mocked):**
@@ -217,7 +267,7 @@ def target_span_argmax_matches(
     equivalence).
   - Each run produces exactly one quarantined suffix file per *fresh* target under `artifacts/untrusted/`.
 
-  **Dependencies:** Tasks 1–4; `run_gcg`/`GcgConfig` (`src/evasion_tax/attack/gcg.py`); `cuda_available` /
+  **Dependencies:** Tasks 1–5; `run_gcg`/`GcgConfig` (`src/evasion_tax/attack/gcg.py`); `cuda_available` /
   `gpu_required_message` (`src/evasion_tax/config.py`); the repro `run.json` writer used by the other scripts.
 
   **Notes:** **Unattended launch** (box): `nohup systemd-inhibit … uv run python scripts/bench_early_stop.py …
@@ -228,7 +278,7 @@ def target_span_argmax_matches(
 
   **Commit:** `feat: early-stop steps-to-success bench driver (checkpoint+resume, quarantine, registered aggregate)`
 
-- [ ] **Task 6: record the realistic cost → re-run `branch_select` → update docs — mac (after the box run)**
+- [ ] **Task 7: record the realistic cost → re-run `branch_select` → update docs — mac (after the box run)**
 
   **Files:**
   - Modify: `docs/core/execution-playbook.md` (§6 D8 + §10: add the **measured early-stop** median, the realistic
@@ -242,7 +292,7 @@ def target_span_argmax_matches(
   **Test scenarios:** docs not unit-tested; `branch_select` already covered. Recorded branch stays
   `provisional`, `locked=False`, `default_if_unconfirmed="F"` (the adaptive cost still gates the lock).
 
-  **Dependencies:** Task 5's registered `bench_result.json`.
+  **Dependencies:** Task 6's registered `bench_result.json`.
 
   **Notes:** This is the early-stop analogue of step-6 Task 5; it **refines** the provisional branch, it does not
   lock it. **M3/H6-A delivered in every branch** regardless.
@@ -254,17 +304,19 @@ def target_span_argmax_matches(
 ## Build order & where each runs
 
 1. **On the mac (TDD, `/tdd`):** Task 1 (pure predicate) → Task 3 (pure bookkeeping) → Task 4 (loader extraction) →
-   Task 2 *guarded body* + Task 5 *core/glue* with the GPU call mocked. Full `src/evasion_tax` stays type-clean +
-   ruff-clean; suite green.
-2. **On the CSB A5000 box (one session, unattended):** Task 2 on-box wiring (`reached` agrees with `run_gcg`) →
-   Task 5 **non-registered dry run** (1 target, 20 steps) → Task 5 **registered run** (`nohup` + `systemd-inhibit`,
+   Task 5 (`loss_of` chunking — pure chunked==single equivalence) → Task 2 *guarded body* + Task 6 *core/glue* with
+   the GPU call mocked. Full `src/evasion_tax` stays type-clean + ruff-clean; suite green.
+2. **On the CSB A5000 box (one session, unattended):** Task 2 on-box wiring (`reached` agrees with `run_gcg`) +
+   Task 5 **box fit-check** (`run_gcg` at sw=512/eval_batch=32 completes < 24 GiB — the OOM is gone) → Task 6
+   **non-registered dry run** (1 target, 20 steps) → Task 6 **registered run** (`nohup` + `systemd-inhibit`,
    per-target checkpoint, auto-restart `until`-loop) → push results.
-3. **On the mac:** Task 6 — realistic-cost record + `branch_select` re-run + doc updates.
+3. **On the mac:** Task 7 — realistic-cost record + `branch_select` re-run + doc updates.
 
 **Verify gates:** (a) pure predicate matches hand-computed argmax + agrees with `per_sequence_ce≈0`; (b) on-box
-`target.reached` agrees with `run_gcg.reached`; (c) registered `bench_result.json` carries the steps-to-success
-distribution (median/IQR/censored_fraction) under the §8 header, with per-target resume proven; (d) the realistic
-`s/target` re-feeds `branch_select` and the **provisional** branch + **hard-F default** are written.
+`target.reached` agrees with `run_gcg.reached`; (c) **chunked `loss_of` == single within `atol` (all B / chunk
+sizes / suffix lengths) AND `run_gcg` at sw=512 fits 24 GiB**; (d) registered `bench_result.json` carries the
+steps-to-success distribution (median/IQR/censored_fraction) under the §8 header, with per-target resume proven;
+(e) the realistic `s/target` re-feeds `branch_select` and the **provisional** branch + **hard-F default** are written.
 
 ---
 
@@ -274,6 +326,6 @@ distribution (median/IQR/censored_fraction) under the §8 header, with per-targe
 supported) · @src/evasion_tax/attack/gcg_openvla.py (`OpenVlaGcgTarget`: `_full_ids`, `_labels`, `loss_of`,
 `token_gradient`, `per_sequence_ce`) · @scripts/microbench_gcg.py (`_load_frozen_openvla`, `_build_target`,
 `steps_to_success` recording — the D8 harness this bench complements) · @src/evasion_tax/eval/branch_select.py
-(`affordable_matrix` / `provisional_branch` — Task 6 re-feeds it) · @docs/gpu/CSB/plan.md (*Unattended runs* +
+(`affordable_matrix` / `provisional_branch` — Task 7 re-feeds it) · @docs/gpu/CSB/plan.md (*Unattended runs* +
 step 6) · @docs/core/execution-playbook.md (§6 D7/D8, §7 M1 "A5000 early-stop steps-to-success bench", §10).
 Registered cost input: `results/2026-06-23T13-34-55Z-gcg-microbench/` (s/step = 33.19 s; s/target worst = 16,595 s).
