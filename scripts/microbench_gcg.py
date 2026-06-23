@@ -444,7 +444,12 @@ def main(argv: list[str] | None = None) -> int:
         # Budget-faithful s/step primitives: token_gradient/loss_of return numpy, which
         # forces a device sync, so perf_counter brackets the real GPU time. Timed BEFORE
         # the peak reset so peak_vram_gib stays the run_gcg peak (unchanged semantics).
+        # The caching allocator reserves memory and only returns it to the driver on
+        # empty_cache(): without freeing between these near-ceiling forwards (the timing
+        # loss_of runs at B=eval_batch=max-B, the loop's largest forward) and run_gcg, the
+        # reserved-but-fragmented blocks OOM run_gcg's B=search_width forward (logits.float()).
         if eval_batch >= 1:
+            torch.cuda.empty_cache()  # drop the prior target's run_gcg reservation first
             init = target.init_suffix_ids()
             tg0 = time.perf_counter()
             target.token_gradient(init)
@@ -453,6 +458,7 @@ def main(argv: list[str] | None = None) -> int:
             tf0 = time.perf_counter()
             target.loss_of(candidates)
             t_fwds.append(time.perf_counter() - tf0)
+        torch.cuda.empty_cache()  # return the timing reservation so run_gcg starts model-only
         torch.cuda.reset_peak_memory_stats(device)
         t0 = time.perf_counter()
         result = run_gcg(target, cfg)

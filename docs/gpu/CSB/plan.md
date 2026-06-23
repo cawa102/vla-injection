@@ -189,6 +189,7 @@ times one `token_gradient` (`t_grad`) + one `loss_of` at `B=eval_batch` (`t_fwd`
 
 ```bash
 export HF_HOME=<roomy-disk>/hf            # ~14 GB base-model cache (as in steps 3 / 5.5)
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True   # reduce 24 GB fragmentation OOMs
 cd ~/vla-injection
 uv run python scripts/microbench_gcg.py \
   --config configs/example_m2.yaml \
@@ -208,6 +209,10 @@ uv run python scripts/microbench_gcg.py \
   `speedup_k≈1.53`) **passed through** for the record — not re-measured this run.
 - If `--attn-impl flash_attention_2` errors, retry `--attn-impl sdpa` (the step-5.5 cross-check path). If `uv run`
   prunes the lock-external GPU stack, fall back to `uv run --no-sync` (the step-4 workaround).
+- **OOM fix (2026-06-23):** the per-target `t_grad`/`t_fwd` timing forwards at `B≈max-B` reserved memory that the
+  caching allocator held across into `run_gcg`, fragmenting the 24 GB card → `run_gcg`'s `B=search_width` forward
+  OOM'd at `logits.float()` (1.16 GiB). Fixed by `torch.cuda.empty_cache()` between the timing forwards and
+  `run_gcg` (commit on `main`); `expandable_segments:True` above is the belt-and-suspenders.
 
 *Verify gate:* prints `s/target median …s (n=3, reproducible=True)`, `peak VRAM … GiB`, `max candidate-batch
 B=<max-B>`, **and** `budget-faithful (sw=512/ns=500/eval_batch=<max-B>): t_grad=…s t_fwd=…s => s/step=…s,
