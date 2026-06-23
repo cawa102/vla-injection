@@ -16,8 +16,15 @@ from __future__ import annotations
 import argparse
 import dataclasses
 import math
+import os
 import sys
 from pathlib import Path
+
+# Default the CUDA allocator to expandable segments BEFORE any torch/CUDA init so the
+# 24 GB micro-bench does not OOM from fragmentation even if the operator forgot the
+# shell export (runbook docs/gpu/CSB/plan.md; OOM fixes a3b7d0c / b1da360). An explicit
+# `export PYTORCH_CUDA_ALLOC_CONF=...` still wins — setdefault only fills it when unset.
+os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 
 import _bootstrap  # noqa: F401  (import side effect: puts src/ on sys.path)
 import numpy as np  # noqa: E402

@@ -14,6 +14,7 @@ REQUIRED_KEYS = {
     "cuda",
     "torch",
     "driver",
+    "env_vars",
 }
 
 
@@ -76,6 +77,25 @@ def _fake_torch(*, available: bool, raw_driver: int = 0) -> types.SimpleNamespac
         cuda=types.SimpleNamespace(is_available=lambda: available),
         _C=types.SimpleNamespace(_cuda_getDriverVersion=lambda: raw_driver),
     )
+
+
+def test_env_vars_snapshot_has_cuda_alloc_keys():
+    # The registered record must show whether the allocator knob the 24 GB
+    # micro-bench depends on (PYTORCH_CUDA_ALLOC_CONF=expandable_segments) was
+    # active, plus which physical GPU the run was pinned to.
+    env = capture_env()
+    env_vars = env["env_vars"]
+    assert isinstance(env_vars, dict)
+    assert "PYTORCH_CUDA_ALLOC_CONF" in env_vars
+    assert "CUDA_VISIBLE_DEVICES" in env_vars
+
+
+def test_env_vars_capture_set_value_and_none_when_unset(monkeypatch):
+    monkeypatch.setenv("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
+    monkeypatch.delenv("CUDA_VISIBLE_DEVICES", raising=False)
+    env = capture_env()
+    assert env["env_vars"]["PYTORCH_CUDA_ALLOC_CONF"] == "expandable_segments:True"
+    assert env["env_vars"]["CUDA_VISIBLE_DEVICES"] is None
 
 
 def test_driver_version_resolves_with_mocked_cuda_torch(monkeypatch):

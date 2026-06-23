@@ -189,7 +189,7 @@ times one `token_gradient` (`t_grad`) + one `loss_of` at `B=eval_batch` (`t_fwd`
 
 ```bash
 export HF_HOME=<roomy-disk>/hf            # ~14 GB base-model cache (as in steps 3 / 5.5)
-export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True   # reduce 24 GB fragmentation OOMs
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True   # reduce 24 GB fragmentation OOMs (script self-defaults this; explicit export still wins)
 cd ~/vla-injection
 uv run python scripts/microbench_gcg.py \
   --config configs/example_m2.yaml \
@@ -219,6 +219,11 @@ uv run python scripts/microbench_gcg.py \
   fragmentation gone the sweep then reached a higher max-B (~43) and the timing `loss_of(B=max-B)` OOM'd by ~10 MiB
   because the preceding `token_gradient` (B=1 backward) reservation sat on top → `empty_cache()` **between**
   `token_gradient` and `loss_of` too (commits on `main`). If a razor-edge max-B still OOMs, use `--eval-batch 32`.
+  **Reproducibility (2026-06-23):** the script now `os.environ.setdefault`s `expandable_segments:True` *before* any
+  CUDA init, so a direct run is safe even without the export above; `capture_env` records `PYTORCH_CUDA_ALLOC_CONF`
+  + `CUDA_VISIBLE_DEVICES` under `run.json`'s `env_vars`, so the allocator knob is now provable from the registered
+  record (the already-logged `2026-06-23T13-34-55Z` run predates this capture → its expandable_segments provenance
+  lives in commits `a3b7d0c`/`b1da360` + this note, per the write-once rule).
 
 *Verify gate:* prints `s/target median …s (n=3, reproducible=True)`, `peak VRAM … GiB`, `max candidate-batch
 B=<max-B>`, **and** `budget-faithful (sw=512/ns=500/eval_batch=<max-B>): t_grad=…s t_fwd=…s => s/step=…s,

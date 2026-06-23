@@ -9,9 +9,25 @@ local dev host (no torch, no CUDA) and on the GPU node (A100/H100).
 from __future__ import annotations
 
 import importlib.metadata as importlib_metadata
+import os
 import platform as platform_mod
 import subprocess
 import sys
+
+# Reproducibility-relevant environment variables recorded with every run.
+# ``PYTORCH_CUDA_ALLOC_CONF`` carries the ``expandable_segments`` allocator
+# setting the 24 GB GCG micro-bench needs to avoid fragmentation OOMs, so the
+# registered record must show whether it was active; ``CUDA_VISIBLE_DEVICES``
+# pins which physical GPU the run used.
+_REPRO_ENV_VARS = (
+    "PYTORCH_CUDA_ALLOC_CONF",
+    "CUDA_VISIBLE_DEVICES",
+)
+
+
+def _repro_env_vars() -> dict[str, str | None]:
+    """Snapshot the reproducibility-relevant env vars (``None`` when unset)."""
+    return {name: os.environ.get(name) for name in _REPRO_ENV_VARS}
 
 
 def _git_commit() -> str | None:
@@ -77,9 +93,11 @@ def capture_env() -> dict:
 
     Returns:
         A fresh dict with keys ``platform``, ``python_version``,
-        ``dependencies``, ``git_commit``, ``torch``, ``cuda``, ``driver``.
-        On a machine without torch/CUDA, ``torch``/``cuda``/``driver`` are
-        ``None`` and ``git_commit`` is ``None`` outside a git repo. Never raises.
+        ``dependencies``, ``git_commit``, ``torch``, ``cuda``, ``driver``,
+        ``env_vars``. On a machine without torch/CUDA, ``torch``/``cuda``/
+        ``driver`` are ``None`` and ``git_commit`` is ``None`` outside a git
+        repo; ``env_vars`` values are ``None`` when the variable is unset.
+        Never raises.
     """
     torch_version, cuda_version, driver_version = _torch_versions()
     return {
@@ -90,4 +108,5 @@ def capture_env() -> dict:
         "torch": torch_version,
         "cuda": cuda_version,
         "driver": driver_version,
+        "env_vars": _repro_env_vars(),
     }
