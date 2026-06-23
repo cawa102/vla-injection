@@ -216,6 +216,24 @@ def test_suffix_span_rejects_out_of_range_len(bad_len):
 
 
 # --------------------------------------------------------------------------- #
+# reached(): the run_gcg reached_fn. GPU body is the on-box gate (reached agrees #
+# with run_gcg.reached and with loss~0); off-GPU we pin only the call contract.  #
+# --------------------------------------------------------------------------- #
+
+
+def test_reached_signature_matches_run_gcg_reached_fn_contract():
+    import inspect
+
+    from evasion_tax.attack.gcg_openvla import OpenVlaGcgTarget
+
+    # run_gcg expects reached_fn: Callable[[np.ndarray], bool]; target.reached must take
+    # exactly one positional arg (the suffix ids) besides self, so callers can pass
+    # reached_fn=target.reached directly.
+    params = list(inspect.signature(OpenVlaGcgTarget.reached).parameters)
+    assert params == ["self", "suffix_ids"]
+
+
+# --------------------------------------------------------------------------- #
 # Guard: torch / transformers / PIL only inside methods, never at module top   #
 # --------------------------------------------------------------------------- #
 

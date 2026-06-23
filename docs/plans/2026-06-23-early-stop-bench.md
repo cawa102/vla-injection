@@ -103,7 +103,7 @@ def target_span_argmax_matches(
 
   **Commit:** `feat: pure RoboGCG-style forced-decode success predicate for GCG early-stop`
 
-- [ ] **Task 2: GPU `OpenVlaGcgTarget.reached()` (the `reached_fn`) — mac (guarded) + box wiring**
+- [x] **Task 2: GPU `OpenVlaGcgTarget.reached()` (the `reached_fn`) — mac (guarded) + box wiring**
 
   **Files:**
   - Modify: `src/evasion_tax/attack/gcg_openvla.py` (add `reached`)

@@ -25,6 +25,8 @@ from typing import Any
 
 import numpy as np
 
+from evasion_tax.attack.early_stop import target_span_argmax_matches
+
 
 def chunked_losses(
     full: np.ndarray,
@@ -487,6 +489,43 @@ class OpenVlaGcgTarget:
         idx = target.view(1, -1, 1).expand(log_probs.shape[0], -1, 1)  # [B, n_target, 1]
         true_lp = log_probs.gather(-1, idx).squeeze(-1)  # [B, n_target]
         return (-true_lp).mean(dim=-1)  # [B] mean CE over the target span
+
+    def reached(self, suffix_ids: np.ndarray) -> bool:
+        """Whether the target action span is greedily decoded — the ``run_gcg`` ``reached_fn``.
+
+        The DE-1 success predicate on the GPU: one ``torch.no_grad()`` forward at the
+        current suffix, then the pure
+        :func:`~evasion_tax.attack.early_stop.target_span_argmax_matches` (the *same*
+        predicate the off-GPU tests pin). Callers pass ``reached_fn=target.reached`` to
+        ``run_gcg`` so the search stops once the argmax decode equals the target, checked
+        every step (DE-3) — one extra B=1 forward per step, the intended ~6 % overhead.
+
+        OpenVLA fuses image patches into the sequence, so ``out.logits`` (length ``S``)
+        includes vision positions and does **not** align with the text ``_labels``. We take
+        the **same trailing slice** as :meth:`_target_span_ce_torch` — the ``n_target + 1``
+        positions whose first ``n_target`` predict the target tokens, independent of the
+        patch count — and pass that aligned block to the predicate. Using the same slice as
+        the loss seam is what makes ``reached`` agree with ``loss ≈ 0`` (the on-box gate).
+        """
+        import torch  # type: ignore[import-not-found]
+
+        full_ids = self._full_ids(suffix_ids)
+        input_ids = torch.tensor(full_ids[None, :], device=self._device, dtype=torch.long)
+        attn = torch.ones_like(input_ids)
+        with torch.no_grad():
+            out = self._model(
+                input_ids=input_ids,
+                attention_mask=attn,
+                pixel_values=self._pixel_values,
+            )
+        n_target = int(self._target_action_ids.shape[0])
+        # Trailing [n_target+1, V] slice: rows [:-1] are the positions predicting the target
+        # tokens (== _target_span_ce_torch's slice); the final row is dropped by the
+        # predicate's causal shift. Aligned labels = [ignore] ⊕ target, so the predicate
+        # checks argmax(pred_logits[j]) == target[j] at every target position.
+        logits_slice = out.logits[0, -n_target - 1 :, :].float().cpu().numpy()  # [n_target+1, V]
+        labels_slice = np.concatenate([[_LABEL_IGNORE], self._target_action_ids])  # [n_target+1]
+        return target_span_argmax_matches(logits_slice, labels_slice)
 
     def loss_of(self, candidate_suffixes: np.ndarray) -> np.ndarray:
         """``[B, L]`` candidates → ``[B]`` CE losses via no-grad forward(s) (DE-7 chunked).
