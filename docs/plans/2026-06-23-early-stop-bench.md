@@ -79,7 +79,7 @@ def target_span_argmax_matches(
 
 ## Tasks
 
-- [ ] **Task 1: pure success predicate (`target_span_argmax_matches`) — mac**
+- [x] **Task 1: pure success predicate (`target_span_argmax_matches`) — mac**
 
   **Files:**
   - Create: `src/evasion_tax/attack/early_stop.py`
