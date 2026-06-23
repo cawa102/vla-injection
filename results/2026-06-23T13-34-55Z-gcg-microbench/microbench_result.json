@@ -1,0 +1,48 @@
+{
+  "adaptive_gcg_cost": "deferred (L1 not on GPU)",
+  "branch_lock_condition": "Branch is PROVISIONAL: locked only once the adaptive GCG-against-the-probe bench (M1/M2, same GPU seam) confirms N/N\u2212; until then the committed branch is the hard-F default (oracle frontier, H6-A).",
+  "branch_status": "provisional",
+  "device_name": "NVIDIA RTX A5000",
+  "dtype": "bfloat16",
+  "exclusive_gpu": true,
+  "faithful": {
+    "eval_batch": 32,
+    "num_steps": 500,
+    "s_per_step": 33.190573442261666,
+    "s_per_target_worstcase": 16595.286721130833,
+    "search_width": 512,
+    "t_fwd_s": 2.061111861956306,
+    "t_grad_s": 0.21278365096077323
+  },
+  "gcg_config": {
+    "n_steps": 5,
+    "search_width": 32,
+    "seed": 42,
+    "suffix_len": 20,
+    "top_k": 256
+  },
+  "l1_extraction_overhead": "deferred (L1 not on GPU)",
+  "max_batch_note": "max_candidate_batch is a 24 GB VRAM ceiling (hardware characterisation), NOT branch-critical (DB-3): the compute branch stays provisional + hard-F default regardless.",
+  "max_candidate_batch": 43,
+  "peak_vram_gib": 21.312,
+  "s_per_target": {
+    "iqr_s": 0.1367548134876415,
+    "median_s": 11.639242882025428,
+    "n": 3,
+    "rel_iqr": 0.011749459554524205,
+    "reproducible": true
+  },
+  "s_per_target_loop": {
+    "calib_label": "n5/W32/1tgt",
+    "median_s": 17.475,
+    "note": "engineering-tax ablation; loop per-candidate eval (DB-2)"
+  },
+  "seed": 42,
+  "speedup_k": 1.5337019483938916,
+  "stage": "microbench_gcg",
+  "steps_to_success": [
+    5,
+    5,
+    5
+  ]
+}
