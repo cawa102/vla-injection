@@ -1,0 +1,112 @@
+"""Tests for ``scripts/run_attack.py`` (Task 5) — guard + resume/quarantine/record glue.
+
+The GPU work (GCG suffix optimisation + attacked rollout) is mocked via an injected
+``attack_fn``; the per-unit resume, suffix quarantine, denial flag, both-success-
+notions record, and frozen-schema load (refuses to re-pin from attacked data) are
+tested without CUDA. The guard (off-GPU ⇒ exit 2) is the shared script contract.
+"""
+
+from __future__ import annotations
+
+import importlib
+import json
+import sys
+from pathlib import Path
+
+from evasion_tax.attack.early_stop_bench import TargetOutcome
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+_SCRIPTS = _REPO_ROOT / "scripts"
+
+
+def _load():
+    if str(_SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(_SCRIPTS))
+    return importlib.import_module("run_attack")
+
+
+def _outcome(uid, *, reached=True, steps=60):
+    return TargetOutcome(
+        target_id=uid, reached=reached, steps_to_success=steps, censored=not reached,
+        best_loss=0.05, wall_seconds=200.0, peak_vram_gib=18.0, suffix_sha256="cafef00d",
+    )
+
+
+def _attack_out(uid, *, asr=True, task_success=False):
+    return {
+        "cost": _outcome(uid),
+        "suffix_text": f"! ! ! suffix for {uid}",
+        "rollout_asr_reached": asr,
+        "task_success": task_success,
+        "metric_a_per_step": [1.0, 1.0],
+    }
+
+
+def test_guard_without_cuda_exits_2(monkeypatch, capsys, tmp_path):
+    mod = _load()
+    monkeypatch.setattr(mod, "cuda_available", lambda: False)
+    cfg = _REPO_ROOT / "configs" / "example_m2.yaml"
+    schema = tmp_path / "schema.json"
+    schema.write_text(json.dumps({"engagement_radius": 0.04, "grasp_radius": 0.12}))
+    rc = mod.main(["--config", str(cfg), "--schema-from", str(schema),
+                   "--results-root", str(tmp_path)])
+    assert rc == 2
+    assert mod.STAGE in capsys.readouterr().err
+
+
+def test_is_denial_only_when_neither_region_nor_goal_reached():
+    mod = _load()
+    assert mod.is_denial(asr_reached=False, task_success=False) is True
+    assert mod.is_denial(asr_reached=True, task_success=False) is False   # redirect
+    assert mod.is_denial(asr_reached=False, task_success=True) is False   # benign task done
+
+
+def test_load_frozen_schema_reads_only_radii(tmp_path):
+    mod = _load()
+    p = tmp_path / "schema.json"
+    p.write_text(json.dumps({"engagement_radius": 0.04, "grasp_radius": 0.12}))
+    schema = mod.load_frozen_schema(str(p))
+    assert schema.engagement_radius == 0.04 and schema.grasp_radius == 0.12
+
+
+def test_run_attack_loop_records_both_notions_and_quarantines(tmp_path):
+    mod = _load()
+    units = ["t0:r0:42", "t0:r1:43", "t1:r0:44"]
+    units_dir = tmp_path / "units"
+    quarantine = tmp_path / "untrusted"
+
+    def attack_fn(unit):
+        return _attack_out(unit, asr=True, task_success=False)
+
+    records = mod.run_attack_loop(
+        units_dir, quarantine, units=units, attack_fn=attack_fn, resume=False
+    )
+    assert len(records) == 3
+    # each record carries BOTH success notions (cost.reached + rollout ASR) + denial
+    for r in records:
+        assert r["cost"]["reached"] is True
+        assert r["rollout_asr_reached"] is True
+        assert r["is_denial"] is False
+    # exactly one quarantined suffix per fresh unit
+    assert len(list(quarantine.glob("*.txt"))) == 3
+
+
+def test_run_attack_loop_resume_skips_finished_unit(tmp_path):
+    mod = _load()
+    units = ["t0:r0:42", "t0:r1:43"]
+    units_dir = tmp_path / "units"
+    quarantine = tmp_path / "untrusted"
+    mod.run_attack_loop(units_dir, quarantine, units=units,
+                        attack_fn=lambda u: _attack_out(u), resume=False)
+
+    calls = []
+
+    def counting(unit):
+        calls.append(unit)
+        return _attack_out(unit)
+
+    records = mod.run_attack_loop(units_dir, quarantine, units=units,
+                                  attack_fn=counting, resume=True)
+    assert calls == []                                    # all skipped
+    assert len(records) == 2
+    assert len(list(quarantine.glob("*.txt"))) == 2       # no extra quarantined suffixes
