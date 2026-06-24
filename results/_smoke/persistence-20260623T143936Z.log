@@ -1,0 +1,62 @@
+nohup: ignoring input
+2026-06-23 15:42:09.012877: I tensorflow/core/util/port.cc:113] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-06-23 15:42:09.045170: E external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:9261] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+2026-06-23 15:42:09.045236: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:607] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-06-23 15:42:09.046305: E external/local_xla/xla/stream_executor/cuda/cuda_blas.cc:1515] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2026-06-23 15:42:09.051639: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2026-06-23 15:42:09.746255: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+/home/40473058@eeecs.qub.ac.uk/vla-injection/.venv/lib/python3.10/site-packages/huggingface_hub/file_download.py:949: FutureWarning: `resume_download` is deprecated and will be removed in version 1.0.0. Downloads always resume when possible. If you want to force a new download, use `force_download=True`.
+  warnings.warn(
+/home/40473058@eeecs.qub.ac.uk/vla-injection/.venv/lib/python3.10/site-packages/huggingface_hub/file_download.py:949: FutureWarning: `resume_download` is deprecated and will be removed in version 1.0.0. Downloads always resume when possible. If you want to force a new download, use `force_download=True`.
+  warnings.warn(
+You are attempting to use Flash Attention 2.0 with a model not initialized on GPU. Make sure to move the model to GPU after initializing it on CPU with `model.to('cuda')`.
+You are attempting to use Flash Attention 2.0 without specifying a torch dtype. This might lead to unexpected behaviour
+Loading checkpoint shards:   0%|          | 0/3 [00:00<?, ?it/s]Loading checkpoint shards:  33%|███▎      | 1/3 [00:00<00:00,  4.12it/s]Loading checkpoint shards:  67%|██████▋   | 2/3 [00:00<00:00,  4.65it/s]Loading checkpoint shards: 100%|██████████| 3/3 [00:00<00:00,  4.96it/s]Loading checkpoint shards: 100%|██████████| 3/3 [00:00<00:00,  4.80it/s]
+/home/40473058@eeecs.qub.ac.uk/vla-injection/.venv/lib/python3.10/site-packages/huggingface_hub/file_download.py:949: FutureWarning: `resume_download` is deprecated and will be removed in version 1.0.0. Downloads always resume when possible. If you want to force a new download, use `force_download=True`.
+  warnings.warn(
+Traceback (most recent call last):
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/scripts/microbench_gcg.py", line 541, in <module>
+    raise SystemExit(main())
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/scripts/microbench_gcg.py", line 469, in main
+    result = run_gcg(target, cfg)
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/src/evasion_tax/attack/gcg.py", line 208, in run_gcg
+    cand, cand_loss = select_best(fn.loss_of(cands), cands)
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/src/evasion_tax/attack/gcg_openvla.py", line 478, in loss_of
+    out = self._model(
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/.venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1511, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/.venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1520, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/40473058@eeecs.qub.ac.uk/.cache/huggingface/modules/transformers_modules/openvla/openvla-7b/47a0ec7fc4ec123775a391911046cf33cf9ed83f/modeling_prismatic.py", line 404, in forward
+    language_model_output = self.language_model(
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/.venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1511, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/.venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1520, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/.venv/lib/python3.10/site-packages/transformers/models/llama/modeling_llama.py", line 1208, in forward
+    outputs = self.model(
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/.venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1511, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/.venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1520, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/.venv/lib/python3.10/site-packages/transformers/models/llama/modeling_llama.py", line 1018, in forward
+    layer_outputs = decoder_layer(
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/.venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1511, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/.venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1520, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/.venv/lib/python3.10/site-packages/transformers/models/llama/modeling_llama.py", line 741, in forward
+    hidden_states, self_attn_weights, present_key_value = self.self_attn(
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/.venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1511, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/.venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1520, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/.venv/lib/python3.10/site-packages/transformers/models/llama/modeling_llama.py", line 447, in forward
+    query_states, key_states = apply_rotary_pos_emb(query_states, key_states, cos, sin)
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/.venv/lib/python3.10/site-packages/transformers/models/llama/modeling_llama.py", line 206, in apply_rotary_pos_emb
+    q_embed = (q * cos) + (rotate_half(q) * sin)
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/.venv/lib/python3.10/site-packages/transformers/models/llama/modeling_llama.py", line 181, in rotate_half
+    return torch.cat((-x2, x1), dim=-1)
+torch.cuda.OutOfMemoryError: CUDA out of memory. Tried to allocate 604.00 MiB. GPU 0 has a total capacity of 23.55 GiB of which 59.88 MiB is free. Including non-PyTorch memory, this process has 23.47 GiB memory in use. Of the allocated memory 23.17 GiB is allocated by PyTorch, and 28.65 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+uv failed with exit status 1.
