@@ -36,13 +36,15 @@ import argparse
 import dataclasses
 import os
 import sys
-from collections.abc import Mapping, Sequence
 
 import _bootstrap  # noqa: F401  (import side effect: puts src/ on sys.path)
 
 from evasion_tax.config import cuda_available, gpu_required_message  # noqa: E402
+from evasion_tax.eval.rollout_runner import (  # noqa: E402,F401  (build_rollout_step re-exported)
+    build_rollout_step,
+    run_episode,
+)
 from evasion_tax.metric.state_libero import LiberoStateAdapter  # noqa: E402
-from evasion_tax.records import RolloutStep  # noqa: E402
 from evasion_tax.repro import RunLogger, capture_env, seed_everything  # noqa: E402
 
 STAGE = "smoke_libero_episode"
@@ -50,45 +52,6 @@ _EXIT_REQUIRES_GPU = 2
 _BYTES_PER_GIB = 1024**3
 # OpenVLA per-suite episode cap (run_libero_eval.py @ c8f03f48); we run ONE episode.
 _LIBERO_SPATIAL_MAX_STEPS = 220
-
-
-def build_rollout_step(
-    obs: Mapping,
-    action: Sequence[float],
-    *,
-    adapter: LiberoStateAdapter,
-    run_id: str,
-    seed: int,
-    git_commit: str | None,
-    suite: str,
-    task_id: str,
-    step: int,
-    instruction: str,
-    trusted_goal: str,
-) -> RolloutStep:
-    """Build one canonical :class:`RolloutStep` from a ``(obs, action)`` pair.
-
-    Model-free: maps the LIBERO obs to the frozen ``PrivilegedState`` via the real
-    :class:`LiberoStateAdapter` (so the camera image keys and the ``_to_`` relative
-    deltas are filtered exactly as the metric requires) and stores the policy action.
-    This is the seam the metric/state side ingests; it is unit-tested without CUDA.
-    """
-    privileged = dataclasses.asdict(adapter.to_privileged_state(obs))
-    return RolloutStep(
-        run_id=run_id,
-        seed=seed,
-        git_commit=git_commit,
-        suite=suite,
-        task_id=task_id,
-        step=step,
-        observation_ref=f"{suite}/{task_id}/{step}",
-        action=tuple(float(x) for x in action),
-        privileged_state=privileged,
-        instruction=instruction,
-        trusted_goal=trusted_goal,
-        attacked=False,
-        suffix_ref=None,
-    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -163,19 +126,12 @@ def _run_episode(args: argparse.Namespace) -> int:
 
     from types import SimpleNamespace
 
-    import numpy as np
     import torch  # type: ignore[import-not-found]
     from experiments.robot.libero.libero_utils import (  # type: ignore[import-not-found]
-        get_libero_dummy_action,
         get_libero_env,
-        get_libero_image,
-        quat2axisangle,
     )
     from experiments.robot.robot_utils import (  # type: ignore[import-not-found]
-        get_action,
         get_image_resize_size,
-        invert_gripper_action,
-        normalize_gripper_action,
     )
     from libero.libero import benchmark  # type: ignore[import-not-found]
     from transformers import (  # type: ignore[import-not-found]
@@ -242,55 +198,29 @@ def _run_episode(args: argparse.Namespace) -> int:
     )
     run_id = handle.dir.name
 
-    env.reset()
-    obs = env.set_init_state(initial_states[args.episode_id])
-
-    steps: list[dict] = []
-    success = False
-    dummy = get_libero_dummy_action(cfg.model_family)
-    # Match run_libero_eval @ c8f03f48: it loops `t < max_steps + num_steps_wait`, so the
-    # no-op settle steps are EXTRA — the policy still gets the full --max-steps (220) budget.
-    for t in range(args.max_steps + args.num_steps_wait):
-        if t < args.num_steps_wait:
-            obs, _, _, _ = env.step(dummy)
-            continue
-        img = get_libero_image(obs, resize_size)
-        observation = {
-            "full_image": img,
-            "state": np.concatenate(
-                (
-                    obs["robot0_eef_pos"],
-                    quat2axisangle(obs["robot0_eef_quat"]),
-                    obs["robot0_gripper_qpos"],
-                )
-            ),
-        }
-        action = get_action(cfg, model, observation, task_description, processor=processor)
-        action = normalize_gripper_action(action, binarize=True)
-        action = invert_gripper_action(action)
-
-        steps.append(
-            dataclasses.asdict(
-                build_rollout_step(
-                    obs,
-                    action,
-                    adapter=adapter,
-                    run_id=run_id,
-                    seed=args.seed,
-                    git_commit=git_commit,
-                    suite=args.task_suite,
-                    task_id=str(task.name),
-                    step=t,
-                    instruction=str(task_description),
-                    trusted_goal=str(task_description),
-                )
-            )
-        )
-        obs, _, done, _ = env.step(action.tolist())
-        if done:
-            success = True
-            break
+    # The verified env->policy->action->step loop now lives in the reusable runner
+    # (benign: suffix_text=None -> identical to step 4). The smoke stays a thin caller.
+    result = run_episode(
+        model,
+        processor,
+        env=env,
+        init_state=initial_states[args.episode_id],
+        task_description=str(task_description),
+        cfg=cfg,
+        adapter=adapter,
+        resize_size=resize_size,
+        run_id=run_id,
+        seed=args.seed,
+        git_commit=git_commit,
+        suite=args.task_suite,
+        task_id=str(task.name),
+        suffix_text=None,
+        num_steps_wait=args.num_steps_wait,
+        max_steps=args.max_steps,
+    )
     env.close()
+    steps = [dataclasses.asdict(s) for s in result.rollout.steps]
+    success = result.success
 
     props = torch.cuda.get_device_properties(torch.device(args.device))
     peak_reserved_gib = torch.cuda.max_memory_reserved(torch.device(args.device)) / _BYTES_PER_GIB

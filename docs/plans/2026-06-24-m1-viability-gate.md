@@ -117,7 +117,7 @@ class AttackUnitRecord:
 
   **Commit:** `docs+feat: lock (i)→(ii) merge + dated benign-only SchemaA re-pin (D-3/inv#2 gate)`
 
-- [ ] **Task 1: pure redirect-target spec (`RedirectSpec` + codec ids) — mac**
+- [x] **Task 1: pure redirect-target spec (`RedirectSpec` + codec ids) — mac**
 
   **Files:**
   - Create: `src/evasion_tax/attack/redirect_target.py` + `tests/evasion_tax/attack/test_redirect_target.py`
@@ -136,7 +136,7 @@ class AttackUnitRecord:
 
   **Commit:** `feat: pre-registered low-level redirect target spec + forced-decode codec ids (D2/DM-5)`
 
-- [ ] **Task 2: reusable closed-loop rollout runner (benign + frozen-suffix attack) — mac core + box wiring**
+- [x] **Task 2: reusable closed-loop rollout runner (benign + frozen-suffix attack) — mac core + box wiring**
 
   **Files:**
   - Create: `src/evasion_tax/eval/rollout_runner.py` (pure seams: suffix injection, ASR scoring, geometry_stats)
@@ -168,7 +168,7 @@ class AttackUnitRecord:
 
   **Commit:** `feat: reusable closed-loop rollout runner (frozen-suffix inject + window-scored ASR + geometry)`
 
-- [ ] **Task 3: per-rollout metric-(A) scoring + benign-vs-attacked separation — mac (TDD)**
+- [x] **Task 3: per-rollout metric-(A) scoring + benign-vs-attacked separation — mac (TDD)**
 
   **Files:**
   - Create: `src/evasion_tax/eval/separation.py` + `tests/evasion_tax/eval/test_separation.py`
