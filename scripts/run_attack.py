@@ -132,6 +132,11 @@ def run_attack_loop(
     return records
 
 
+def model_id(config) -> str:
+    """The HF model id to load: pinned ``checkpoint`` (the fine-tune), else ``name``."""
+    return config.model.checkpoint or config.model.name
+
+
 def build_units(config, *, n_attacked: int) -> list[str]:
     """The matched attacked subset (DM-4): ``(task, target, seed)`` truncated to N.
 
@@ -193,14 +198,15 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
     from evasion_tax.metric.state_libero import LiberoStateAdapter
     from evasion_tax.policy.action_codec import ActionCodec
 
+    mid = model_id(config)
     cfg = SimpleNamespace(
-        model_family="openvla", pretrained_checkpoint=config.model.name,
+        model_family="openvla", pretrained_checkpoint=mid,
         load_in_8bit=False, load_in_4bit=False, center_crop=True,
         unnorm_key=config.model.unnorm_key, task_suite_name=config.env.suite,
     )
-    processor = AutoProcessor.from_pretrained(config.model.name, trust_remote_code=True)
+    processor = AutoProcessor.from_pretrained(mid, trust_remote_code=True)
     model = AutoModelForVision2Seq.from_pretrained(
-        config.model.name, attn_implementation=args.attn_impl, torch_dtype=torch.bfloat16,
+        mid, attn_implementation=args.attn_impl, torch_dtype=torch.bfloat16,
         low_cpu_mem_usage=True, trust_remote_code=True,
     ).to(torch.device(args.device))
     model.requires_grad_(False)
@@ -225,10 +231,13 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
     def attack_fn(uid: str) -> dict:
         task_s, target_s, seed_s = uid.split(":")
         target_idx, unit_seed = int(target_s), int(seed_s)
-        # locate the task by name within the suite
-        task_id = next(
-            i for i in range(task_suite.n_tasks) if str(task_suite.get_task(i).name) == task_s
-        )
+        # Resolve the task: a symbolic "task_<i>" id -> index i; otherwise match by name.
+        if task_s.startswith("task_") and task_s[len("task_"):].isdigit():
+            task_id = int(task_s[len("task_"):])
+        else:
+            task_id = next(
+                i for i in range(task_suite.n_tasks) if str(task_suite.get_task(i).name) == task_s
+            )
         task = task_suite.get_task(task_id)
         init_states = task_suite.get_task_init_states(task_id)
         env, task_description = get_libero_env(task, cfg.model_family, resolution=256)

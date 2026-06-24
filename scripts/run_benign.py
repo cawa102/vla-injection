@@ -127,6 +127,12 @@ def _benign_records_view(records: Sequence[dict]) -> list[dict]:
 # --------------------------------------------------------------------------- #
 
 
+def _model_id(config) -> str:
+    """The HF model id to load: the pinned ``checkpoint`` (e.g. the LIBERO fine-tune),
+    falling back to ``name`` when no separate checkpoint is pinned."""
+    return config.model.checkpoint or config.model.name
+
+
 def _build_episode_fn(args, config, *, git_commit, run_id):  # pragma: no cover - GPU only
     """Build the per-episode GPU runner (model + env) → an ``episode_fn``."""
     if args.openvla_root:
@@ -149,18 +155,19 @@ def _build_episode_fn(args, config, *, git_commit, run_id):  # pragma: no cover 
     from evasion_tax.eval.rollout_runner import run_episode
     from evasion_tax.metric.state_libero import LiberoStateAdapter
 
+    model_id = _model_id(config)
     cfg = SimpleNamespace(
         model_family="openvla",
-        pretrained_checkpoint=config.model.name,
+        pretrained_checkpoint=model_id,
         load_in_8bit=False,
         load_in_4bit=False,
         center_crop=True,
         unnorm_key=config.model.unnorm_key,
         task_suite_name=config.env.suite,
     )
-    processor = AutoProcessor.from_pretrained(config.model.name, trust_remote_code=True)
+    processor = AutoProcessor.from_pretrained(model_id, trust_remote_code=True)
     model = AutoModelForVision2Seq.from_pretrained(
-        config.model.name,
+        model_id,
         attn_implementation=args.attn_impl,
         torch_dtype=torch.bfloat16,
         low_cpu_mem_usage=True,
