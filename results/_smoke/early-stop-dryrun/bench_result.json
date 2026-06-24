@@ -1,0 +1,16 @@
+{
+  "branch_hint": "all targets censored \u2014 no reached median; the early_stop-OFF worst-case bound remains the honest planning number (DE-2)",
+  "early_stop": true,
+  "realistic_s_per_target": null,
+  "s_per_step": 33.19,
+  "stage": "bench_early_stop",
+  "steps_to_success": {
+    "censored_fraction": 1.0,
+    "iqr_steps": null,
+    "median_steps": null,
+    "n": 1,
+    "n_reached": 0,
+    "n_steps_cap": 20,
+    "reached_fraction": 0.0
+  }
+}

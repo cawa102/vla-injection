@@ -1,0 +1,10 @@
+{
+  "best_loss": 6.031779766082764,
+  "censored": true,
+  "peak_vram_gib": 22.146484375,
+  "reached": false,
+  "steps_to_success": 20,
+  "suffix_sha256": "57d1360f49ee75e24dbb68979719fa6bfe09b7ed9fb8dcceb13fa5b031a96ef2",
+  "target_id": "t42",
+  "wall_seconds": 706.6058523100801
+}
