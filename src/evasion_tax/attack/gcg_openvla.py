@@ -389,6 +389,11 @@ class OpenVlaGcgTarget:
         """The exact suffix token span within the prompt (head) ids."""
         return self._suffix_span
 
+    @property
+    def target_action_ids(self) -> np.ndarray:
+        """The teacher-forced target action-token ids this target optimises toward."""
+        return self._target_action_ids.copy()
+
     def init_suffix_ids(self) -> np.ndarray:
         return self._init_suffix.copy()
 
@@ -526,6 +531,29 @@ class OpenVlaGcgTarget:
         logits_slice = out.logits[0, -n_target - 1 :, :].float().cpu().numpy()  # [n_target+1, V]
         labels_slice = np.concatenate([[_LABEL_IGNORE], self._target_action_ids])  # [n_target+1]
         return target_span_argmax_matches(logits_slice, labels_slice)
+
+    def predict_target_action_ids(self, suffix_ids: np.ndarray) -> np.ndarray:
+        """Greedy victim/surrogate target-span token ids for a fixed suffix (GPU).
+
+        This is the transfer-eval counterpart to :meth:`reached`: it returns the
+        argmax token at each position that predicts the teacher-forced target action
+        span. The evaluator compares these ids with the artifact target ids and logs
+        both exact-hit and token-space distance.
+        """
+        import torch  # type: ignore[import-not-found]
+
+        full_ids = self._full_ids(suffix_ids)
+        input_ids = torch.tensor(full_ids[None, :], device=self._device, dtype=torch.long)
+        attn = torch.ones_like(input_ids)
+        with torch.no_grad():
+            out = self._model(
+                input_ids=input_ids,
+                attention_mask=attn,
+                pixel_values=self._pixel_values,
+            )
+        n_target = int(self._target_action_ids.shape[0])
+        pred_logits = out.logits[0, -n_target - 1 : -1, :].float()
+        return pred_logits.argmax(dim=-1).detach().cpu().numpy().astype(np.int64)
 
     def loss_of(self, candidate_suffixes: np.ndarray) -> np.ndarray:
         """``[B, L]`` candidates → ``[B]`` CE losses via no-grad forward(s) (DE-7 chunked).

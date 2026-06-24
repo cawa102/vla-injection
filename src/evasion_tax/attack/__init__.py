@@ -46,6 +46,18 @@ from evasion_tax.attack.idealized_frontier import (
     Scorer,
     trace_frontier,
 )
+from evasion_tax.attack.openvla_loader import (
+    DEFAULT_INSTRUCTION,
+    OpenVlaLoadRecord,
+    OpenVlaPrecision,
+    build_target,
+    load_openvla_policy,
+    quantization_record,
+)
+from evasion_tax.attack.surrogate_artifacts import (
+    SurrogateSuffixArtifact,
+    TransferEvalRecord,
+)
 
 __all__ = [
     "AttackResult",
@@ -59,12 +71,20 @@ __all__ = [
     "IdealizedActionAttacker",
     "LossGradientFn",
     "OpenVlaGcgTarget",
+    "OpenVlaLoadRecord",
+    "OpenVlaPrecision",
     "RealDynamics",
     "Scorer",
     "SyntheticDynamics",
+    "SurrogateSuffixArtifact",
+    "TransferEvalRecord",
+    "DEFAULT_INSTRUCTION",
     "asr_at_evasion",
+    "build_target",
+    "load_openvla_policy",
     "pareto_frontier",
     "project_onehot_grad",
+    "quantization_record",
     "run_gcg",
     "sample_candidates",
     "select_best",

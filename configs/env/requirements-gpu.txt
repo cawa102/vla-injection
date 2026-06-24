@@ -30,6 +30,7 @@ tokenizers==0.19.1
 timm==0.9.10
 peft==0.11.1
 accelerate>=0.25.0
+bitsandbytes>=0.43.0        # quantized-surrogate GCG transfer: int8 + NF4 4-bit OpenVLA load paths
 sentencepiece==0.1.99
 draccus==0.8.0
 einops

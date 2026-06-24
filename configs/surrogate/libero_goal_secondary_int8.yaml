@@ -1,0 +1,39 @@
+# Secondary transfer check after the libero_spatial pilot passes.
+# Small int8 check only; do not combine with primary claims unless separately registered.
+
+seed: 42
+
+model:
+  name: openvla-7b
+  unnorm_key: libero_goal
+  checkpoint: openvla/openvla-7b-finetuned-libero-goal
+  quantization: int8
+
+env:
+  suite: libero_goal
+  tasks: [task_0]
+  max_steps: 300
+
+attack:
+  name: robogcg
+  targets_per_task: 5
+  persistence_steps: 5
+
+metric:
+  k: 5
+
+detector:
+  fpr_targets: [0.05]
+  primary_fpr: 0.05
+
+eval:
+  matrix: [surrogate_transfer_secondary]
+  splits:
+    calib:
+      tasks: [task_0]
+      scenes: [scene_0]
+      seeds: [42]
+    test:
+      tasks: [task_0]
+      scenes: [scene_0]
+      seeds: [42]

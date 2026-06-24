@@ -46,6 +46,7 @@ from evasion_tax.eval.power import (
     required_benign_n,
 )
 from evasion_tax.eval.splits import assert_disjoint
+from evasion_tax.eval.surrogate_transfer import summarize_transfer, write_summary_outputs
 
 __all__ = [
     "AffordableMatrix",
@@ -69,5 +70,7 @@ __all__ = [
     "results_table_to_dict",
     "roc_auc",
     "run_condition_matrix",
+    "summarize_transfer",
     "tpr_at_fpr",
+    "write_summary_outputs",
 ]

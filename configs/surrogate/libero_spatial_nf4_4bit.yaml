@@ -1,0 +1,39 @@
+# Quantized-surrogate transfer primary matrix: NF4 4-bit surrogate.
+# Differs from libero_spatial_bf16.yaml only in model.quantization.
+
+seed: 42
+
+model:
+  name: openvla-7b
+  unnorm_key: libero_spatial
+  checkpoint: openvla/openvla-7b-finetuned-libero-spatial
+  quantization: nf4_4bit
+
+env:
+  suite: libero_spatial
+  tasks: [task_0]
+  max_steps: 220
+
+attack:
+  name: robogcg
+  targets_per_task: 20
+  persistence_steps: 5
+
+metric:
+  k: 5
+
+detector:
+  fpr_targets: [0.01, 0.05]
+  primary_fpr: 0.05
+
+eval:
+  matrix: [surrogate_transfer]
+  splits:
+    calib:
+      tasks: [task_0]
+      scenes: [scene_0]
+      seeds: [42]
+    test:
+      tasks: [task_0]
+      scenes: [scene_0]
+      seeds: [42]

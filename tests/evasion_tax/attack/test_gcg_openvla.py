@@ -233,6 +233,15 @@ def test_reached_signature_matches_run_gcg_reached_fn_contract():
     assert params == ["self", "suffix_ids"]
 
 
+def test_predict_target_action_ids_signature_matches_transfer_eval_contract():
+    import inspect
+
+    from evasion_tax.attack.gcg_openvla import OpenVlaGcgTarget
+
+    params = list(inspect.signature(OpenVlaGcgTarget.predict_target_action_ids).parameters)
+    assert params == ["self", "suffix_ids"]
+
+
 # --------------------------------------------------------------------------- #
 # Guard: torch / transformers / PIL only inside methods, never at module top   #
 # --------------------------------------------------------------------------- #
