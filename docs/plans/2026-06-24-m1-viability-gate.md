@@ -190,7 +190,7 @@ class AttackUnitRecord:
 
   **Commit:** `feat: per-rollout metric-A reduction + benign-vs-attacked separation table (held-out FPR)`
 
-- [ ] **Task 4: `run_benign.py` body — benign LIBERO baseline — mac core + box run**
+- [x] **Task 4: `run_benign.py` body — benign LIBERO baseline — mac core + box run** *(mac core + the DM-3 re-pin bridge `scripts/repin_schema.py` done; box run pending)*
 
   **Files:**
   - Modify: `scripts/run_benign.py` (replace the `NotImplementedError` with the runner loop)
@@ -214,7 +214,7 @@ class AttackUnitRecord:
 
   **Commit:** `feat: benign LIBERO baseline driver (rollouts + geometry_stats + calib/held-out split)`
 
-- [ ] **Task 5: `run_attack.py` body — RoboGCG targeted redirect + folded-in cost — mac core + box run**
+- [x] **Task 5: `run_attack.py` body — RoboGCG targeted redirect + folded-in cost — mac core + box run** *(mac core done; box run pending)*
 
   **Files:**
   - Modify: `scripts/run_attack.py` (replace the `NotImplementedError`)
