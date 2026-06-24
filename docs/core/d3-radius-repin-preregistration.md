@@ -1,8 +1,14 @@
 # D-3 — SchemaA Radius Re-pin Pre-registration (locked before any attacked output)
 
-> **STATUS: PROPOSED — drafted 2026-06-18; author/supervisor sign-off PENDING.** Once signed off this becomes
-> **LOCKED** and dated. It governs the **one** permitted update to the frozen `SchemaA` geometric radii
-> (`engagement_radius`, `grasp_radius`) and resolves the `[VERIFY vs LIBERO geometry]` flags in
+> **STATUS: LOCKED — author sign-off 2026-06-24** (via the M1 viability-gate plan,
+> `docs/plans/2026-06-24-m1-viability-gate.md` DM-3); **supervisor sign-off PENDING** (theme-level, parallel to
+> the playbook header). The §3 estimators and §4 guards are now **FROZEN**: re-tuning any knob (the margin `m`,
+> the §3 percentiles, the §4 guard percentiles, the min-`n`) on the resulting numbers or on **any** attacked
+> data **voids the pre-registration** (invariant #2). The lock was made **before any attacked output exists**
+> (pre-step-6), which is the legitimate "set the knobs up front" window. The **executable form** is
+> `evasion_tax.eval.schema_repin.repin_schema_from_benign` (committed with this lock; unit-tested off-GPU). It
+> governs the **one** permitted update to the frozen `SchemaA` geometric radii (`engagement_radius`,
+> `grasp_radius`) and resolves the `[VERIFY vs LIBERO geometry]` flags in
 > [`metric-a-annotation-schema.md`](./metric-a-annotation-schema.md) §5. It exists to satisfy that document's
 > **§0 circularity guard** and **playbook invariant #2**: the metric's constants must be fixed from
 > **benign geometry only**, **before the first attacked rollout is ever inspected**, so the detector cannot be
@@ -74,7 +80,10 @@ r*   = m · median(A)        # engagement radius: a successful benign approach m
 R_g* = m · P90(G)           # grasp radius: a benign on-goal grasp must read consistent (low p3)
 ```
 (`P90` = 90th percentile; `median` = 50th. Use linear interpolation; if a set has < 5 elements the re-pin is
-**aborted** for that radius — insufficient benign evidence → §4 conservative default.)
+**aborted** for that radius — insufficient benign evidence → §4 conservative default. **Executable semantics
+(`schema_repin.py`):** for each radius **both** its candidate set *and* its §4 guard set must have ≥ 5 elements
+— i.e. `r` needs `|A| ≥ 5` and `|D| ≥ 5`; `R_g` needs `|G| ≥ 5` and `|Dg| ≥ 5` — otherwise that radius keeps
+its frozen value.)
 
 **These constants are author-settable at SIGN-OFF ONLY (loosen or tighten now).** The margin `m`, the §3
 percentiles (`median` for `r*`, `P90` for `R_g*`), and the §4 guard percentiles (`P10` of `D`/`Dg`) are
@@ -150,7 +159,15 @@ attacked data.
 
 ## 7. Sign-off
 
-- [ ] **Author** — confirms the estimators (§3), guards (§4), and one-shot/recording protocol (§5).
-- [ ] **Supervisor** (if required) — confirms the pre-registration is fixed before any attacked output is seen.
+- [x] **Author** — confirms the estimators (§3), guards (§4), and one-shot/recording protocol (§5). *Locked
+  2026-06-24 via `docs/plans/2026-06-24-m1-viability-gate.md` DM-3, accepting the drafted defaults: `m = 1.2`;
+  `r* = 1.2·median(A)`, `R_g* = 1.2·P90(G)`; guards `r* < P10(D)` / `R_g* < P10(Dg)`; abort-if-`n < 5` (both
+  candidate and guard sets); `round(·, 0.005 m)`; default = no change.*
+- [ ] **Supervisor** (if required) — theme-level sign-off remains PENDING (per the playbook header), parallel to
+  this lock; it does not gate the §3/§4 freeze, which is fixed as of the author lock above.
 
-Until both boxes are ticked this document is **PROPOSED**; the step-6 tiny GCG run must not proceed.
+**Author-locked 2026-06-24** — the M1 attacked run (plan Task 5) must consume the **frozen re-pinned schema**
+via `--schema-from <benign-run>` and may **never** re-pin from attacked data (`schema_repin.py` takes benign
+`geometry_stats` only). The execution protocol (§5) still applies: the benign split is computed, the radii
+fixed once and recorded as a dated deviation in `metric-a-annotation-schema.md` §5, then — and only then — the
+attacked run proceeds.

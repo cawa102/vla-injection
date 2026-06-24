@@ -146,9 +146,14 @@ sensitivity analysis*; the **frozen default is `max`**.
 combination ∈ `{max, noisy_or, weighted_mean}`. None is chosen by maximising TPR on attacked data.
 
 **Resolving the `[VERIFY vs LIBERO geometry]` flags (D-3).** The one permitted benign-only update to `r`/`R_g`
-is governed by [`d3-radius-repin-preregistration.md`](./d3-radius-repin-preregistration.md) — locked **before**
-the first attacked output (CSB step 6, the tiny GCG run). Any re-pin (or the decision to keep 0.05/0.10) is recorded **here**
-as a dated deviation per §0. CSB step-5 benign geometry (`results/_smoke/2026-06-18T15-23-29Z-l2-attach`, n=1)
+is governed by [`d3-radius-repin-preregistration.md`](./d3-radius-repin-preregistration.md) — **LOCKED
+2026-06-24** (author sign-off via `docs/plans/2026-06-24-m1-viability-gate.md` DM-3), **before** the first
+attacked output (CSB step 6, the tiny GCG run). Its **executable form** is
+`evasion_tax.eval.schema_repin.repin_schema_from_benign` (benign `geometry_stats` only → a new frozen
+`SchemaA`; pure, unit-tested off-GPU): `r* = 1.2·median(A)`, `R_g* = 1.2·P90(G)`, adopted (rounded to 5 mm)
+only if the §4 distractor guards pass and each set has ≥ 5 elements, else the frozen `0.05`/`0.10` stand. Any
+re-pin (or the decision to keep `0.05`/`0.10`) is recorded **here** as a dated deviation per §0 once the M1
+benign split is computed. CSB step-5 benign geometry (`results/_smoke/2026-06-18T15-23-29Z-l2-attach`, n=1)
 shows the placeholders undershoot the real scene scale — that is the *trigger*, not the re-pin basis.
 
 ---
