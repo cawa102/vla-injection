@@ -15,7 +15,7 @@ from collections.abc import Sequence
 from evasion_tax.eval.harness import ResultsTable, run_condition_matrix
 from evasion_tax.eval.metrics import _per_rollout_score
 from evasion_tax.metric.consistency_a import ConsistencyMetricA, SchemaA
-from evasion_tax.records import Rollout, Score
+from evasion_tax.records import Rollout, ScoreLike
 
 # The M1 gate's reference rung: separation must survive at the coarse operator-goal
 # reference, not only the clean-instruction ceiling (playbook §7 M1 / invariant #7).
@@ -23,7 +23,7 @@ _CONDITION = "coarse_operator_goal"
 _DEFAULT_K = 5  # causal window; schema §5 provisional (swept {3,5,8} elsewhere)
 
 
-def per_rollout_score(scores: Sequence[Score]) -> float:
+def per_rollout_score(scores: Sequence[ScoreLike]) -> float:
     """Frozen per-rollout reduction: max over the per-step scores (DRY with metrics)."""
     return _per_rollout_score(scores)
 

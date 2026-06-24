@@ -244,7 +244,7 @@ class AttackUnitRecord:
 
   **Commit:** `feat: RoboGCG targeted-redirect attack driver (one-shot suffix, window-scored ASR, folded cost)`
 
-- [ ] **Task 6: M1 viability-gate aggregate + GO/NO-GO report — mac (TDD)**
+- [x] **Task 6: M1 viability-gate aggregate + GO/NO-GO report — mac (TDD)**
 
   **Files:**
   - Create: `scripts/m1_gate_report.py` + `src/evasion_tax/eval/m1_gate.py` + tests for both
