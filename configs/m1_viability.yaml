@@ -4,18 +4,22 @@
 # id to load is `model.checkpoint`. Task/target counts are sized small per the M1
 # branch (provisional N-/F); raise after the D8 early-stop bench refines the budget.
 #
-# Box launch sequence (after `git pull`, env steps 1-6 done, MUJOCO_GL=egl,
-# PYTHONPATH=~/LIBERO:src):
-#   1. python scripts/run_benign.py  --config configs/m1_viability.yaml --n-benign 300 \
-#        --calib-frac 0.25 --openvla-root ~/openvla --resume
-#   2. python scripts/repin_schema.py --geometry results/<benign-run>/geometry_stats.json \
-#        --out    results/<benign-run>/schema_repinned.json      # lock DM-3 (record §5 deviation)
-#   3. python scripts/run_attack.py  --config configs/m1_viability.yaml \
+# Box launch sequence (after `git pull`, env steps 1-6 done). ALWAYS invoke through
+# the uv-managed venv with `uv run python` — bare `python` picks the conda `base`
+# env, which lacks the project deps (yaml/numpy/torch). LIBERO/GPU steps (1, 3) also
+# need `MUJOCO_GL=egl` + `PYTHONPATH=~/LIBERO` + `--openvla-root ~/openvla` (step-4
+# gotcha). If `uv run` prunes the GPU stack, fall back to `uv run --no-sync python`.
+#   export MUJOCO_GL=egl
+#   1. PYTHONPATH=~/LIBERO uv run python scripts/run_benign.py --config configs/m1_viability.yaml \
+#        --n-benign 300 --calib-frac 0.25 --openvla-root ~/openvla --resume
+#   2. uv run python scripts/repin_schema.py --geometry results/<benign-run>/geometry_stats.json \
+#        --out    results/<benign-run>/schema_repinned.json      # lock DM-3 (record §5 deviation); CPU-only
+#   3. PYTHONPATH=~/LIBERO uv run python scripts/run_attack.py --config configs/m1_viability.yaml \
 #        --schema-from results/<benign-run>/schema_repinned.json --n-attacked 10 \
 #        --n-steps 500 --search-width 512 --eval-batch 32 --openvla-root ~/openvla \
 #        --exclusive-gpu --resume                                # dry run first: --n-attacked 1 --n-steps 20
-#   4. python scripts/m1_gate_report.py --benign results/<benign-run>/benign_records.json \
-#        --attack results/<attack-run>/attack_records.json --n-steps-cap 500
+#   4. uv run python scripts/m1_gate_report.py --benign results/<benign-run>/benign_records.json \
+#        --attack results/<attack-run>/attack_records.json --n-steps-cap 500   # CPU-only
 
 seed: 42
 
