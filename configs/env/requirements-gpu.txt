@@ -29,8 +29,14 @@ transformers==4.40.1
 tokenizers==0.19.1
 timm==0.9.10
 peft==0.11.1
-accelerate>=0.25.0
-bitsandbytes>=0.43.0        # quantized-surrogate GCG transfer: int8 + NF4 4-bit OpenVLA load paths
+accelerate==0.30.1         # VERIFIED CSB A5000 2026-06-24 with transformers 4.40.1. Do NOT unpin:
+                           #   >=0.25.0 had drifted to 1.14.0 (~2y newer), whose dispatch_model single-device
+                           #   fast path calls model.to() with no bnb guard → "`.to` is not supported for 4/8-bit
+                           #   bitsandbytes models" at LOAD for every device_map form. 0.30.1 = transformers-4.40 era.
+bitsandbytes==0.43.1       # VERIFIED CSB A5000 2026-06-24: int8 + NF4 4-bit OpenVLA load + GCG backward OK under
+                           #   CUDA 13.2 driver / cu121 torch (prebuilt wheel, no nvcc). Do NOT unpin: >=0.43.0
+                           #   resolved to 0.49.2 → dragged torch 2.12 + numpy 2 + the cuda13 nvidia-* stack,
+                           #   overwriting the cu121 pins. Install GPU-stack adds with `uv pip install --no-deps`.
 sentencepiece==0.1.99
 draccus==0.8.0
 einops
