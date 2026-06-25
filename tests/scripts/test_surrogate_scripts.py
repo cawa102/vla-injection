@@ -52,6 +52,7 @@ def _artifact_json(tmp_path: Path, **overrides) -> Path:
         surrogate_best_loss=0.123,
         surrogate_wall_seconds=60.0,
         surrogate_peak_vram_gib=18.0,
+        surrogate_gradient_health=None,
         failure_reason=None,
         created_utc="2026-06-24T00:00:00+00:00",
     )

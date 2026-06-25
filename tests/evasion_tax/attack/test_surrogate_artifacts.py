@@ -47,6 +47,7 @@ def _artifact(**overrides) -> SurrogateSuffixArtifact:
         surrogate_best_loss=0.123,
         surrogate_wall_seconds=60.0,
         surrogate_peak_vram_gib=18.0,
+        surrogate_gradient_health=None,
         failure_reason=None,
         created_utc="2026-06-24T00:00:00+00:00",
     )
@@ -96,6 +97,36 @@ def test_suffix_artifact_round_trips_json(tmp_path):
 
     assert loaded == artifact
     assert loaded.surrogate_gpu_hours == pytest.approx(60.0 / 3600.0)
+    assert loaded.surrogate_gradient_health is None
+
+
+def test_suffix_artifact_round_trips_populated_gradient_health():
+    health = {
+        "grad_absmax": 1.135,
+        "grad_nonzero": True,
+        "grad_finite": True,
+        "recommended_mean_delta": -1.45,
+        "random_mean_delta": -0.44,
+        "faithfulness_passed": True,
+        "gate_samples": 32,
+    }
+    artifact = _artifact(surrogate_gradient_health=health)
+
+    loaded = SurrogateSuffixArtifact.from_dict(json.loads(json.dumps(artifact.to_dict())))
+
+    assert loaded == artifact
+    assert loaded.surrogate_gradient_health == health
+
+
+def test_suffix_artifact_accepts_schema_v2_and_rejects_v1():
+    assert _artifact(schema_version=2).schema_version == 2
+    with pytest.raises(ValueError, match="schema_version"):
+        _artifact(schema_version=1)
+
+
+def test_suffix_artifact_rejects_non_dict_gradient_health():
+    with pytest.raises(ValueError, match="surrogate_gradient_health"):
+        _artifact(surrogate_gradient_health=[1, 2, 3])
 
 
 def test_suffix_artifact_missing_provenance_rejected():

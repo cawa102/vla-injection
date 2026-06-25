@@ -18,7 +18,7 @@ from typing import Any
 from evasion_tax.attack.openvla_loader import OpenVlaPrecision
 
 StrPath = str | PathLike[str]
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 QUARANTINE_ROOT = Path("artifacts/untrusted")
 PRECISIONS = ("bf16", "int8", "nf4_4bit")
 _REQUIRED_GCG_KEYS = ("suffix_len", "n_steps", "top_k", "search_width", "early_stop")
@@ -88,6 +88,7 @@ class SurrogateSuffixArtifact:
     surrogate_best_loss: float | None
     surrogate_wall_seconds: float
     surrogate_peak_vram_gib: float | None
+    surrogate_gradient_health: dict[str, Any] | None
     failure_reason: str | None
     created_utc: str
 
@@ -139,6 +140,10 @@ class SurrogateSuffixArtifact:
             raise ValueError("surrogate_peak_vram_gib must be >= 0 when provided")
         if self.surrogate_best_loss is not None and not math.isfinite(self.surrogate_best_loss):
             raise ValueError("surrogate_best_loss must be finite when provided")
+        if self.surrogate_gradient_health is not None and not isinstance(
+            self.surrogate_gradient_health, dict
+        ):
+            raise ValueError("surrogate_gradient_health must be a dict or None when provided")
 
     @property
     def surrogate_gpu_hours(self) -> float:
