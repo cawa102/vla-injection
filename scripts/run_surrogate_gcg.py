@@ -195,6 +195,29 @@ def _gradient_health(target, seed: int) -> dict:
         return {"error": f"{type(exc).__name__}: {exc}"}
 
 
+def _results_pointer(artifact: SurrogateSuffixArtifact, artifact_json_path: str) -> dict:
+    """Committable ``results/`` record: surrogate metrics + a provenance pointer, no suffix.
+
+    The suffix token ids / text stay quarantined under ``artifacts/untrusted/`` (gitignored);
+    only the SHA-256 and the run metrics travel into write-once ``results/`` so the run is
+    shareable and analysable from version control without shipping the attack payload.
+    """
+    return {
+        "artifact_id": artifact.artifact_id,
+        "artifact_path": artifact_json_path,
+        "suffix_sha256": artifact.suffix_sha256,
+        "surrogate_precision": artifact.surrogate_precision,
+        "surrogate_target_hit": artifact.surrogate_target_hit,
+        "surrogate_steps_to_success": artifact.surrogate_steps_to_success,
+        "surrogate_censored": artifact.surrogate_censored,
+        "surrogate_best_loss": artifact.surrogate_best_loss,
+        "surrogate_wall_seconds": artifact.surrogate_wall_seconds,
+        "surrogate_peak_vram_gib": artifact.surrogate_peak_vram_gib,
+        "surrogate_gradient_health": artifact.surrogate_gradient_health,
+        "failure_reason": artifact.failure_reason,
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     args = build_arg_parser().parse_args(argv)
     if args.dry_run:
@@ -318,17 +341,7 @@ def main(argv: list[str] | None = None) -> int:
         created_utc=utc_now_iso(),
     )
     artifact_json = write_json_record(artifact, artifact_dir / f"{artifact_id}.json")
-    handle.write(
-        "surrogate_suffix_artifact",
-        {
-            "artifact_id": artifact.artifact_id,
-            "artifact_path": str(artifact_json),
-            "suffix_sha256": artifact.suffix_sha256,
-            "surrogate_precision": artifact.surrogate_precision,
-            "surrogate_target_hit": artifact.surrogate_target_hit,
-            "failure_reason": artifact.failure_reason,
-        },
-    )
+    handle.write("surrogate_suffix_artifact", _results_pointer(artifact, str(artifact_json)))
     print(f"[{STAGE}] artifact -> {artifact_json}")
     if failure_reason:
         print(f"[{STAGE}] surrogate failed/censored: {failure_reason}", file=sys.stderr)

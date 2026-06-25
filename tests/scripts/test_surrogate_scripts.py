@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from evasion_tax.attack.surrogate_artifacts import SCHEMA_VERSION
+from evasion_tax.attack.surrogate_artifacts import SCHEMA_VERSION, SurrogateSuffixArtifact
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _SCRIPTS = _REPO_ROOT / "scripts"
@@ -22,7 +22,7 @@ def _load(name: str):
     return importlib.import_module(name)
 
 
-def _artifact_json(tmp_path: Path, **overrides) -> Path:
+def _artifact_base(**overrides) -> dict:
     base = dict(
         schema_version=SCHEMA_VERSION,
         artifact_id="a0",
@@ -58,6 +58,11 @@ def _artifact_json(tmp_path: Path, **overrides) -> Path:
         created_utc="2026-06-24T00:00:00+00:00",
     )
     base.update(overrides)
+    return base
+
+
+def _artifact_json(tmp_path: Path, **overrides) -> Path:
+    base = _artifact_base(**overrides)
     path = tmp_path / "artifacts" / "untrusted" / "run" / "a0.json"
     path.parent.mkdir(parents=True)
     path.write_text(json.dumps(base))
@@ -68,6 +73,43 @@ def test_run_surrogate_gcg_defines_gate_samples_constant():
     mod = _load("run_surrogate_gcg")
 
     assert mod._GATE_SAMPLES == 32
+
+
+def test_results_pointer_carries_metrics_without_leaking_suffix():
+    mod = _load("run_surrogate_gcg")
+    health = {
+        "grad_absmax": 1.18,
+        "grad_nonzero": True,
+        "grad_finite": True,
+        "recommended_mean_delta": -0.44,
+        "random_mean_delta": -0.22,
+        "faithfulness_passed": True,
+        "gate_samples": 32,
+    }
+    artifact = SurrogateSuffixArtifact.from_dict(
+        _artifact_base(
+            surrogate_gradient_health=health,
+            surrogate_wall_seconds=1113.19,
+            surrogate_peak_vram_gib=17.2,
+            surrogate_steps_to_success=25,
+            surrogate_target_hit=False,
+            surrogate_censored=True,
+        )
+    )
+
+    pointer = mod._results_pointer(artifact, "artifacts/untrusted/run/a0.json")
+
+    # Metrics land in the committable results/ record so a run is analysable from version
+    # control, not stranded in the gitignored quarantine.
+    assert pointer["surrogate_wall_seconds"] == 1113.19
+    assert pointer["surrogate_peak_vram_gib"] == 17.2
+    assert pointer["surrogate_gradient_health"] == health
+    assert pointer["surrogate_steps_to_success"] == 25
+    assert pointer["surrogate_censored"] is True
+    assert pointer["suffix_sha256"] == "a" * 64  # provenance pointer kept
+    # The suffix payload itself stays quarantined — it must NOT leak into results/.
+    assert "suffix_token_ids" not in pointer
+    assert "suffix_path" not in pointer
 
 
 class _FakeReport:
