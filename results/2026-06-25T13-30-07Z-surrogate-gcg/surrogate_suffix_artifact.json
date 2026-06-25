@@ -1,0 +1,8 @@
+{
+  "artifact_id": "2026-06-25T13-30-07Z-surrogate-gcg-libero_spatial-task_0-int8",
+  "artifact_path": "artifacts/untrusted/2026-06-25T13-30-07Z-surrogate-gcg/2026-06-25T13-30-07Z-surrogate-gcg-libero_spatial-task_0-int8.json",
+  "failure_reason": null,
+  "suffix_sha256": "3fa1c2723be45a4e505d90369dacf639a0ca76f849f9f05b40bb133044e80296",
+  "surrogate_precision": "int8",
+  "surrogate_target_hit": false
+}

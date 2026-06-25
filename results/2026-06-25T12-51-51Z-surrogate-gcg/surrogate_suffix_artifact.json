@@ -1,0 +1,8 @@
+{
+  "artifact_id": "2026-06-25T12-51-51Z-surrogate-gcg-libero_spatial-task_0-int8",
+  "artifact_path": "artifacts/untrusted/2026-06-25T12-51-51Z-surrogate-gcg/2026-06-25T12-51-51Z-surrogate-gcg-libero_spatial-task_0-int8.json",
+  "failure_reason": "OutOfMemoryError: CUDA out of memory. Tried to allocate 20.00 MiB. GPU 0 has a total capacity of 23.55 GiB of which 3.88 MiB is free. Process 12400 has 15.47 GiB memory in use. Including non-PyTorch memory, this process has 8.04 GiB memory in use. Of the allocated memory 7.73 GiB is allocated by PyTorch, and 43.65 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)",
+  "suffix_sha256": "a719ae352d60f078e4f18ba9a64145c7f1c85af97d62b4a12f8c84517404eb7d",
+  "surrogate_precision": "int8",
+  "surrogate_target_hit": false
+}
