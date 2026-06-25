@@ -101,12 +101,20 @@ def run_benign_loop(
         if resume and path.exists():
             records.append(json.loads(path.read_text()))
             continue
+        # Progress (flush=True so it shows immediately under buffering/nohup): the first
+        # episode pays a one-time CUDA/flash warmup, so this confirms the loop is alive.
+        print(f"[run_benign] rolling episode {i + 1}/{n_benign} ...", flush=True)
         result = episode_fn(index=i, seed=seed + i)
         record = _score_episode(
             result, is_calibration=assign_calibration(i, n_benign, calib_frac), schema=schema, k=k
         )
         path.write_text(json.dumps(record))
         records.append(record)
+        print(
+            f"[run_benign] episode {i + 1}/{n_benign}: success={result.success} "
+            f"steps={len(result.rollout)}",
+            flush=True,
+        )
     return records, aggregate_benign(records)
 
 
