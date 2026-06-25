@@ -146,7 +146,7 @@ variable fixed; deviation recorded" rule.
 
 ---
 
-- [ ] **Task 3: Wire gradient-health + fallback into the surrogate driver**
+- [x] **Task 3: Wire gradient-health + fallback into the surrogate driver**
 
 **Files:**
 - Modify: `scripts/run_surrogate_gcg.py`

@@ -23,7 +23,7 @@ from evasion_tax.attack.gcg import GcgConfig, run_gcg  # noqa: E402
 from evasion_tax.attack.openvla_loader import (  # noqa: E402
     DEFAULT_INSTRUCTION,
     build_target,
-    load_openvla_policy,
+    load_openvla_with_attn_fallback,
     quantization_record,
 )
 from evasion_tax.attack.surrogate_artifacts import (  # noqa: E402
@@ -40,6 +40,7 @@ STAGE = "run_surrogate_gcg"
 _EXIT_REQUIRES_GPU = 2
 _BYTES_PER_GIB = 1024**3
 _DEFAULT_EVAL_BATCH = 32
+_GATE_SAMPLES = 32  # gradient_agrees_with_swaps probes for the recorded gradient-health diagnostic
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
@@ -166,6 +167,34 @@ def _git_commit_or_raise(env: dict) -> str:
     return str(commit)
 
 
+def _gradient_health(target, seed: int) -> dict:
+    """Record-only gradient-health diagnostic computed once at the init suffix.
+
+    Mirrors ``scripts/smoke_quantized_backward.py`` so a censored arm is attributable
+    after the fact (dead vs weak-but-real vs hard target). It **records, never gates** —
+    nf4's weak-but-real gradient (plan H-S2) must still run the full search — so a probe
+    failure is captured as ``{"error": ...}`` rather than aborting the run.
+    """
+    try:
+        grad = target.token_gradient(target.init_suffix_ids())
+        report = target.gradient_agrees_with_swaps(
+            n_samples=_GATE_SAMPLES,
+            rng=np.random.default_rng(seed),
+        )
+        grad_absmax = float(np.abs(grad).max())
+        return {
+            "grad_absmax": grad_absmax,
+            "grad_nonzero": bool(grad_absmax > 0.0),
+            "grad_finite": bool(np.isfinite(grad).all()),
+            "recommended_mean_delta": report.recommended_mean_delta,
+            "random_mean_delta": report.random_mean_delta,
+            "faithfulness_passed": bool(report.passed),
+            "gate_samples": _GATE_SAMPLES,
+        }
+    except Exception as exc:  # noqa: BLE001 - record, never gate; a weak/dead gradient must still run.
+        return {"error": f"{type(exc).__name__}: {exc}"}
+
+
 def main(argv: list[str] | None = None) -> int:
     args = build_arg_parser().parse_args(argv)
     if args.dry_run:
@@ -193,7 +222,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     target_action_ids = _parse_target_tokens(args.target_action_tokens)
 
-    model, processor, load_record = load_openvla_policy(
+    model, processor, load_record = load_openvla_with_attn_fallback(
         torch,
         fields["model"],
         device,
@@ -211,6 +240,7 @@ def main(argv: list[str] | None = None) -> int:
         eval_batch=args.eval_batch,
         target_action_ids=target_action_ids,
     )
+    gradient_health = _gradient_health(target, fields["seed"])
 
     run_config = {
         "stage": STAGE,
@@ -283,6 +313,7 @@ def main(argv: list[str] | None = None) -> int:
         surrogate_best_loss=best_loss,
         surrogate_wall_seconds=wall_seconds,
         surrogate_peak_vram_gib=peak_vram,
+        surrogate_gradient_health=gradient_health,
         failure_reason=failure_reason,
         created_utc=utc_now_iso(),
     )

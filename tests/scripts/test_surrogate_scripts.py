@@ -5,6 +5,7 @@ import json
 import sys
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 from evasion_tax.attack.surrogate_artifacts import SCHEMA_VERSION
@@ -63,6 +64,65 @@ def _artifact_json(tmp_path: Path, **overrides) -> Path:
     return path
 
 
+def test_run_surrogate_gcg_defines_gate_samples_constant():
+    mod = _load("run_surrogate_gcg")
+
+    assert mod._GATE_SAMPLES == 32
+
+
+class _FakeReport:
+    recommended_mean_delta = -1.45
+    random_mean_delta = -0.44
+    passed = True
+
+
+class _FakeTarget:
+    """Minimal stand-in for OpenVlaGcgTarget exercising the off-GPU diagnostic seam."""
+
+    def __init__(self, grad, *, raise_exc=None):
+        self._grad = grad
+        self._raise_exc = raise_exc
+
+    def init_suffix_ids(self):
+        return np.zeros(3, dtype=np.int64)
+
+    def token_gradient(self, ids):
+        if self._raise_exc is not None:
+            raise self._raise_exc
+        return self._grad
+
+    def gradient_agrees_with_swaps(self, n_samples, rng):
+        assert n_samples == 32  # the diagnostic must use _GATE_SAMPLES
+        return _FakeReport()
+
+
+def test_gradient_health_records_the_shared_contract_dict():
+    mod = _load("run_surrogate_gcg")
+    grad = np.array([[0.0, 1.135], [0.5, -0.2]])
+
+    health = mod._gradient_health(_FakeTarget(grad), seed=42)
+
+    assert health == {
+        "grad_absmax": pytest.approx(1.135),
+        "grad_nonzero": True,
+        "grad_finite": True,
+        "recommended_mean_delta": -1.45,
+        "random_mean_delta": -0.44,
+        "faithfulness_passed": True,
+        "gate_samples": 32,
+    }
+
+
+def test_gradient_health_captures_probe_failure_without_raising():
+    # "record, never gate": a dead-gradient probe must be logged, not abort the run.
+    mod = _load("run_surrogate_gcg")
+    target = _FakeTarget(None, raise_exc=RuntimeError("dead gradient"))
+
+    health = mod._gradient_health(target, seed=42)
+
+    assert health == {"error": "RuntimeError: dead gradient"}
+
+
 def test_run_surrogate_gcg_dry_run_uses_config_precision(capsys):
     mod = _load("run_surrogate_gcg")
 
@@ -73,6 +133,8 @@ def test_run_surrogate_gcg_dry_run_uses_config_precision(capsys):
     assert record["precision"] == "int8"
     assert record["gcg_config"]["suffix_len"] == 20
     assert record["load_record"]["quantization_config"] == {"load_in_8bit": True}
+    # The GPU-only gradient-health diagnostic must never leak into the CUDA-free dry-run.
+    assert "surrogate_gradient_health" not in record
 
 
 def test_run_surrogate_gcg_no_cuda_exits_nonzero(monkeypatch, tmp_path, capsys):
