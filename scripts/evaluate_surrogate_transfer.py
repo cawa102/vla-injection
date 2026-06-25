@@ -15,7 +15,7 @@ import numpy as np  # noqa: E402
 from evasion_tax.attack.openvla_loader import (  # noqa: E402
     DEFAULT_INSTRUCTION,
     build_target,
-    load_openvla_policy,
+    load_openvla_with_attn_fallback,
 )
 from evasion_tax.attack.surrogate_artifacts import (  # noqa: E402
     SCHEMA_VERSION,
@@ -143,7 +143,7 @@ def main(argv: list[str] | None = None) -> int:
     distance: float | None = None
     hit = False
     try:
-        model, processor, load_record = load_openvla_policy(
+        model, processor, load_record = load_openvla_with_attn_fallback(
             torch,
             victim["model"],
             device,

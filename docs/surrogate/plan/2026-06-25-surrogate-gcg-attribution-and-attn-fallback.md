@@ -182,7 +182,7 @@ computes the identical diagnostic); do not build a second GPU test.
 
 ---
 
-- [ ] **Task 4: Use the fallback in the victim evaluator**
+- [x] **Task 4: Use the fallback in the victim evaluator**
 
 **Files:**
 - Modify: `scripts/evaluate_surrogate_transfer.py`
