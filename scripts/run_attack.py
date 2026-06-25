@@ -32,7 +32,6 @@ import _bootstrap  # noqa: F401  (import side effect: puts src/ on sys.path)
 from evasion_tax.attack.early_stop_bench import TargetOutcome, outcome_to_record  # noqa: E402
 from evasion_tax.config import cuda_available, gpu_required_message, load_config  # noqa: E402
 from evasion_tax.metric.consistency_a import SchemaA  # noqa: E402
-from evasion_tax.repro.run_logger import RunLogger  # noqa: E402
 
 STAGE = "run_attack"
 _EXIT_REQUIRES_GPU = 2
@@ -156,6 +155,19 @@ def build_units(config, *, n_attacked: int) -> list[str]:
     return units[:n_attacked]
 
 
+def prepare_run_dir(results_root: str, run_name: str) -> tuple[Path, bool]:
+    """Resolve a STABLE run dir reused across restarts so ``--resume`` actually resumes.
+
+    Returns ``(run_dir, is_first_launch)``. Per-unit checkpoints under
+    ``<run_dir>/units/`` make an unattended ``until``-loop restart idempotent (mirrors
+    the bench driver); the §8 header is written only on first launch.
+    """
+    run_dir = Path(results_root) / run_name
+    is_first = not run_dir.exists()
+    run_dir.mkdir(parents=True, exist_ok=True)
+    return run_dir, is_first
+
+
 # --------------------------------------------------------------------------- #
 # GPU body (torch / OpenVLA / GCG imported inside; never runs off-GPU)        #
 # --------------------------------------------------------------------------- #
@@ -177,7 +189,8 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
         sys.path.insert(0, args.openvla_root)
 
     seed_everything(config.seed)
-    git_commit = capture_env().get("git_commit")
+    env_rec = capture_env()
+    git_commit = env_rec.get("git_commit")
     schema = load_frozen_schema(args.schema_from)  # frozen; never re-pins (DM-3)
 
     # Heavy GPU bring-up (model, env, codec) is the box's job; the structure mirrors
@@ -219,14 +232,20 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
     task_suite = benchmark.get_benchmark_dict()[config.env.suite]()
     metric = ConsistencyMetricA(schema=schema, k=config.metric.k)
 
-    logger = RunLogger(args.results_root)
-    handle = logger.start(
-        slug="robogcg-redirect",
-        config={"stage": STAGE, "model": config.model.name, "schema_from": args.schema_from,
-                "search_width": args.search_width, "n_steps": args.n_steps,
-                "exclusive_gpu": args.exclusive_gpu},
-        seed=config.seed,
-    )
+    run_dir, first = prepare_run_dir(args.results_root, args.run_name)
+    if first:  # write-once §8 header on the FIRST launch only; a resume reuses the dir
+        (run_dir / "run.json").write_text(
+            json.dumps(
+                {
+                    "stage": STAGE, "run_name": args.run_name, "seed": config.seed,
+                    "git_commit": git_commit, "hardware": env_rec, "model": mid,
+                    "schema_from": args.schema_from, "search_width": args.search_width,
+                    "n_steps": args.n_steps, "exclusive_gpu": args.exclusive_gpu,
+                },
+                indent=2, sort_keys=True,
+            )
+            + "\n"
+        )
 
     def attack_fn(uid: str) -> dict:
         task_s, target_s, seed_s = uid.split(":")
@@ -274,7 +293,7 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
             ep = run_episode(
                 model, processor, env=env, init_state=init_states[unit_seed % len(init_states)],
                 task_description=str(task_description), cfg=cfg, adapter=adapter,
-                resize_size=resize_size, run_id=handle.dir.name, seed=unit_seed,
+                resize_size=resize_size, run_id=run_dir.name, seed=unit_seed,
                 git_commit=git_commit, suite=config.env.suite, task_id=str(task.name),
                 suffix_text=suffix_text, max_steps=config.env.max_steps,
             )
@@ -289,12 +308,13 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
 
     units = build_units(config, n_attacked=args.n_attacked)
     records = run_attack_loop(
-        handle.dir / "units", Path(_QUARANTINE_ROOT) / handle.dir.name,
+        run_dir / "units", Path(_QUARANTINE_ROOT) / args.run_name,
         units=units, attack_fn=attack_fn, resume=args.resume,
     )
-    handle.write("attack_records", records)
+    # Derived view — overwrite-safe across resumes (per-unit JSONs are the write-once record).
+    (run_dir / "attack_records.json").write_text(json.dumps(records, indent=2) + "\n")
     n_redirect = sum(1 for r in records if not r["is_denial"] and r["rollout_asr_reached"])
-    print(f"[{STAGE}] {len(records)} units, {n_redirect} reached the region -> {handle.dir}")
+    print(f"[{STAGE}] {len(records)} units, {n_redirect} reached the region -> {run_dir}")
     return 0
 
 
@@ -313,6 +333,8 @@ def main(argv: list[str] | None = None) -> int:
                         choices=["sdpa", "eager", "flash_attention_2"])
     parser.add_argument("--openvla-root", default=None, help="cloned openvla repo (eval helpers)")
     parser.add_argument("--results-root", default="results", help="write-once results root")
+    parser.add_argument("--run-name", default="m1-robogcg-redirect",
+                        help="stable run-dir under results-root, reused across restarts")
     parser.add_argument("--exclusive-gpu", action="store_true", help="record an exclusive window")
     parser.add_argument("--resume", action="store_true", help="skip units already on disk")
     args = parser.parse_args(argv)

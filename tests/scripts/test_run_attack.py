@@ -61,6 +61,14 @@ def test_is_denial_only_when_neither_region_nor_goal_reached():
     assert mod.is_denial(asr_reached=False, task_success=True) is False   # benign task done
 
 
+def test_prepare_run_dir_is_stable_across_restarts(tmp_path):
+    mod = _load()
+    d1, first1 = mod.prepare_run_dir(str(tmp_path), "m1-robogcg-redirect")
+    d2, first2 = mod.prepare_run_dir(str(tmp_path), "m1-robogcg-redirect")
+    assert d1 == d2                              # same dir → --resume + until-loop work
+    assert first1 is True and first2 is False
+
+
 def test_load_frozen_schema_reads_only_radii(tmp_path):
     mod = _load()
     p = tmp_path / "schema.json"

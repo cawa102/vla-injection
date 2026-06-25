@@ -9,17 +9,22 @@
 # env, which lacks the project deps (yaml/numpy/torch). LIBERO/GPU steps (1, 3) also
 # need `MUJOCO_GL=egl` + `PYTHONPATH=~/LIBERO` + `--openvla-root ~/openvla` (step-4
 # gotcha). If `uv run` prunes the GPU stack, fall back to `uv run --no-sync python`.
+# Run dirs are STABLE (--run-name, reused across restarts) so paths are deterministic and
+# --resume / the unattended until-loop actually resume: benign -> results/m1-benign-baseline/,
+# attack -> results/m1-robogcg-redirect/. Pilot first (--n-benign 10), then the full run.
 #   export MUJOCO_GL=egl
 #   1. PYTHONPATH=~/LIBERO uv run python scripts/run_benign.py --config configs/m1_viability.yaml \
 #        --n-benign 300 --calib-frac 0.25 --openvla-root ~/openvla --resume
-#   2. uv run python scripts/repin_schema.py --geometry results/<benign-run>/geometry_stats.json \
-#        --out    results/<benign-run>/schema_repinned.json      # lock DM-3 (record §5 deviation); CPU-only
+#   2. uv run python scripts/repin_schema.py \
+#        --geometry results/m1-benign-baseline/geometry_stats.json \
+#        --out      results/m1-benign-baseline/schema_repinned.json   # lock DM-3 (record §5); CPU-only
 #   3. PYTHONPATH=~/LIBERO uv run python scripts/run_attack.py --config configs/m1_viability.yaml \
-#        --schema-from results/<benign-run>/schema_repinned.json --n-attacked 10 \
+#        --schema-from results/m1-benign-baseline/schema_repinned.json --n-attacked 10 \
 #        --n-steps 500 --search-width 512 --eval-batch 32 --openvla-root ~/openvla \
-#        --exclusive-gpu --resume                                # dry run first: --n-attacked 1 --n-steps 20
-#   4. uv run python scripts/m1_gate_report.py --benign results/<benign-run>/benign_records.json \
-#        --attack results/<attack-run>/attack_records.json --n-steps-cap 500   # CPU-only
+#        --exclusive-gpu --resume                              # dry run first: --n-attacked 1 --n-steps 20
+#   4. uv run python scripts/m1_gate_report.py \
+#        --benign results/m1-benign-baseline/benign_records.json \
+#        --attack results/m1-robogcg-redirect/attack_records.json --n-steps-cap 500   # CPU-only
 
 seed: 42
 

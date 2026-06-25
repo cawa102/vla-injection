@@ -30,7 +30,6 @@ import _bootstrap  # noqa: F401  (import side effect: puts src/ on sys.path)
 from evasion_tax.config import cuda_available, gpu_required_message, load_config  # noqa: E402
 from evasion_tax.eval.rollout_runner import EpisodeResult, geometry_stats  # noqa: E402
 from evasion_tax.metric.consistency_a import ConsistencyMetricA, SchemaA  # noqa: E402
-from evasion_tax.repro.run_logger import RunLogger  # noqa: E402
 
 STAGE = "run_benign"
 _EXIT_REQUIRES_GPU = 2
@@ -130,6 +129,20 @@ def _benign_records_view(records: Sequence[dict]) -> list[dict]:
     ]
 
 
+def prepare_run_dir(results_root: str, run_name: str) -> tuple[Path, bool]:
+    """Resolve a STABLE run dir reused across restarts so ``--resume`` actually resumes.
+
+    Returns ``(run_dir, is_first_launch)``. A fresh timestamped dir per launch (the old
+    behaviour) made ``--resume`` look in an empty dir and re-run everything; a stable
+    ``run_name`` + per-episode checkpoints under ``<run_dir>/episodes/`` make a restart
+    idempotent (mirrors the bench driver). The §8 header is written only on first launch.
+    """
+    run_dir = Path(results_root) / run_name
+    is_first = not run_dir.exists()
+    run_dir.mkdir(parents=True, exist_ok=True)
+    return run_dir, is_first
+
+
 # --------------------------------------------------------------------------- #
 # GPU body (torch / LIBERO imported inside; never runs off-GPU)               #
 # --------------------------------------------------------------------------- #
@@ -211,29 +224,46 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
     from evasion_tax.repro import capture_env, seed_everything
 
     seed_everything(config.seed)
-    git_commit = capture_env().get("git_commit")
+    env_rec = capture_env()
+    git_commit = env_rec.get("git_commit")
     schema = _load_schema(args.schema_from)
 
-    logger = RunLogger(args.results_root)
-    handle = logger.start(
-        slug="benign-baseline",
-        config={"stage": STAGE, "model": config.model.name, "suite": config.env.suite,
-                "n_benign": args.n_benign, "calib_frac": args.calib_frac},
-        seed=config.seed,
-    )
-    episode_fn = _build_episode_fn(args, config, git_commit=git_commit, run_id=handle.dir.name)
+    run_dir, first = prepare_run_dir(args.results_root, args.run_name)
+    if first:  # write-once §8 header on the FIRST launch only; a resume reuses the dir
+        (run_dir / "run.json").write_text(
+            json.dumps(
+                {
+                    "stage": STAGE, "run_name": args.run_name, "seed": config.seed,
+                    "git_commit": git_commit, "hardware": env_rec,
+                    "config": {
+                        "model": _model_id(config), "suite": config.env.suite,
+                        "n_benign": args.n_benign, "calib_frac": args.calib_frac,
+                        "k": config.metric.k,
+                    },
+                    "schema_from": args.schema_from,
+                },
+                indent=2, sort_keys=True,
+            )
+            + "\n"
+        )
+
+    episode_fn = _build_episode_fn(args, config, git_commit=git_commit, run_id=run_dir.name)
     records, summary = run_benign_loop(
-        handle.dir / "episodes", n_benign=args.n_benign, calib_frac=args.calib_frac,
+        run_dir / "episodes", n_benign=args.n_benign, calib_frac=args.calib_frac,
         seed=config.seed, schema=schema, k=config.metric.k, episode_fn=episode_fn,
         resume=args.resume,
     )
-    handle.write("benign_records", _benign_records_view(records))
-    # DM-3 / D-3 §2: the re-pin reads the CALIBRATION split's geometry ONLY (the
-    # held-out split must stay untouched so its FPR stays honest — invariant #3).
-    handle.write("geometry_stats", [r["geometry"] for r in records if r["is_calibration"]])
-    handle.write("benign_summary", summary)
+    # Derived views — overwrite-safe across resumes (the per-episode JSONs are the
+    # write-once raw record). geometry_stats = CALIB split only (D-3 §2 / invariant #3).
+    (run_dir / "benign_records.json").write_text(
+        json.dumps(_benign_records_view(records), indent=2) + "\n"
+    )
+    (run_dir / "geometry_stats.json").write_text(
+        json.dumps([r["geometry"] for r in records if r["is_calibration"]], indent=2) + "\n"
+    )
+    (run_dir / "benign_summary.json").write_text(json.dumps(summary, indent=2) + "\n")
     print(f"[{STAGE}] {summary['n']} episodes, success_rate={summary['success_rate']:.3f}, "
-          f"calib={summary['n_calib']} eval={summary['n_eval']} -> {handle.dir}")
+          f"calib={summary['n_calib']} eval={summary['n_eval']} -> {run_dir}")
     return 0
 
 
@@ -260,6 +290,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--schema-from", default=None,
                         help="frozen re-pinned SchemaA JSON (default: base placeholders)")
     parser.add_argument("--results-root", default="results", help="write-once results root")
+    parser.add_argument("--run-name", default="m1-benign-baseline",
+                        help="stable run-dir under results-root, reused across restarts")
     parser.add_argument("--resume", action="store_true", help="skip episodes already on disk")
     args = parser.parse_args(argv)
 

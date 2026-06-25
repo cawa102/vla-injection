@@ -56,6 +56,14 @@ def test_guard_without_cuda_exits_2(monkeypatch, capsys, tmp_path):
     assert mod.STAGE in capsys.readouterr().err
 
 
+def test_prepare_run_dir_is_stable_and_first_launch_flagged(tmp_path):
+    mod = _load()
+    d1, first1 = mod.prepare_run_dir(str(tmp_path), "m1-benign-baseline")
+    d2, first2 = mod.prepare_run_dir(str(tmp_path), "m1-benign-baseline")
+    assert d1 == d2                       # same stable dir across restarts (resume works)
+    assert first1 is True and first2 is False  # header written only on the first launch
+
+
 def test_assign_calibration_split_is_disjoint_by_index():
     mod = _load()
     flags = [mod.assign_calibration(i, 10, 0.4) for i in range(10)]
