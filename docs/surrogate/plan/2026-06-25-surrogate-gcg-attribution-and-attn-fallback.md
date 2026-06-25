@@ -75,7 +75,7 @@ Downstream attribution of a censored arm: `grad_nonzero False` → dead gradient
 
 ## Tasks
 
-- [ ] **Task 1: Add gradient-health field to the suffix-artifact schema**
+- [x] **Task 1: Add gradient-health field to the suffix-artifact schema**
 
 **Files:**
 - Modify: `src/evasion_tax/attack/surrogate_artifacts.py`
@@ -109,7 +109,7 @@ unchanged structurally, just versioned to 2).
 
 ---
 
-- [ ] **Task 2: Flash-attn→sdpa load fallback helper**
+- [x] **Task 2: Flash-attn→sdpa load fallback helper**
 
 **Files:**
 - Modify: `src/evasion_tax/attack/openvla_loader.py`

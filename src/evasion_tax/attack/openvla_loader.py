@@ -12,6 +12,7 @@ exactly like ``gcg_openvla`` and the smoke scripts.
 
 from __future__ import annotations
 
+import sys
 from dataclasses import dataclass
 from typing import Any, Literal
 
@@ -183,6 +184,48 @@ def load_openvla_policy(
     model.requires_grad_(False)
     model.eval()
     return model, processor, record
+
+
+def is_flash_attn_load_error(exc: BaseException) -> bool:
+    """True if ``exc`` looks like a flash-attention backend load failure.
+
+    An ``ImportError`` (flash-attn ships as an optional extension that fails to import
+    on many boxes) or any exception whose message mentions ``flash`` qualifies. Pure and
+    torch-free so the fallback branch is unit-testable off-GPU.
+    """
+    if isinstance(exc, ImportError):
+        return True
+    return "flash" in str(exc).lower()
+
+
+def load_openvla_with_attn_fallback(
+    torch_mod,
+    model_id,
+    device,
+    attn_impl,
+    *,
+    precision: OpenVlaPrecision = "bf16",
+):
+    """Load OpenVLA, retrying once with ``sdpa`` if the requested attn backend fails.
+
+    The controlled variable (attention impl) stays fixed on the happy path; only a
+    flash-attn *load* failure triggers the single ``sdpa`` retry, and the returned
+    :class:`OpenVlaLoadRecord` reflects the impl actually used so the deviation is
+    auditable. Non-flash errors and a failing ``sdpa`` retry propagate unchanged.
+    """
+    try:
+        return load_openvla_policy(
+            torch_mod, model_id, device, attn_impl, precision=precision
+        )
+    except Exception as exc:  # noqa: BLE001 - a flash-attn load miss is recoverable, not fatal.
+        if attn_impl == "sdpa" or not is_flash_attn_load_error(exc):
+            raise
+        print(
+            f"[openvla_loader] attn_impl={attn_impl!r} failed to load "
+            f"({type(exc).__name__}: {exc}); falling back to sdpa",
+            file=sys.stderr,
+        )
+    return load_openvla_policy(torch_mod, model_id, device, "sdpa", precision=precision)
 
 
 def load_frozen_openvla(torch_mod, model_id, device, attn_impl):
