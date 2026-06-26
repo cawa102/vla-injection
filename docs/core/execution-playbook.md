@@ -76,7 +76,20 @@ used, is a **separate** registration. **Log exact card + precision + parallelism
 
 ## 1. You Are Here  ← update this block every session
 
-- **Last updated:** 2026-06-24 (**M1-plan mac-side COMPLETE + pushed to origin/main — box-ready**: Tasks 0–6 + the
+- **Last updated:** 2026-06-26 (**surrogate-GCG runner now observable + partially recoverable** — `run_gcg`
+  (`src/evasion_tax/attack/gcg.py`) gained an optional **keyword-only, exception-isolated `on_step` callback**
+  (`feat(gcg)` `57cde59`; passed a *copy* of the incumbent suffix, a logging/disk failure can never abort a
+  multi-hour search) and the surrogate driver (`scripts/run_surrogate_gcg.py`, `feat(surrogate)` `4f40b53`) uses it
+  to print a `[gcg] step N/500 best_loss=… elapsed=…s` heartbeat every **25** steps and atomically (over)write a
+  **quarantined `artifacts/untrusted/<run_id>/checkpoint.json`** carrying the current best suffix every **50** steps.
+  This is the durable fix for the **silent overnight death** of the 2026-06-26 unattended bf16 pilot (idle-suspend /
+  session loss killed the run with **no progress emitted and nothing recoverable**, and the remaining arms never ran).
+  Core GCG math is **byte-identical when the callback is absent**; **no change** to the final write-once artifact or
+  the `results/` pointer schema (the checkpoint is a mutable sidecar). **Resume-from-checkpoint is deferred (YAGNI)** —
+  this lands only the foothold (best suffix + step), since bit-exact resume needs the candidate-sampler RNG state.
+  **11 new TDD tests, full suite 657 green, ruff clean**; plan `docs/surrogate/plan/2026-06-26-gcg-progress-checkpoint-callback.md`;
+  pushed to origin/main. The on-box behaviour (a long run printing the heartbeat + refreshing `checkpoint.json`) is
+  validated on the CSB box during the next pilot, not by a GPU unit test. *Prior 2026-06-24:* **M1-plan mac-side COMPLETE + pushed to origin/main — box-ready**: Tasks 0–6 + the
   benign/attack drivers built via TDD (630 tests green, ruff + pyright clean). New: `eval/schema_repin.py` (DM-3 re-pin),
   `attack/redirect_target.py` (D2/DM-5 redirect spec + codec ids), `eval/rollout_runner.py` (frozen-suffix runner +
   window-scored ASR + geometry; step-4 smoke refactored to a thin caller), `eval/separation.py` (benign-vs-attacked
