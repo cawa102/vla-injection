@@ -18,11 +18,21 @@ tokens with the **most negative** gradient (largest predicted loss decrease).
 
 from __future__ import annotations
 
+import sys
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Protocol, runtime_checkable
 
 import numpy as np
+
+OnStep = Callable[[int, np.ndarray, float], None]
+"""Per-step progress callback: ``on_step(step, best_suffix_ids, best_loss)``.
+
+``step`` is 1-based (the step just completed), ``best_suffix_ids`` is a defensive
+copy of the incumbent suffix, and ``best_loss`` is its (non-increasing) loss. The
+callback is auxiliary — :func:`run_gcg` isolates it so a logging/disk failure can
+never abort a multi-hour search.
+"""
 
 
 def top_k_candidates(grad: np.ndarray, top_k: int) -> np.ndarray:
@@ -168,6 +178,7 @@ def run_gcg(
     cfg: GcgConfig,
     *,
     reached_fn: Callable[[np.ndarray], bool] | None = None,
+    on_step: OnStep | None = None,
 ) -> GcgResult:
     """Run the GCG suffix search against the ``fn`` seam under ``cfg``.
 
@@ -182,6 +193,10 @@ def run_gcg(
         cfg: Pinned search hyper-parameters.
         reached_fn: Optional predicate on the current best suffix ids; when it
             returns ``True`` the search stops and ``reached`` is set.
+        on_step: Optional :data:`OnStep` callback invoked once after each completed
+            step with ``(step, best_suffix_ids_copy, best_loss)`` — including the
+            early-stop step. Exception-isolated (a failure is logged to stderr and
+            the search continues); ``None`` leaves behaviour identical.
 
     Returns:
         A :class:`GcgResult` with the best suffix, its loss, and the trajectory.
@@ -210,8 +225,16 @@ def run_gcg(
                 suffix = cand
                 best_loss = cand_loss
             history.append(best_loss)
-            if reached_fn is not None and reached_fn(suffix):
-                reached = True
+            reached = reached_fn is not None and reached_fn(suffix)
+            if on_step is not None:
+                try:
+                    on_step(steps_run, suffix.copy(), best_loss)
+                except Exception as exc:  # noqa: BLE001 - callback is auxiliary, never fatal
+                    print(
+                        f"[run_gcg] on_step callback failed: {type(exc).__name__}: {exc}",
+                        file=sys.stderr,
+                    )
+            if reached:
                 break
 
     return GcgResult(

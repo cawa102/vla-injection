@@ -83,7 +83,7 @@ payload):
 
 ## Tasks
 
-- [ ] **Task 1: `on_step` callback in `run_gcg`**
+- [x] **Task 1: `on_step` callback in `run_gcg`**
 
 **Files:**
 - Modify: `src/evasion_tax/attack/gcg.py` (`run_gcg`, ~`:166-220`)

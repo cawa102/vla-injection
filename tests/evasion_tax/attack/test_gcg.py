@@ -211,3 +211,69 @@ def test_run_gcg_rejects_top_k_above_vocab_size():
     cfg = GcgConfig(suffix_len=4, n_steps=5, top_k=11, search_width=8, seed=0)
     with pytest.raises(ValueError):
         run_gcg(fn, cfg)
+
+
+# --------------------------------------------------------------------------- #
+# on_step callback: observability foothold (exception-isolated)                #
+# --------------------------------------------------------------------------- #
+
+
+def test_on_step_reports_each_step_with_matching_loss_history():
+    cfg = GcgConfig(suffix_len=4, n_steps=12, top_k=3, search_width=16, seed=1)
+    calls: list[tuple[int, float]] = []
+
+    result = run_gcg(
+        _hamming_fn(),
+        cfg,
+        on_step=lambda step, ids, loss: calls.append((step, loss)),
+    )
+
+    steps = [step for step, _ in calls]
+    losses = [loss for _, loss in calls]
+    assert steps == list(range(1, cfg.n_steps + 1))  # 1-based, once per completed step
+    assert losses == list(result.loss_history[1:])  # incumbent loss after each step
+
+
+def test_on_step_receives_defensive_copy_that_cannot_corrupt_the_search():
+    cfg = GcgConfig(suffix_len=4, n_steps=10, top_k=3, search_width=16, seed=1)
+
+    def vandal(step, ids, loss):
+        ids[:] = 999  # try to corrupt the live search via the callback's array
+
+    baseline = run_gcg(_hamming_fn(), cfg)
+    result = run_gcg(_hamming_fn(), cfg, on_step=vandal)
+
+    assert result == baseline  # the search is unaffected ⇒ callback got a copy
+
+
+def test_on_step_exception_is_isolated_and_never_aborts_the_search():
+    cfg = GcgConfig(suffix_len=4, n_steps=10, top_k=3, search_width=16, seed=1)
+
+    def boom(step, ids, loss):
+        raise RuntimeError("simulated logging/disk failure")
+
+    baseline = run_gcg(_hamming_fn(), cfg)
+    result = run_gcg(_hamming_fn(), cfg, on_step=boom)
+
+    assert result.n_steps_run == cfg.n_steps  # ran the full budget despite every call raising
+    assert result == baseline  # a failing callback changes nothing about the search
+
+
+def test_on_step_called_once_per_step_through_the_reaching_step():
+    fn = _hamming_fn()
+    cfg = GcgConfig(suffix_len=4, n_steps=200, top_k=3, search_width=32, seed=1)
+    reached_fn = lambda ids: bool((ids == np.asarray(_SECRET)).all())  # noqa: E731
+    steps: list[int] = []
+
+    result = run_gcg(
+        fn, cfg, reached_fn=reached_fn, on_step=lambda step, ids, loss: steps.append(step)
+    )
+
+    # Early-stop fires at result.n_steps_run; the reaching step is itself reported.
+    assert result.reached is True
+    assert steps == list(range(1, result.n_steps_run + 1))
+
+
+def test_on_step_none_is_identical_to_omitting_the_callback():
+    cfg = GcgConfig(suffix_len=4, n_steps=15, top_k=3, search_width=8, seed=123)
+    assert run_gcg(_hamming_fn(), cfg, on_step=None) == run_gcg(_hamming_fn(), cfg)
