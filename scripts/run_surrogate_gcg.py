@@ -12,6 +12,7 @@ import argparse
 import dataclasses
 import hashlib
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -19,7 +20,7 @@ from pathlib import Path
 import _bootstrap  # noqa: F401  (import side effect: puts src/ on sys.path)
 import numpy as np  # noqa: E402
 
-from evasion_tax.attack.gcg import GcgConfig, run_gcg  # noqa: E402
+from evasion_tax.attack.gcg import GcgConfig, OnStep, run_gcg  # noqa: E402
 from evasion_tax.attack.openvla_loader import (  # noqa: E402
     DEFAULT_INSTRUCTION,
     build_target,
@@ -30,6 +31,7 @@ from evasion_tax.attack.surrogate_artifacts import (  # noqa: E402
     QUARANTINE_ROOT,
     SCHEMA_VERSION,
     SurrogateSuffixArtifact,
+    require_quarantined,
     utc_now_iso,
     write_json_record,
 )
@@ -41,6 +43,8 @@ _EXIT_REQUIRES_GPU = 2
 _BYTES_PER_GIB = 1024**3
 _DEFAULT_EVAL_BATCH = 32
 _GATE_SAMPLES = 32  # gradient_agrees_with_swaps probes for the recorded gradient-health diagnostic
+_PROGRESS_EVERY = 25  # emit a heartbeat progress line every N completed GCG steps
+_CHECKPOINT_EVERY = 50  # refresh the quarantined best-suffix checkpoint every M completed steps
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
@@ -101,6 +105,86 @@ def _parse_target_tokens(raw: str | None) -> np.ndarray | None:
     if not toks:
         raise ValueError("--target-action-tokens must contain at least one integer")
     return np.asarray(toks, dtype=np.int64)
+
+
+def _progress_line(step: int, n_steps: int, best_loss: float, elapsed_s: float) -> str:
+    """Heartbeat line for the GCG search log. No suffix payload — safe for stdout."""
+    return f"[gcg] step {step}/{n_steps} best_loss={best_loss:.3f} elapsed={elapsed_s:.0f}s"
+
+
+def _checkpoint_dict(
+    step: int,
+    n_steps: int,
+    best_suffix: np.ndarray,
+    best_loss: float,
+    precision: str,
+    updated_utc: str,
+) -> dict:
+    """Mutable best-suffix checkpoint (Shared-contract dict, JSON-safe).
+
+    Carries ``best_suffix_ids`` — the attack payload — so the file it is written to
+    MUST stay under ``artifacts/untrusted/`` (see :func:`_checkpoint_path`).
+    """
+    return {
+        "step": int(step),
+        "n_steps": int(n_steps),
+        "best_loss": float(best_loss),
+        "best_suffix_ids": [int(x) for x in best_suffix],
+        "precision": precision,
+        "updated_utc": updated_utc,
+    }
+
+
+def _atomic_write_json(path: Path, obj: dict) -> None:
+    """Overwrite ``path`` with ``obj`` atomically (write a temp, then ``os.replace``).
+
+    Unlike the write-once :func:`write_json_record`, this is OVERWRITE-safe: the
+    checkpoint is a mutable sidecar refreshed each interval, so re-writing it must
+    not raise ``FileExistsError``.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(obj, indent=2, sort_keys=True) + "\n")
+    os.replace(tmp, path)
+
+
+def _checkpoint_path(artifact_dir: Path) -> Path:
+    """The mutable checkpoint path for a run, enforced to stay under quarantine.
+
+    The checkpoint carries the suffix (attack payload), so it must live beside the
+    write-once suffix artifact under ``artifacts/untrusted/<run_id>/`` — never under
+    tracked ``results/``.
+    """
+    return require_quarantined(artifact_dir / "checkpoint.json")
+
+
+def _make_on_step(
+    *,
+    n_steps: int,
+    precision: str,
+    checkpoint_path: Path,
+    t0: float,
+    out=sys.stdout,
+) -> OnStep:
+    """Throttled :data:`OnStep`: heartbeat every ``_PROGRESS_EVERY`` steps, checkpoint
+    every ``_CHECKPOINT_EVERY`` steps.
+
+    The progress line (no suffix) goes to ``out``; the suffix-bearing checkpoint is
+    atomically (over)written to the quarantined ``checkpoint_path``. Elapsed wall time
+    is measured against ``t0`` (a ``time.perf_counter()`` reading taken at search start).
+    """
+
+    def on_step(step: int, best_suffix: np.ndarray, best_loss: float) -> None:
+        if step % _PROGRESS_EVERY == 0:
+            elapsed = time.perf_counter() - t0
+            print(_progress_line(step, n_steps, best_loss, elapsed), file=out, flush=True)
+        if step % _CHECKPOINT_EVERY == 0:
+            _atomic_write_json(
+                checkpoint_path,
+                _checkpoint_dict(step, n_steps, best_suffix, best_loss, precision, utc_now_iso()),
+            )
+
+    return on_step
 
 
 def _write_text_once(path: Path, text: str) -> Path:
@@ -285,12 +369,19 @@ def main(argv: list[str] | None = None) -> int:
     artifact_dir = QUARANTINE_ROOT / run_id
 
     t0 = time.perf_counter()
+    on_step = _make_on_step(
+        n_steps=gcg.n_steps,
+        precision=fields["precision"],
+        checkpoint_path=_checkpoint_path(artifact_dir),
+        t0=t0,
+    )
     failure_reason = None
     try:
         result = run_gcg(
             target,
             gcg,
             reached_fn=target.reached if args.early_stop else None,
+            on_step=on_step,
         )
         suffix_ids = np.asarray(result.best_suffix_ids, dtype=np.int64)
         surrogate_target_hit = bool(result.reached)

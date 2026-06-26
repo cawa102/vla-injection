@@ -123,7 +123,7 @@ forward; throttling is the *callback's* job (Task 2), not `run_gcg`'s.
 
 ---
 
-- [ ] **Task 2: progress-log + checkpoint callback in the surrogate driver**
+- [x] **Task 2: progress-log + checkpoint callback in the surrogate driver**
 
 **Files:**
 - Modify: `scripts/run_surrogate_gcg.py`

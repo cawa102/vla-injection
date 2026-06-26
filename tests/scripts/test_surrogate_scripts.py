@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib
+import io
 import json
 import sys
 from pathlib import Path
@@ -8,7 +9,11 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from evasion_tax.attack.surrogate_artifacts import SCHEMA_VERSION, SurrogateSuffixArtifact
+from evasion_tax.attack.surrogate_artifacts import (
+    SCHEMA_VERSION,
+    SurrogateSuffixArtifact,
+    is_under_quarantine,
+)
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _SCRIPTS = _REPO_ROOT / "scripts"
@@ -163,6 +168,105 @@ def test_gradient_health_captures_probe_failure_without_raising():
     health = mod._gradient_health(target, seed=42)
 
     assert health == {"error": "RuntimeError: dead gradient"}
+
+
+def test_progress_line_reports_step_budget_and_loss():
+    mod = _load("run_surrogate_gcg")
+
+    line = mod._progress_line(25, 500, 6.357123, 1113.4)
+
+    assert line.startswith("[gcg]")
+    assert "step 25/500" in line
+    assert "best_loss=6.357" in line
+    assert "1113" in line  # elapsed seconds, no suffix payload
+
+
+def test_checkpoint_dict_carries_the_shared_contract_and_round_trips():
+    mod = _load("run_surrogate_gcg")
+    suffix = np.array([7, 8, 9], dtype=np.int64)
+
+    record = mod._checkpoint_dict(
+        step=50,
+        n_steps=500,
+        best_suffix=suffix,
+        best_loss=6.123,
+        precision="int8",
+        updated_utc="2026-06-26T12:00:00+00:00",
+    )
+
+    assert record == {
+        "step": 50,
+        "n_steps": 500,
+        "best_loss": 6.123,
+        "best_suffix_ids": [7, 8, 9],  # the attack payload — why the file is quarantined
+        "precision": "int8",
+        "updated_utc": "2026-06-26T12:00:00+00:00",
+    }
+    # JSON-safe: numpy ids became plain ints, so the dict round-trips losslessly.
+    assert json.loads(json.dumps(record)) == record
+
+
+def test_atomic_write_json_overwrites_in_place_and_round_trips(tmp_path):
+    mod = _load("run_surrogate_gcg")
+    path = tmp_path / "checkpoint.json"
+
+    mod._atomic_write_json(path, {"step": 50, "best_loss": 6.1})
+    assert json.loads(path.read_text()) == {"step": 50, "best_loss": 6.1}
+
+    # The checkpoint is MUTABLE: a second write overwrites without FileExistsError.
+    mod._atomic_write_json(path, {"step": 100, "best_loss": 5.0})
+    assert json.loads(path.read_text()) == {"step": 100, "best_loss": 5.0}
+    # No stray temp file left behind.
+    assert list(tmp_path.iterdir()) == [path]
+
+
+def test_make_on_step_throttles_progress_and_checkpoint(tmp_path):
+    mod = _load("run_surrogate_gcg")
+    out = io.StringIO()
+    ckpt = tmp_path / "checkpoint.json"
+    on_step = mod._make_on_step(
+        n_steps=500, precision="int8", checkpoint_path=ckpt, t0=0.0, out=out
+    )
+
+    checkpoint_steps: list[int] = []
+    for step in range(1, 101):
+        suffix = np.array([step, step + 1, step + 2], dtype=np.int64)
+        on_step(step, suffix, float(500 - step))
+        if ckpt.exists():
+            checkpoint_steps.append(json.loads(ckpt.read_text())["step"])
+
+    # A progress line every _PROGRESS_EVERY (25) steps.
+    progress_steps = [
+        int(line.split("step ")[1].split("/")[0]) for line in out.getvalue().splitlines()
+    ]
+    assert progress_steps == [25, 50, 75, 100]
+
+    # The checkpoint is refreshed every _CHECKPOINT_EVERY (50) steps: it first appears at
+    # step 50 and is overwritten at step 100 — its "step" field only ever holds 50 or 100.
+    assert checkpoint_steps[0] == 50  # nothing written before the first interval
+    assert set(checkpoint_steps) == {50, 100}
+
+    final = json.loads(ckpt.read_text())
+    assert final["step"] == 100
+    assert final["best_suffix_ids"] == [100, 101, 102]  # the suffix passed at step 100
+    assert final["best_loss"] == 400.0
+
+
+def test_checkpoint_path_is_quarantined_under_the_run_dir():
+    mod = _load("run_surrogate_gcg")
+
+    path = mod._checkpoint_path(mod.QUARANTINE_ROOT / "run123")
+
+    assert path.name == "checkpoint.json"
+    assert path.parent.name == "run123"
+    assert is_under_quarantine(path)  # the suffix-bearing checkpoint never leaves quarantine
+
+
+def test_checkpoint_path_rejects_a_non_quarantined_run_dir():
+    mod = _load("run_surrogate_gcg")
+
+    with pytest.raises(ValueError):
+        mod._checkpoint_path(Path("results/run123"))
 
 
 def test_run_surrogate_gcg_dry_run_uses_config_precision(capsys):
