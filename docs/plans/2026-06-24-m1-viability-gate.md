@@ -52,6 +52,14 @@ transformers 4.40.1 / bf16 OpenVLA-7B + LIBERO (EGL) behind the CUDA guard (same
   (skip-if-exists), suffixes quarantined to `artifacts/untrusted/` (D6-6), `nohup`+`systemd-inhibit`+`until` for
   unattended runs (`docs/gpu/CSB/plan.md`). `--exclusive-gpu` recorded, not a hard gate (production attack runs
   don't need an exclusive window).
+- **DM-8 — surrogate-transfer arm demoted (2026-06-29); M1 proceeds bf16-direct via this plan.** The
+  quantized-surrogate→bf16 transfer sweep (`docs/surrogate/`, n500, 2026-06-27) found int8/nf4 GCG gradients
+  **unfaithful** (recommended-token Δ ≥ random; n=1) and **no speed win** (int8 slowest), while **bf16 fits one
+  24 GB A5000 and attacks directly**. The transfer arm is **demoted** — its unfaithfulness result is kept as a
+  reportable **negative finding** (`surrogate-precision-sweep-result`; playbook §1 / §6 D8) — and M1 runs the
+  **bf16-direct** RoboGCG redirect (Task 5). The sweep's `target_hit=false` came from a **hand-specified
+  `--target-action-tokens`** (the surrogate driver), **not** the pre-registered `redirect_spec_for` that
+  `run_attack.py` uses (Task 1 / DM-5), so it does **not** indicate the M1 target is unreachable.
 
 ---
 
@@ -299,6 +307,33 @@ class AttackUnitRecord:
 + codec round-trips; (c) one benign episode via the runner reproduces step-4; (d) separation table uses held-out
 FPR + calib-only τ; (e) attacked run logs **both** success notions per unit, resume + quarantine proven; (f) the M1
 report emits the four-part H1 verdict + the folded attack-cost distribution → re-feeds `branch_select`.
+
+---
+
+## Status & box-execution readiness (2026-06-29)
+
+**Code:** Tasks 0–6 done (mac core + harness); `run_attack.py` is wired to the pre-registered
+`redirect_spec_for` / `target_action_ids_for` (Task 1). Only **Task 7** (post-box: cost → `branch_select`
+re-feed + docs) remains. The harness is **box-ready** — the exact launch sequence is in the
+`configs/m1_viability.yaml` header.
+
+**Box state:** only small/interrupted benign **pilots** exist (`results/2026-06-25T12-*-benign-baseline`,
+max **27/300** episodes, auto-timestamped dirs, **no `geometry_stats.json`, no re-pinned schema, no attack run**).
+The registered M1 runs have **not** been executed — recent box time went to the (now-demoted, DM-8) surrogate sweep.
+
+**Remaining box execution (all via the `m1_viability.yaml` sequence — no new code):**
+1. Full benign baseline `--n-benign 300` → `results/m1-benign-baseline/` (`--run-name`, `--resume`). The pilots
+   are throwaway (auto-timestamped, not the stable run-dir).
+2. Lock the DM-3 re-pin → `schema_repinned.json` (CPU-only).
+3. Attack **dry run** (`--n-attacked 1 --n-steps 20 --results-root results/_smoke`) — harness sanity.
+4. Attack **registered** run → `results/m1-robogcg-redirect/` (`nohup`+`systemd-inhibit`, per-unit resume,
+   early-look after 3 — DM-6/7).
+5. Mac: `m1_gate_report.py` → H1 GO/NO-GO (Task 6) → Task 7 branch re-feed.
+
+**Observability:** the surrogate sweep ran at commit `337eeb3` (**pre** the `on_step` callback
+`57cde59`/`4f40b53`), so it logged **no per-step loss trajectory**. M1 runs at HEAD → `run_gcg` emits
+`[gcg] step N/500 best_loss=…` every 25 steps + a 50-step quarantined checkpoint, so plateau-vs-descending **is**
+observable for the attack.
 
 ---
 
