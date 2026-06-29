@@ -1,0 +1,22 @@
+{
+  "artifact_id": "2026-06-26T13-44-17Z-surrogate-gcg-libero_spatial-task_0-bf16",
+  "artifact_path": "artifacts/untrusted/2026-06-26T13-44-17Z-surrogate-gcg/2026-06-26T13-44-17Z-surrogate-gcg-libero_spatial-task_0-bf16.json",
+  "failure_reason": null,
+  "suffix_sha256": "d24e958286390765931e4b539bc371fa338a4237ce3811cc4f274ef8e7f44f35",
+  "surrogate_best_loss": 2.566796064376831,
+  "surrogate_censored": true,
+  "surrogate_gradient_health": {
+    "faithfulness_passed": true,
+    "gate_samples": 32,
+    "grad_absmax": 1.4309499263763428,
+    "grad_finite": true,
+    "grad_nonzero": true,
+    "random_mean_delta": -1.0323554873466492,
+    "recommended_mean_delta": -1.070162445306778
+  },
+  "surrogate_peak_vram_gib": 18.240234375,
+  "surrogate_precision": "bf16",
+  "surrogate_steps_to_success": 500,
+  "surrogate_target_hit": false,
+  "surrogate_wall_seconds": 18214.41533173481
+}

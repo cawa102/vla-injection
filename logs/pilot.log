@@ -1,0 +1,8 @@
+nohup: ignoring input
+[pilot] === bf16 start Fri 26 Jun 13:43:53 UTC 2026 ===
+[pilot] === bf16 end Fri 26 Jun 18:47:53 UTC 2026 ===
+[pilot] === int8 start Fri 26 Jun 18:47:53 UTC 2026 ===
+[pilot] === int8 end Sat 27 Jun 00:58:50 UTC 2026 ===
+[pilot] === nf4_4bit start Sat 27 Jun 00:58:50 UTC 2026 ===
+[pilot] === nf4_4bit end Sat 27 Jun 06:04:40 UTC 2026 ===
+[pilot] ALL DONE Sat 27 Jun 06:04:40 UTC 2026
