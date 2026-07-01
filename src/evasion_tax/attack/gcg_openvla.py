@@ -289,6 +289,22 @@ class FaithfulnessReport:
     passed: bool
 
 
+def _to_pil(image: Any) -> Any:
+    """Normalize a rollout observation to a ``PIL.Image`` for the OpenVLA processor.
+
+    The processor calls ``img.convert("RGB")`` so it requires a PIL image.
+    ``build_target`` already passes one, but the LIBERO rollout obs
+    (``get_libero_image``) is a numpy HWC uint8 array — pass PIL through unchanged,
+    wrap numpy via ``Image.fromarray``. PIL is imported here (not at module top) to
+    keep the module importable on a CUDA/PIL-free host (see the module docstring).
+    """
+    from PIL import Image  # noqa: E402
+
+    if isinstance(image, Image.Image):
+        return image
+    return Image.fromarray(np.asarray(image))
+
+
 class OpenVlaGcgTarget:
     """GPU-only :class:`~evasion_tax.attack.gcg.LossGradientFn` for frozen bf16 OpenVLA-7B.
 
@@ -370,7 +386,9 @@ class OpenVlaGcgTarget:
         # the model's (bf16) param dtype — the frozen vision encoder's Conv bias is bf16,
         # so a float32 image errors ("Input type (float) and bias type (c10::BFloat16)
         # should be the same"). Same idiom as smoke_openvla_gradient.py's bf16 cast.
-        proc = processor(_PROMPT_PREFIX.format(instruction=instruction) + _PROMPT_TAIL, image)
+        proc = processor(
+            _PROMPT_PREFIX.format(instruction=instruction) + _PROMPT_TAIL, _to_pil(image)
+        )
         model_dtype = next(model.parameters()).dtype
         self._pixel_values = proc["pixel_values"].to(device=device, dtype=model_dtype)
 

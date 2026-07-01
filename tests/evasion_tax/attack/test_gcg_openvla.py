@@ -16,12 +16,28 @@ import pytest
 
 from evasion_tax.attack.gcg_openvla import (
     EquivalenceCheck,
+    _to_pil,
     chunked_losses,
     equivalence_verdict,
     per_sequence_ce,
     project_onehot_grad,
     suffix_span_in_ids,
 )
+
+
+def test_to_pil_wraps_numpy_and_passes_pil_through():
+    """`_to_pil` normalizes the rollout obs (numpy HWC uint8) to a PIL image so the
+    OpenVLA processor's `img.convert("RGB")` works, and passes a PIL image through
+    unchanged — the run_attack numpy-image regression that crashed the M1 attack."""
+    Image = pytest.importorskip("PIL.Image")
+
+    arr = np.zeros((4, 4, 3), dtype=np.uint8)
+    wrapped = _to_pil(arr)
+    assert isinstance(wrapped, Image.Image)
+    assert wrapped.size == (4, 4)
+
+    pil = Image.fromarray(arr)
+    assert _to_pil(pil) is pil
 
 # --------------------------------------------------------------------------- #
 # per_sequence_ce: HF-style shifted, ignore-masked, per-row MEAN cross-entropy  #
