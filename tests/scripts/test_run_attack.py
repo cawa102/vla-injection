@@ -13,6 +13,8 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
+
 from evasion_tax.attack.early_stop_bench import TargetOutcome
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -118,3 +120,87 @@ def test_run_attack_loop_resume_skips_finished_unit(tmp_path):
     assert calls == []                                    # all skipped
     assert len(records) == 2
     assert len(list(quarantine.glob("*.txt"))) == 2       # no extra quarantined suffixes
+
+
+def test_run_attack_loop_writes_aggregate_incrementally_survives_crash(tmp_path):
+    # BUG1: a crash mid-loop must still leave a valid aggregate of the finished units,
+    # so an interrupted run is not lost and m1_gate_report has something to read.
+    mod = _load()
+    units = ["t0:r0:42", "t0:r1:43", "t1:r0:44"]
+    units_dir = tmp_path / "units"
+    quarantine = tmp_path / "untrusted"
+
+    def failing(unit):
+        if unit == units[2]:
+            raise RuntimeError("boom on unit 3")
+        return _attack_out(unit)
+
+    with pytest.raises(RuntimeError):
+        mod.run_attack_loop(units_dir, quarantine, units=units,
+                            attack_fn=failing, resume=False)
+
+    aggregate = units_dir.parent / "attack_records.json"
+    assert aggregate.exists()
+    records = json.loads(aggregate.read_text())
+    assert len(records) == 2                               # only the units finished pre-crash
+    assert [r["unit_id"] for r in records] == units[:2]
+
+
+def test_run_attack_loop_fires_on_unit_done_per_fresh_unit(tmp_path):
+    # BUG5: a boundary hook fires once per FRESH unit (the GPU body wires it to
+    # torch.cuda.empty_cache() to curb fragmentation OOM over sequential sw=512 searches).
+    mod = _load()
+    units = ["t0:r0:42", "t0:r1:43", "t1:r0:44"]
+    calls = []
+    mod.run_attack_loop(
+        tmp_path / "units", tmp_path / "untrusted", units=units,
+        attack_fn=lambda u: _attack_out(u), resume=False,
+        on_unit_done=lambda: calls.append(1),
+    )
+    assert len(calls) == 3                                 # one per fresh unit
+
+
+def test_run_attack_loop_on_unit_done_skips_reloaded_units(tmp_path):
+    # Reloaded (resumed) units did no GPU work → no cache-clear needed for them.
+    mod = _load()
+    units = ["t0:r0:42", "t0:r1:43"]
+    units_dir = tmp_path / "units"
+    quarantine = tmp_path / "untrusted"
+    mod.run_attack_loop(units_dir, quarantine, units=units,
+                        attack_fn=lambda u: _attack_out(u), resume=False)
+
+    calls = []
+    mod.run_attack_loop(units_dir, quarantine, units=units,
+                        attack_fn=lambda u: _attack_out(u), resume=True,
+                        on_unit_done=lambda: calls.append(1))
+    assert calls == []                                     # all reloaded → hook never fires
+
+
+def _header(**over):
+    h = {
+        "seed": 42, "git_commit": "abc123", "model": "openvla/x",
+        "n_steps": 500, "search_width": 512, "eval_batch": 32, "schema_sha256": "feed",
+    }
+    h.update(over)
+    return h
+
+
+def test_assert_resume_compatible_noop_when_no_run_json(tmp_path):
+    # BUG3: no run.json → fresh run, nothing to check.
+    mod = _load()
+    mod.assert_resume_compatible(tmp_path, _header())  # must not raise
+
+
+def test_assert_resume_compatible_passes_on_identical_header(tmp_path):
+    mod = _load()
+    (tmp_path / "run.json").write_text(json.dumps(_header()))
+    mod.assert_resume_compatible(tmp_path, _header())  # identical config → proceeds
+
+
+def test_assert_resume_compatible_raises_naming_changed_field(tmp_path):
+    # A changed n_steps must abort (never silently mix incompatible units) and name it.
+    mod = _load()
+    (tmp_path / "run.json").write_text(json.dumps(_header(n_steps=500)))
+    with pytest.raises(SystemExit) as exc:
+        mod.assert_resume_compatible(tmp_path, _header(n_steps=20))
+    assert "n_steps" in str(exc.value)

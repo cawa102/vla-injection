@@ -66,6 +66,29 @@ def test_build_verdict_go(tmp_path):
     assert verdict["cost"]["steps_to_success"]["median_steps"] == 60.0
 
 
+def test_build_verdict_falls_back_to_units_when_aggregate_absent(tmp_path):
+    # BUG1 belt-and-suspenders: if attack_records.json is missing but the per-unit
+    # units/*.json exist, the report reconstructs the aggregate from those.
+    mod = _load()
+    benign = tmp_path / "benign_records.json"
+    benign.write_text(json.dumps(_benign_dicts()))
+
+    attack_dir = tmp_path / "attack-run"
+    units = attack_dir / "units"
+    units.mkdir(parents=True)
+    for i, rec in enumerate(_attack_dicts()):
+        (units / f"u{i}.json").write_text(json.dumps(rec))
+    # attack_dir / "attack_records.json" is deliberately absent.
+
+    args = mod.argparse.Namespace(
+        benign=str(benign), attack=str(attack_dir / "attack_records.json"),
+        fpr=0.05, n_steps_cap=500, s_per_step=33.19, ceiling_auc=None,
+        schema_engagement=0.05, schema_grasp=0.10,
+    )
+    verdict = mod.build_verdict(args)
+    assert verdict["redirect"]["n"] == len(_attack_dicts())
+
+
 def test_main_writes_report(tmp_path):
     mod = _load()
     benign, attack = _write(tmp_path)

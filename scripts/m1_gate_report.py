@@ -37,10 +37,28 @@ def _load_list(path: str) -> list:
     return items
 
 
+def _load_attack_records(path: str) -> list:
+    """Attack records from the aggregate, or the per-unit ``units/*.json`` fallback.
+
+    BUG1 belt-and-suspenders: ``run_attack`` now writes ``attack_records.json``
+    incrementally, but if it is absent (a run killed before the first write) the
+    per-unit write-once checkpoints are the source of truth — reconstruct the
+    aggregate from ``<attack-dir>/units/*.json`` rather than failing outright.
+    """
+    p = Path(path)
+    if p.exists():
+        return _load_list(path)
+    units_dir = p.parent / "units"
+    unit_files = sorted(units_dir.glob("*.json")) if units_dir.is_dir() else []
+    if unit_files:
+        return [json.loads(f.read_text()) for f in unit_files]
+    return _load_list(path)  # neither exists → the original FileNotFoundError, unchanged
+
+
 def build_verdict(args: argparse.Namespace) -> dict:
     """Load both record files and compute the verdict (no I/O side effects)."""
     benign = benign_records_from_dicts(_load_list(args.benign))
-    attack = attack_records_from_dicts(_load_list(args.attack))
+    attack = attack_records_from_dicts(_load_attack_records(args.attack))
     schema = SchemaA(engagement_radius=args.schema_engagement, grasp_radius=args.schema_grasp)
     return m1_verdict(
         benign,

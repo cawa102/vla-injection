@@ -15,6 +15,7 @@ from evasion_tax.eval.rollout_runner import (
     geometry_stats,
     inject_suffix,
     normalize_actions,
+    reset_and_settle,
     rollout_asr,
 )
 from evasion_tax.eval.schema_repin import repin_schema_from_benign
@@ -33,6 +34,39 @@ def _codec():
         vocab_size=32064,
         n_bins=256,
     )
+
+
+class _SettleEnv:
+    """Minimal LIBERO-env stand-in recording reset/init/settle for the seam test."""
+
+    def __init__(self):
+        self.reset_calls = 0
+        self.init_state = None
+        self.dummy_steps = 0
+        self.last_dummy = None
+
+    def reset(self):
+        self.reset_calls += 1
+
+    def set_init_state(self, state):
+        self.init_state = state
+        return {"obs": "start", "t": 0}
+
+    def step(self, action):
+        self.dummy_steps += 1
+        self.last_dummy = action
+        return {"obs": "settled", "t": self.dummy_steps}, 0.0, False, {}
+
+
+def test_reset_and_settle_applies_num_steps_wait_dummy_steps():
+    # BUG4: the target frame must be the obs AFTER the settle, matching run_episode.
+    env = _SettleEnv()
+    obs = reset_and_settle(env, init_state="s0", dummy_action=[0.0] * 7, num_steps_wait=10)
+    assert env.reset_calls == 1
+    assert env.init_state == "s0"
+    assert env.dummy_steps == 10                 # exactly num_steps_wait dummy steps
+    assert obs == {"obs": "settled", "t": 10}    # returns the post-settle obs, not t=0
+    assert env.last_dummy == [0.0] * 7
 
 
 def test_inject_suffix_none_is_identity():

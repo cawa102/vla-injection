@@ -24,6 +24,25 @@ from evasion_tax.policy.action_codec import ActionCodec
 from evasion_tax.records import Rollout, RolloutStep, TargetActionSpec
 
 
+def reset_and_settle(
+    env: Any, *, init_state: Any, dummy_action: Any, num_steps_wait: int = 10
+) -> Any:
+    """Reset, set the init state, apply ``num_steps_wait`` dummy steps, return the obs.
+
+    The shared reset+settle seam used by BOTH :func:`run_episode` and the GCG target
+    capture (BUG4), so the adversarial suffix is optimised on the exact first policy
+    frame the rollout acts from (LIBERO needs the scene to settle for
+    ``num_steps_wait`` dummy actions before the policy sees a stable obs). ``env`` and
+    ``dummy_action`` are injected — this seam does no torch/LIBERO import, so it is
+    unit-tested off-GPU with a mock env.
+    """
+    env.reset()
+    obs = env.set_init_state(init_state)
+    for _ in range(num_steps_wait):
+        obs, _, _, _ = env.step(dummy_action)
+    return obs
+
+
 def inject_suffix(instruction: str, suffix_text: str | None) -> str:
     """Append a frozen adversarial ``suffix_text`` to ``instruction``.
 
@@ -214,17 +233,18 @@ def run_episode(
     attacked = suffix_text is not None
     suffix_ref = "frozen_suffix" if attacked else None
 
-    env.reset()
-    obs = env.set_init_state(init_state)
     dummy = get_libero_dummy_action(cfg.model_family)
+    obs = reset_and_settle(
+        env, init_state=init_state, dummy_action=dummy, num_steps_wait=num_steps_wait
+    )
 
     steps: list[RolloutStep] = []
     success = False
-    # Match run_libero_eval @ c8f03f48: t < max_steps + num_steps_wait (settle is EXTRA).
-    for t in range(max_steps + num_steps_wait):
-        if t < num_steps_wait:
-            obs, _, _, _ = env.step(dummy)
-            continue
+    # Policy steps only — the settle (num_steps_wait dummy steps) is done above via the
+    # shared seam. Step indices keep the run_libero_eval @ c8f03f48 numbering (the first
+    # policy step is num_steps_wait, so the settle is EXTRA), and the frame here matches
+    # the GCG target capture (BUG4).
+    for t in range(num_steps_wait, max_steps + num_steps_wait):
         img = get_libero_image(obs, resize_size)
         observation = {
             "full_image": img,

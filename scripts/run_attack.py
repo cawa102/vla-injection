@@ -22,9 +22,10 @@ with the GPU attack call mocked.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 
 import _bootstrap  # noqa: F401  (import side effect: puts src/ on sys.path)
@@ -36,6 +37,11 @@ from evasion_tax.metric.consistency_a import SchemaA  # noqa: E402
 STAGE = "run_attack"
 _EXIT_REQUIRES_GPU = 2
 _QUARANTINE_ROOT = "artifacts/untrusted"
+# The run.json header fields that MUST match for a --resume to reuse existing units;
+# a mismatch means the on-disk units were produced under a different attack config.
+_RESUME_KEYS = (
+    "seed", "git_commit", "model", "n_steps", "search_width", "eval_batch", "schema_sha256",
+)
 
 
 # --------------------------------------------------------------------------- #
@@ -60,6 +66,32 @@ def is_denial(*, asr_reached: bool, task_success: bool) -> bool:
     only when both fail is the outcome pure denial (DM-2 / §7 M1 NO-GO branch).
     """
     return not asr_reached and not task_success
+
+
+def assert_resume_compatible(run_dir: Path, current_header: Mapping) -> None:
+    """Abort a ``--resume`` if the existing ``run.json`` config differs (BUG3).
+
+    Reusing ``units/*.json`` from a run with a different schema / commit / step
+    budget / model silently mixes incompatible units into one aggregate. Before any
+    reuse, cross-check the :data:`_RESUME_KEYS` of the existing header against the
+    current launch and abort (naming the offending field) on any mismatch.
+
+    A no-op when ``run.json`` is absent (a fresh run — nothing to reuse).
+
+    Raises:
+        SystemExit: on any :data:`_RESUME_KEYS` mismatch (with the offending field).
+    """
+    run_json = Path(run_dir) / "run.json"
+    if not run_json.exists():
+        return
+    stored = json.loads(run_json.read_text())
+    for key in _RESUME_KEYS:
+        if stored.get(key) != current_header.get(key):
+            raise SystemExit(
+                f"[{STAGE}] --resume incompatible with existing {run_json}: "
+                f"{key}={stored.get(key)!r} (stored) != {current_header.get(key)!r} (current). "
+                f"Dry-runs and different configs MUST use a separate --run-name/--results-root."
+            )
 
 
 def load_frozen_schema(path: str) -> SchemaA:
@@ -100,6 +132,7 @@ def run_attack_loop(
     units: Sequence[str],
     attack_fn: Callable[[str], dict],
     resume: bool,
+    on_unit_done: Callable[[], None] | None = None,
 ) -> list[dict]:
     """Attack each unit via ``attack_fn`` (GPU-injected), quarantine, record, resume.
 
@@ -107,27 +140,40 @@ def run_attack_loop(
     finished unit instead of re-attacking. Every fresh unit's suffix is quarantined
     to ``quarantine_dir`` (D6-6). ``attack_fn(uid) -> {cost, suffix_text,
     rollout_asr_reached, task_success, metric_a_per_step}``.
+
+    ``on_unit_done`` (optional) fires after each FRESHLY-attacked unit (post-quarantine,
+    before the next target build); the GPU body wires it to ``torch.cuda.empty_cache()``
+    to curb fragmentation OOM over sequential ``sw=512`` searches (BUG5). It is not
+    called for resumed (reloaded) units, which did no GPU work.
     """
     units_dir.mkdir(parents=True, exist_ok=True)
     quarantine_dir.mkdir(parents=True, exist_ok=True)
+    # BUG1: the aggregate is written after EVERY completed unit (not once after the
+    # loop), so an interrupted run leaves a valid aggregate of the finished units and
+    # an early look works. Per-unit `units/<uid>.json` stays the write-once source of
+    # truth; this is an overwrite-safe derived view.
+    aggregate_path = units_dir.parent / "attack_records.json"
     records: list[dict] = []
     for uid in units:
         path = units_dir / f"{_safe(uid)}.json"
         if resume and path.exists():
             records.append(json.loads(path.read_text()))
-            continue
-        out = attack_fn(uid)
-        denial = is_denial(
-            asr_reached=out["rollout_asr_reached"], task_success=out["task_success"]
-        )
-        record = attack_unit_record(
-            uid, out["cost"], rollout_asr_reached=out["rollout_asr_reached"],
-            is_denial_=denial, metric_a_per_step=out["metric_a_per_step"],
-        )
-        # Quarantine the adversarial suffix BEFORE recording (D6-6; never in results/).
-        (quarantine_dir / f"{_safe(uid)}.txt").write_text(out["suffix_text"])
-        path.write_text(json.dumps(record))
-        records.append(record)
+        else:
+            out = attack_fn(uid)
+            denial = is_denial(
+                asr_reached=out["rollout_asr_reached"], task_success=out["task_success"]
+            )
+            record = attack_unit_record(
+                uid, out["cost"], rollout_asr_reached=out["rollout_asr_reached"],
+                is_denial_=denial, metric_a_per_step=out["metric_a_per_step"],
+            )
+            # Quarantine the adversarial suffix BEFORE recording (D6-6; never in results/).
+            (quarantine_dir / f"{_safe(uid)}.txt").write_text(out["suffix_text"])
+            path.write_text(json.dumps(record))
+            records.append(record)
+            if on_unit_done is not None:  # BUG5: free fragmented VRAM before the next unit
+                on_unit_done()
+        aggregate_path.write_text(json.dumps(records, indent=2) + "\n")
     return records
 
 
@@ -181,7 +227,7 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
     from evasion_tax.attack.gcg import GcgConfig, run_gcg
     from evasion_tax.attack.gcg_openvla import OpenVlaGcgTarget
     from evasion_tax.attack.redirect_target import redirect_spec_for, target_action_ids_for
-    from evasion_tax.eval.rollout_runner import rollout_asr, run_episode
+    from evasion_tax.eval.rollout_runner import reset_and_settle, rollout_asr, run_episode
     from evasion_tax.metric.consistency_a import ConsistencyMetricA
     from evasion_tax.repro import capture_env, seed_everything
 
@@ -199,6 +245,7 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
 
     import torch  # type: ignore[import-not-found]
     from experiments.robot.libero.libero_utils import (  # type: ignore[import-not-found]
+        get_libero_dummy_action,
         get_libero_env,
         get_libero_image,
     )
@@ -233,19 +280,18 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
     metric = ConsistencyMetricA(schema=schema, k=config.metric.k)
 
     run_dir, first = prepare_run_dir(args.results_root, args.run_name)
+    schema_sha256 = hashlib.sha256(Path(args.schema_from).read_bytes()).hexdigest()
+    header = {
+        "stage": STAGE, "run_name": args.run_name, "seed": config.seed,
+        "git_commit": git_commit, "hardware": env_rec, "model": mid,
+        "schema_from": args.schema_from, "schema_sha256": schema_sha256,
+        "search_width": args.search_width, "n_steps": args.n_steps,
+        "eval_batch": args.eval_batch, "exclusive_gpu": args.exclusive_gpu,
+    }
     if first:  # write-once §8 header on the FIRST launch only; a resume reuses the dir
-        (run_dir / "run.json").write_text(
-            json.dumps(
-                {
-                    "stage": STAGE, "run_name": args.run_name, "seed": config.seed,
-                    "git_commit": git_commit, "hardware": env_rec, "model": mid,
-                    "schema_from": args.schema_from, "search_width": args.search_width,
-                    "n_steps": args.n_steps, "exclusive_gpu": args.exclusive_gpu,
-                },
-                indent=2, sort_keys=True,
-            )
-            + "\n"
-        )
+        (run_dir / "run.json").write_text(json.dumps(header, indent=2, sort_keys=True) + "\n")
+    else:  # BUG3: never reuse units from a run launched under a different config
+        assert_resume_compatible(run_dir, header)
 
     def attack_fn(uid: str) -> dict:
         task_s, target_s, seed_s = uid.split(":")
@@ -262,9 +308,13 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
         env, task_description = get_libero_env(task, cfg.model_family, resolution=256)
         adapter = LiberoStateAdapter([str(o) for o in env.obj_of_interest])
         try:
-            env.reset()
-            obs = env.set_init_state(init_states[unit_seed % len(init_states)])
-            start_image = get_libero_image(obs, resize_size)
+            # BUG4: build the GCG target on the POST-settle frame (the exact obs
+            # run_episode acts from), not the pre-settle t=0 frame.
+            start_obs = reset_and_settle(
+                env, init_state=init_states[unit_seed % len(init_states)],
+                dummy_action=get_libero_dummy_action(cfg.model_family),
+            )
+            start_image = get_libero_image(start_obs, resize_size)
 
             spec = redirect_spec_for(
                 target_idx, persistence_steps=config.attack.persistence_steps
@@ -310,9 +360,9 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
     records = run_attack_loop(
         run_dir / "units", Path(_QUARANTINE_ROOT) / args.run_name,
         units=units, attack_fn=attack_fn, resume=args.resume,
+        on_unit_done=torch.cuda.empty_cache,  # BUG5: A5000 fragmentation at sw=512
     )
-    # Derived view — overwrite-safe across resumes (per-unit JSONs are the write-once record).
-    (run_dir / "attack_records.json").write_text(json.dumps(records, indent=2) + "\n")
+    # `attack_records.json` is written incrementally inside run_attack_loop (BUG1).
     n_redirect = sum(1 for r in records if not r["is_denial"] and r["rollout_asr_reached"])
     print(f"[{STAGE}] {len(records)} units, {n_redirect} reached the region -> {run_dir}")
     return 0
