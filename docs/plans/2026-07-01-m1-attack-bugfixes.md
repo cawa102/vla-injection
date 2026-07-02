@@ -41,7 +41,7 @@ BUG5 strongly recommended. BUG3/4 small but real.
 
 ## Tasks
 
-- [ ] **Task 1: BUG1 — incremental `attack_records.json`**
+- [x] **Task 1: BUG1 — incremental `attack_records.json`**
 
   **Files:**
   - Modify: `scripts/run_attack.py` (`run_attack_loop` ~113-131; move/duplicate the aggregate write from ~314-315)
@@ -64,7 +64,7 @@ BUG5 strongly recommended. BUG3/4 small but real.
 
   **Commit:** `fix(attack): write attack_records.json incrementally per unit (partial-run + early-look safe)`
 
-- [ ] **Task 2: BUG2 — re-score benign against the re-pinned SchemaA (Approach A, DM-3 same-scale)**
+- [x] **Task 2: BUG2 — re-score benign against the re-pinned SchemaA (Approach A, DM-3 same-scale)**
 
   **Files:**
   - Create: `src/evasion_tax/eval/rescore_benign.py` + `tests/evasion_tax/eval/test_rescore_benign.py`
@@ -95,7 +95,7 @@ BUG5 strongly recommended. BUG3/4 small but real.
 
   **Commit:** `feat(eval): re-score benign against the re-pinned SchemaA (DM-3 same-scale separation)`
 
-- [ ] **Task 3: BUG3 — validate run header before `--resume` reuse**
+- [x] **Task 3: BUG3 — validate run header before `--resume` reuse**
 
   **Files:**
   - Modify: `scripts/run_attack.py` (`_run` / `run_attack_loop`, ~113-131 + the run.json write ~235)
@@ -116,7 +116,7 @@ BUG5 strongly recommended. BUG3/4 small but real.
 
   **Commit:** `fix(attack): validate run header before --resume reuse (no cross-config unit mixing)`
 
-- [ ] **Task 4: BUG4 — build the GCG target on the post-settle rollout-start frame**
+- [x] **Task 4: BUG4 — build the GCG target on the post-settle rollout-start frame**
 
   **Files:**
   - Modify: `src/evasion_tax/eval/rollout_runner.py` (extract the reset+settle seam from `run_episode` ~217-226)
@@ -137,7 +137,7 @@ BUG5 strongly recommended. BUG3/4 small but real.
 
   **Commit:** `fix(attack): build GCG target on the post-settle rollout-start frame (match run_episode)`
 
-- [ ] **Task 5: BUG5 — `torch.cuda.empty_cache()` between units**
+- [x] **Task 5: BUG5 — `torch.cuda.empty_cache()` between units**
 
   **Files:**
   - Modify: `scripts/run_attack.py` (attack loop / GPU body; mirror `bench_early_stop.py`)
@@ -151,7 +151,7 @@ BUG5 strongly recommended. BUG3/4 small but real.
 
   **Commit:** `fix(attack): torch.cuda.empty_cache() between units (A5000 fragmentation at sw=512)`
 
-- [ ] **Task 6: box sequence + docs**
+- [x] **Task 6: box sequence + docs**
 
   **Files:**
   - Modify: `configs/m1_viability.yaml` (header launch sequence: insert **step 2b** `rescore_benign.py`; gate report

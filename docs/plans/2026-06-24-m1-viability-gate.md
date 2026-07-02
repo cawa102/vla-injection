@@ -321,14 +321,21 @@ re-feed + docs) remains. The harness is **box-ready** — the exact launch seque
 max **27/300** episodes, auto-timestamped dirs, **no `geometry_stats.json`, no re-pinned schema, no attack run**).
 The registered M1 runs have **not** been executed — recent box time went to the (now-demoted, DM-8) surrogate sweep.
 
-**Remaining box execution (all via the `m1_viability.yaml` sequence — no new code):**
+**Remaining box execution (via the `m1_viability.yaml` sequence + the 2026-07-01 attack-path bugfixes):**
 1. Full benign baseline `--n-benign 300` → `results/m1-benign-baseline/` (`--run-name`, `--resume`). The pilots
    are throwaway (auto-timestamped, not the stable run-dir).
 2. Lock the DM-3 re-pin → `schema_repinned.json` (CPU-only).
-3. Attack **dry run** (`--n-attacked 1 --n-steps 20 --results-root results/_smoke`) — harness sanity.
+2b. **Re-score benign on the re-pinned schema** → `benign_records_repinned.json` (`scripts/rescore_benign.py`,
+   CPU-only). **BUG2 same-scale fix:** benign is scored on the placeholder schema in step 1, so it MUST be
+   re-scored onto the re-pinned scale before the gate, or the separation AUC is cross-scale and invalid.
+3. Attack **dry run** in a **separate dir** (`--n-attacked 1 --n-steps 20 --results-root results/_smoke
+   --run-name attack-dry`) — harness sanity (BUG3: the registered dir aborts a `--resume` with a mismatched header).
 4. Attack **registered** run → `results/m1-robogcg-redirect/` (`nohup`+`systemd-inhibit`, per-unit resume,
-   early-look after 3 — DM-6/7).
-5. Mac: `m1_gate_report.py` → H1 GO/NO-GO (Task 6) → Task 7 branch re-feed.
+   `attack_records.json` written incrementally per unit so early-look after 3 works — DM-6/7, BUG1).
+5. Mac: `m1_gate_report.py` (`--benign …/benign_records_repinned.json`) → H1 GO/NO-GO (Task 6) → Task 7 branch re-feed.
+
+The 2026-07-01 bugfixes (see `docs/plans/2026-07-01-m1-attack-bugfixes.md`) also freeze the GCG target on the
+post-settle rollout-start frame (BUG4) and clear the CUDA cache between units (BUG5).
 
 **Observability:** the surrogate sweep ran at commit `337eeb3` (**pre** the `on_step` callback
 `57cde59`/`4f40b53`), so it logged **no per-step loss trajectory**. M1 runs at HEAD → `run_gcg` emits

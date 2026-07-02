@@ -18,12 +18,19 @@
 #   2. uv run python scripts/repin_schema.py \
 #        --geometry results/m1-benign-baseline/geometry_stats.json \
 #        --out      results/m1-benign-baseline/schema_repinned.json   # lock DM-3 (record §5); CPU-only
+#   2b. uv run python scripts/rescore_benign.py \
+#        --run results/m1-benign-baseline \
+#        --schema-from results/m1-benign-baseline/schema_repinned.json \
+#        --out results/m1-benign-baseline/benign_records_repinned.json  # BUG2: benign onto the
+#        # re-pinned scale so benign & attack separation is same-scale (DM-3); CPU-only, MUST precede step 4
 #   3. PYTHONPATH=~/LIBERO uv run python scripts/run_attack.py --config configs/m1_viability.yaml \
 #        --schema-from results/m1-benign-baseline/schema_repinned.json --n-attacked 10 \
 #        --n-steps 500 --search-width 512 --eval-batch 32 --openvla-root ~/openvla \
-#        --exclusive-gpu --resume                              # dry run first: --n-attacked 1 --n-steps 20
+#        --exclusive-gpu --resume
+#        # DRY-RUN FIRST in a SEPARATE dir (BUG3 aborts a --resume with a mismatched header):
+#        #   ... --n-attacked 1 --n-steps 20 --results-root results/_smoke --run-name attack-dry
 #   4. uv run python scripts/m1_gate_report.py \
-#        --benign results/m1-benign-baseline/benign_records.json \
+#        --benign results/m1-benign-baseline/benign_records_repinned.json \
 #        --attack results/m1-robogcg-redirect/attack_records.json --n-steps-cap 500   # CPU-only
 
 seed: 42
