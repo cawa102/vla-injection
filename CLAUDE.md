@@ -99,6 +99,12 @@ agreed `docs/core/` plan covers.
 **Phases — know which one a task belongs to; don't skip ahead.**
 Scope → Literature review → Design → Implement → Run & analyse → Write up.
 
+**GPU long-run gate (mandatory).** **STOP and ask the user before launching any long-running task on the
+GPU** — registered runs, attack/eval sweeps, benchmarks, or anything expected to take more than a few
+minutes of GPU time. State what will run, on which card, the expected duration, and wait for explicit
+approval. Short interactive checks (e.g. `nvidia-smi`, loading a model to verify it fits) don't need
+approval; anything that occupies a GPU for an extended period does.
+
 **Reproducibility (non-negotiable).** Pin & record all seeds; capture the exact environment; record
 data/checkpoint provenance (source, hash, date, licence); log each run to a timestamped **write-once**
 `results/`; change **one variable at a time**; figures regenerable from logged data by a script; report
