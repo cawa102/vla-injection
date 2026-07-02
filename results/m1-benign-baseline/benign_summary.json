@@ -1,0 +1,6 @@
+{
+  "n": 300,
+  "success_rate": 0.77,
+  "n_calib": 75,
+  "n_eval": 225
+}
