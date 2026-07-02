@@ -21,6 +21,9 @@ results/_demo/
 # Third-party paper PDFs (provenance + SHA-256 recorded in docs/references/README.md; re-fetchable)
 docs/references/*.pdf
 
+# Submission drafts — progress reports & paper/dissertation working files (author deliverables, kept local)
+docs/paper/
+
 # --- Secrets / environment ---
 .env
 .env.*
