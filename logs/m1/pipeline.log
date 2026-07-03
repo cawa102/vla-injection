@@ -1,0 +1,1436 @@
+nohup: ignoring input
+[pipe] BENIGN start Mon 29 Jun 15:11:45 UTC 2026
+2026-06-29 16:11:47.750296: I tensorflow/core/util/port.cc:113] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-06-29 16:11:47.782776: E external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:9261] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+2026-06-29 16:11:47.782839: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:607] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-06-29 16:11:47.783899: E external/local_xla/xla/stream_executor/cuda/cuda_blas.cc:1515] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2026-06-29 16:11:47.789271: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2026-06-29 16:11:48.510428: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+[robosuite WARNING] No private macro file found! (macros.py:53)
+[robosuite WARNING] It is recommended to use a private macro file (macros.py:54)
+[robosuite WARNING] To setup, run: python /home/40473058@eeecs.qub.ac.uk/vla-injection/.venv/lib/python3.10/site-packages/robosuite/scripts/setup_macros.py (macros.py:55)
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+Users of this version of Gym should be able to simply replace 'import gym' with 'import gymnasium as gym' in the vast majority of cases.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+<frozen importlib._bootstrap>:283: DeprecationWarning: the load_module() method is deprecated and slated for removal in Python 3.12; use exec_module() instead
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:00<00:00,  3.08it/s]Loading checkpoint shards:  50%|█████     | 2/4 [00:00<00:00,  3.31it/s]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:00<00:00,  3.38it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:01<00:00,  3.43it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:01<00:00,  3.38it/s]
+[info] using task orders [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+[run_benign] rolling episode 1/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 1/300: success=True steps=86
+[run_benign] rolling episode 2/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 2/300: success=True steps=130
+[run_benign] rolling episode 3/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 3/300: success=False steps=220
+[run_benign] rolling episode 4/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 4/300: success=True steps=82
+[run_benign] rolling episode 5/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 5/300: success=True steps=125
+[run_benign] rolling episode 6/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 6/300: success=False steps=220
+[run_benign] rolling episode 7/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 7/300: success=False steps=220
+[run_benign] rolling episode 8/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 8/300: success=False steps=220
+[run_benign] rolling episode 9/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 9/300: success=True steps=114
+[run_benign] rolling episode 10/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 10/300: success=True steps=110
+[run_benign] rolling episode 11/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 11/300: success=True steps=141
+[run_benign] rolling episode 12/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 12/300: success=True steps=108
+[run_benign] rolling episode 13/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 13/300: success=True steps=107
+[run_benign] rolling episode 14/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 14/300: success=True steps=101
+[run_benign] rolling episode 15/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 15/300: success=True steps=133
+[run_benign] rolling episode 16/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 16/300: success=False steps=220
+[run_benign] rolling episode 17/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 17/300: success=False steps=220
+[run_benign] rolling episode 18/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 18/300: success=True steps=115
+[run_benign] rolling episode 19/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 19/300: success=False steps=220
+[run_benign] rolling episode 20/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 20/300: success=False steps=220
+[run_benign] rolling episode 21/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 21/300: success=True steps=81
+[run_benign] rolling episode 22/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 22/300: success=True steps=119
+[run_benign] rolling episode 23/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 23/300: success=True steps=94
+[run_benign] rolling episode 24/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 24/300: success=True steps=81
+[run_benign] rolling episode 25/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 25/300: success=True steps=126
+[run_benign] rolling episode 26/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 26/300: success=True steps=91
+[run_benign] rolling episode 27/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 27/300: success=True steps=97
+[run_benign] rolling episode 28/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 28/300: success=True steps=211
+[run_benign] rolling episode 29/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 29/300: success=False steps=220
+[run_benign] rolling episode 30/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 30/300: success=True steps=113
+[run_benign] rolling episode 31/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 31/300: success=True steps=175
+[run_benign] rolling episode 32/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 32/300: success=False steps=220
+[run_benign] rolling episode 33/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 33/300: success=True steps=94
+[run_benign] rolling episode 34/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 34/300: success=True steps=97
+[run_benign] rolling episode 35/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 35/300: success=False steps=220
+[run_benign] rolling episode 36/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 36/300: success=False steps=220
+[run_benign] rolling episode 37/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 37/300: success=True steps=96
+[run_benign] rolling episode 38/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 38/300: success=False steps=220
+[run_benign] rolling episode 39/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 39/300: success=True steps=92
+[run_benign] rolling episode 40/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 40/300: success=True steps=122
+[run_benign] rolling episode 41/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 41/300: success=True steps=73
+[run_benign] rolling episode 42/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 42/300: success=True steps=124
+[run_benign] rolling episode 43/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 43/300: success=True steps=130
+[run_benign] rolling episode 44/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 44/300: success=True steps=88
+[run_benign] rolling episode 45/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 45/300: success=True steps=192
+[run_benign] rolling episode 46/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 46/300: success=False steps=220
+[run_benign] rolling episode 47/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 47/300: success=True steps=117
+[run_benign] rolling episode 48/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 48/300: success=True steps=113
+[run_benign] rolling episode 49/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 49/300: success=False steps=220
+[run_benign] rolling episode 50/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 50/300: success=True steps=121
+[run_benign] rolling episode 51/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 51/300: success=True steps=72
+[run_benign] rolling episode 52/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 52/300: success=True steps=94
+[run_benign] rolling episode 53/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 53/300: success=True steps=112
+[run_benign] rolling episode 54/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 54/300: success=True steps=86
+[run_benign] rolling episode 55/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 55/300: success=False steps=220
+[run_benign] rolling episode 56/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 56/300: success=True steps=87
+[run_benign] rolling episode 57/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 57/300: success=True steps=117
+[run_benign] rolling episode 58/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 58/300: success=True steps=112
+[run_benign] rolling episode 59/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 59/300: success=True steps=101
+[run_benign] rolling episode 60/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 60/300: success=False steps=220
+[run_benign] rolling episode 61/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 61/300: success=True steps=79
+[run_benign] rolling episode 62/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 62/300: success=True steps=108
+[run_benign] rolling episode 63/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 63/300: success=True steps=96
+[run_benign] rolling episode 64/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 64/300: success=True steps=92
+[run_benign] rolling episode 65/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 65/300: success=True steps=133
+[run_benign] rolling episode 66/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 66/300: success=True steps=84
+[run_benign] rolling episode 67/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 67/300: success=True steps=110
+[run_benign] rolling episode 68/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 68/300: success=True steps=119
+[run_benign] rolling episode 69/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 69/300: success=True steps=83
+[run_benign] rolling episode 70/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 70/300: success=False steps=220
+[run_benign] rolling episode 71/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 71/300: success=True steps=81
+[run_benign] rolling episode 72/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 72/300: success=True steps=116
+[run_benign] rolling episode 73/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 73/300: success=True steps=96
+[run_benign] rolling episode 74/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 74/300: success=True steps=101
+[run_benign] rolling episode 75/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 75/300: success=True steps=111
+[run_benign] rolling episode 76/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 76/300: success=True steps=79
+[run_benign] rolling episode 77/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 77/300: success=True steps=100
+[run_benign] rolling episode 78/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 78/300: success=True steps=132
+[run_benign] rolling episode 79/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 79/300: success=True steps=87
+[run_benign] rolling episode 80/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 80/300: success=False steps=220
+[run_benign] rolling episode 81/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 81/300: success=True steps=93
+[run_benign] rolling episode 82/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 82/300: success=True steps=95
+[run_benign] rolling episode 83/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 83/300: success=True steps=184
+[run_benign] rolling episode 84/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 84/300: success=True steps=89
+[run_benign] rolling episode 85/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 85/300: success=True steps=125
+[run_benign] rolling episode 86/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 86/300: success=False steps=220
+[run_benign] rolling episode 87/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 87/300: success=True steps=107
+[run_benign] rolling episode 88/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 88/300: success=True steps=130
+[run_benign] rolling episode 89/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 89/300: success=False steps=220
+[run_benign] rolling episode 90/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 90/300: success=True steps=128
+[run_benign] rolling episode 91/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 91/300: success=True steps=81
+[run_benign] rolling episode 92/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 92/300: success=True steps=117
+[run_benign] rolling episode 93/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 93/300: success=True steps=113
+[run_benign] rolling episode 94/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 94/300: success=True steps=79
+[run_benign] rolling episode 95/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 95/300: success=True steps=138
+[run_benign] rolling episode 96/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 96/300: success=True steps=73
+[run_benign] rolling episode 97/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 97/300: success=True steps=105
+[run_benign] rolling episode 98/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 98/300: success=False steps=220
+[run_benign] rolling episode 99/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 99/300: success=True steps=98
+[run_benign] rolling episode 100/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 100/300: success=True steps=125
+[run_benign] rolling episode 101/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 101/300: success=True steps=113
+[run_benign] rolling episode 102/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 102/300: success=True steps=112
+[run_benign] rolling episode 103/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 103/300: success=True steps=99
+[run_benign] rolling episode 104/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 104/300: success=True steps=90
+[run_benign] rolling episode 105/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 105/300: success=True steps=119
+[run_benign] rolling episode 106/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 106/300: success=True steps=86
+[run_benign] rolling episode 107/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 107/300: success=True steps=110
+[run_benign] rolling episode 108/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 108/300: success=False steps=220
+[run_benign] rolling episode 109/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 109/300: success=False steps=220
+[run_benign] rolling episode 110/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 110/300: success=True steps=120
+[run_benign] rolling episode 111/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 111/300: success=True steps=73
+[run_benign] rolling episode 112/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 112/300: success=True steps=107
+[run_benign] rolling episode 113/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 113/300: success=False steps=220
+[run_benign] rolling episode 114/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 114/300: success=True steps=78
+[run_benign] rolling episode 115/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 115/300: success=True steps=139
+[run_benign] rolling episode 116/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 116/300: success=False steps=220
+[run_benign] rolling episode 117/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 117/300: success=True steps=105
+[run_benign] rolling episode 118/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 118/300: success=True steps=125
+[run_benign] rolling episode 119/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 119/300: success=True steps=146
+[run_benign] rolling episode 120/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 120/300: success=True steps=116
+[run_benign] rolling episode 121/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 121/300: success=True steps=83
+[run_benign] rolling episode 122/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 122/300: success=True steps=121
+[run_benign] rolling episode 123/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 123/300: success=True steps=107
+[run_benign] rolling episode 124/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 124/300: success=True steps=78
+[run_benign] rolling episode 125/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 125/300: success=False steps=220
+[run_benign] rolling episode 126/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 126/300: success=False steps=220
+[run_benign] rolling episode 127/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 127/300: success=True steps=116
+[run_benign] rolling episode 128/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 128/300: success=True steps=105
+[run_benign] rolling episode 129/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 129/300: success=True steps=108
+[run_benign] rolling episode 130/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 130/300: success=False steps=220
+[run_benign] rolling episode 131/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 131/300: success=False steps=220
+[run_benign] rolling episode 132/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 132/300: success=True steps=119
+[run_benign] rolling episode 133/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 133/300: success=True steps=102
+[run_benign] rolling episode 134/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 134/300: success=False steps=220
+[run_benign] rolling episode 135/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 135/300: success=False steps=220
+[run_benign] rolling episode 136/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 136/300: success=False steps=220
+[run_benign] rolling episode 137/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 137/300: success=True steps=100
+[run_benign] rolling episode 138/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 138/300: success=True steps=138
+[run_benign] rolling episode 139/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 139/300: success=True steps=95
+[run_benign] rolling episode 140/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 140/300: success=True steps=123
+[run_benign] rolling episode 141/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 141/300: success=True steps=86
+[run_benign] rolling episode 142/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 142/300: success=True steps=103
+[run_benign] rolling episode 143/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 143/300: success=True steps=95
+[run_benign] rolling episode 144/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 144/300: success=True steps=96
+[run_benign] rolling episode 145/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 145/300: success=True steps=132
+[run_benign] rolling episode 146/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 146/300: success=True steps=100
+[run_benign] rolling episode 147/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 147/300: success=True steps=127
+[run_benign] rolling episode 148/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 148/300: success=True steps=117
+[run_benign] rolling episode 149/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 149/300: success=True steps=104
+[run_benign] rolling episode 150/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 150/300: success=False steps=220
+[run_benign] rolling episode 151/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 151/300: success=True steps=77
+[run_benign] rolling episode 152/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 152/300: success=False steps=220
+[run_benign] rolling episode 153/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 153/300: success=True steps=97
+[run_benign] rolling episode 154/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 154/300: success=True steps=92
+[run_benign] rolling episode 155/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 155/300: success=True steps=125
+[run_benign] rolling episode 156/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 156/300: success=False steps=220
+[run_benign] rolling episode 157/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 157/300: success=True steps=108
+[run_benign] rolling episode 158/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 158/300: success=False steps=220
+[run_benign] rolling episode 159/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 159/300: success=True steps=102
+[run_benign] rolling episode 160/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 160/300: success=True steps=131
+[run_benign] rolling episode 161/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 161/300: success=True steps=78
+[run_benign] rolling episode 162/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 162/300: success=True steps=108
+[run_benign] rolling episode 163/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 163/300: success=True steps=92
+[run_benign] rolling episode 164/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 164/300: success=True steps=81
+[run_benign] rolling episode 165/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 165/300: success=True steps=127
+[run_benign] rolling episode 166/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 166/300: success=False steps=220
+[run_benign] rolling episode 167/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 167/300: success=True steps=94
+[run_benign] rolling episode 168/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 168/300: success=True steps=121
+[run_benign] rolling episode 169/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 169/300: success=True steps=143
+[run_benign] rolling episode 170/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 170/300: success=True steps=119
+[run_benign] rolling episode 171/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 171/300: success=True steps=80
+[run_benign] rolling episode 172/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 172/300: success=True steps=97
+[run_benign] rolling episode 173/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 173/300: success=True steps=113
+[run_benign] rolling episode 174/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 174/300: success=True steps=80
+[run_benign] rolling episode 175/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 175/300: success=True steps=126
+[run_benign] rolling episode 176/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 176/300: success=True steps=85
+[run_benign] rolling episode 177/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 177/300: success=False steps=220
+[run_benign] rolling episode 178/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 178/300: success=True steps=141
+[run_benign] rolling episode 179/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 179/300: success=True steps=87
+[run_benign] rolling episode 180/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 180/300: success=True steps=118
+[run_benign] rolling episode 181/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 181/300: success=True steps=83
+[run_benign] rolling episode 182/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 182/300: success=True steps=112
+[run_benign] rolling episode 183/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 183/300: success=True steps=100
+[run_benign] rolling episode 184/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 184/300: success=True steps=79
+[run_benign] rolling episode 185/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 185/300: success=True steps=121
+[run_benign] rolling episode 186/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 186/300: success=False steps=220
+[run_benign] rolling episode 187/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 187/300: success=True steps=112
+[run_benign] rolling episode 188/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 188/300: success=True steps=136
+[run_benign] rolling episode 189/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 189/300: success=False steps=220
+[run_benign] rolling episode 190/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 190/300: success=False steps=220
+[run_benign] rolling episode 191/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 191/300: success=True steps=84
+[run_benign] rolling episode 192/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 192/300: success=True steps=124
+[run_benign] rolling episode 193/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 193/300: success=False steps=220
+[run_benign] rolling episode 194/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 194/300: success=True steps=75
+[run_benign] rolling episode 195/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 195/300: success=True steps=126
+[run_benign] rolling episode 196/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 196/300: success=False steps=220
+[run_benign] rolling episode 197/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 197/300: success=True steps=103
+[run_benign] rolling episode 198/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 198/300: success=True steps=122
+[run_benign] rolling episode 199/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 199/300: success=True steps=104
+[run_benign] rolling episode 200/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 200/300: success=False steps=220
+[run_benign] rolling episode 201/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 201/300: success=False steps=220
+[run_benign] rolling episode 202/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 202/300: success=True steps=120
+[run_benign] rolling episode 203/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 203/300: success=True steps=117
+[run_benign] rolling episode 204/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 204/300: success=True steps=84
+[run_benign] rolling episode 205/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 205/300: success=False steps=220
+[run_benign] rolling episode 206/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 206/300: success=False steps=220
+[run_benign] rolling episode 207/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 207/300: success=True steps=118
+[run_benign] rolling episode 208/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 208/300: success=True steps=117
+[run_benign] rolling episode 209/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 209/300: success=True steps=127
+[run_benign] rolling episode 210/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 210/300: success=True steps=118
+[run_benign] rolling episode 211/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 211/300: success=True steps=69
+[run_benign] rolling episode 212/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 212/300: success=True steps=104
+[run_benign] rolling episode 213/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 213/300: success=True steps=89
+[run_benign] rolling episode 214/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 214/300: success=True steps=81
+[run_benign] rolling episode 215/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 215/300: success=True steps=147
+[run_benign] rolling episode 216/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 216/300: success=True steps=95
+[run_benign] rolling episode 217/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 217/300: success=True steps=136
+[run_benign] rolling episode 218/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 218/300: success=True steps=120
+[run_benign] rolling episode 219/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 219/300: success=False steps=220
+[run_benign] rolling episode 220/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 220/300: success=True steps=120
+[run_benign] rolling episode 221/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 221/300: success=True steps=86
+[run_benign] rolling episode 222/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 222/300: success=False steps=220
+[run_benign] rolling episode 223/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 223/300: success=True steps=107
+[run_benign] rolling episode 224/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 224/300: success=True steps=81
+[run_benign] rolling episode 225/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 225/300: success=True steps=124
+[run_benign] rolling episode 226/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 226/300: success=False steps=220
+[run_benign] rolling episode 227/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 227/300: success=True steps=98
+[run_benign] rolling episode 228/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 228/300: success=True steps=127
+[run_benign] rolling episode 229/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 229/300: success=True steps=85
+[run_benign] rolling episode 230/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 230/300: success=True steps=114
+[run_benign] rolling episode 231/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 231/300: success=True steps=79
+[run_benign] rolling episode 232/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 232/300: success=True steps=101
+[run_benign] rolling episode 233/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 233/300: success=True steps=96
+[run_benign] rolling episode 234/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 234/300: success=True steps=89
+[run_benign] rolling episode 235/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 235/300: success=True steps=140
+[run_benign] rolling episode 236/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 236/300: success=True steps=75
+[run_benign] rolling episode 237/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 237/300: success=False steps=220
+[run_benign] rolling episode 238/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 238/300: success=True steps=121
+[run_benign] rolling episode 239/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 239/300: success=True steps=94
+[run_benign] rolling episode 240/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 240/300: success=True steps=101
+[run_benign] rolling episode 241/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 241/300: success=True steps=69
+[run_benign] rolling episode 242/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 242/300: success=True steps=113
+[run_benign] rolling episode 243/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 243/300: success=True steps=101
+[run_benign] rolling episode 244/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 244/300: success=True steps=85
+[run_benign] rolling episode 245/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 245/300: success=True steps=124
+[run_benign] rolling episode 246/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 246/300: success=True steps=96
+[run_benign] rolling episode 247/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 247/300: success=True steps=100
+[run_benign] rolling episode 248/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 248/300: success=True steps=125
+[run_benign] rolling episode 249/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 249/300: success=True steps=81
+[run_benign] rolling episode 250/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 250/300: success=False steps=220
+[run_benign] rolling episode 251/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 251/300: success=False steps=220
+[run_benign] rolling episode 252/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 252/300: success=True steps=98
+[run_benign] rolling episode 253/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 253/300: success=True steps=106
+[run_benign] rolling episode 254/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 254/300: success=False steps=220
+[run_benign] rolling episode 255/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 255/300: success=True steps=175
+[run_benign] rolling episode 256/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 256/300: success=False steps=220
+[run_benign] rolling episode 257/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 257/300: success=True steps=110
+[run_benign] rolling episode 258/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 258/300: success=True steps=124
+[run_benign] rolling episode 259/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 259/300: success=False steps=220
+[run_benign] rolling episode 260/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 260/300: success=False steps=220
+[run_benign] rolling episode 261/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 261/300: success=True steps=95
+[run_benign] rolling episode 262/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 262/300: success=False steps=220
+[run_benign] rolling episode 263/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 263/300: success=True steps=113
+[run_benign] rolling episode 264/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 264/300: success=True steps=74
+[run_benign] rolling episode 265/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 265/300: success=True steps=127
+[run_benign] rolling episode 266/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 266/300: success=False steps=220
+[run_benign] rolling episode 267/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 267/300: success=True steps=119
+[run_benign] rolling episode 268/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 268/300: success=True steps=103
+[run_benign] rolling episode 269/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 269/300: success=False steps=220
+[run_benign] rolling episode 270/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 270/300: success=False steps=220
+[run_benign] rolling episode 271/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 271/300: success=True steps=88
+[run_benign] rolling episode 272/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 272/300: success=True steps=110
+[run_benign] rolling episode 273/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 273/300: success=True steps=92
+[run_benign] rolling episode 274/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 274/300: success=False steps=220
+[run_benign] rolling episode 275/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 275/300: success=False steps=220
+[run_benign] rolling episode 276/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 276/300: success=False steps=220
+[run_benign] rolling episode 277/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 277/300: success=True steps=102
+[run_benign] rolling episode 278/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 278/300: success=True steps=151
+[run_benign] rolling episode 279/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 279/300: success=False steps=220
+[run_benign] rolling episode 280/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 280/300: success=True steps=135
+[run_benign] rolling episode 281/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 281/300: success=True steps=70
+[run_benign] rolling episode 282/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 282/300: success=True steps=117
+[run_benign] rolling episode 283/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 283/300: success=True steps=104
+[run_benign] rolling episode 284/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 284/300: success=True steps=90
+[run_benign] rolling episode 285/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 285/300: success=True steps=135
+[run_benign] rolling episode 286/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 286/300: success=False steps=220
+[run_benign] rolling episode 287/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 287/300: success=True steps=103
+[run_benign] rolling episode 288/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 288/300: success=True steps=148
+[run_benign] rolling episode 289/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 289/300: success=True steps=94
+[run_benign] rolling episode 290/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 290/300: success=False steps=220
+[run_benign] rolling episode 291/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 291/300: success=True steps=71
+[run_benign] rolling episode 292/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 292/300: success=True steps=111
+[run_benign] rolling episode 293/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 293/300: success=True steps=97
+[run_benign] rolling episode 294/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 294/300: success=True steps=85
+[run_benign] rolling episode 295/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 295/300: success=True steps=129
+[run_benign] rolling episode 296/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 296/300: success=True steps=79
+[run_benign] rolling episode 297/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 297/300: success=True steps=116
+[run_benign] rolling episode 298/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 298/300: success=False steps=220
+[run_benign] rolling episode 299/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 299/300: success=True steps=107
+[run_benign] rolling episode 300/300 ...
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[run_benign] episode 300/300: success=True steps=118
+[run_benign] 300 episodes, success_rate=0.770, calib=75 eval=225 -> results/m1-benign-baseline
+[pipe] REPIN start Mon 29 Jun 18:46:03 UTC 2026
+[repin] engagement_radius 0.05 -> 0.05; grasp_radius 0.1 -> 0.1 (n=75)
+[repin] frozen schema -> results/m1-benign-baseline/schema_repinned.json; record the dated deviation in the schema doc §5.
+[pipe] ATTACK start Mon 29 Jun 18:46:04 UTC 2026
+2026-06-29 19:46:06.640482: I tensorflow/core/util/port.cc:113] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-06-29 19:46:06.674741: E external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:9261] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+2026-06-29 19:46:06.674798: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:607] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-06-29 19:46:06.675866: E external/local_xla/xla/stream_executor/cuda/cuda_blas.cc:1515] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2026-06-29 19:46:06.689044: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2026-06-29 19:46:07.412871: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+[robosuite WARNING] No private macro file found! (macros.py:53)
+[robosuite WARNING] It is recommended to use a private macro file (macros.py:54)
+[robosuite WARNING] To setup, run: python /home/40473058@eeecs.qub.ac.uk/vla-injection/.venv/lib/python3.10/site-packages/robosuite/scripts/setup_macros.py (macros.py:55)
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+Users of this version of Gym should be able to simply replace 'import gym' with 'import gymnasium as gym' in the vast majority of cases.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+<frozen importlib._bootstrap>:283: DeprecationWarning: the load_module() method is deprecated and slated for removal in Python 3.12; use exec_module() instead
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:00<00:01,  2.87it/s]Loading checkpoint shards:  50%|█████     | 2/4 [00:00<00:00,  3.08it/s]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:00<00:00,  3.16it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:01<00:00,  3.23it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:01<00:00,  3.17it/s]
+[info] using task orders [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+Traceback (most recent call last):
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/scripts/run_attack.py", line 352, in <module>
+    raise SystemExit(main())
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/scripts/run_attack.py", line 348, in main
+    return _run(args, config)
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/scripts/run_attack.py", line 310, in _run
+    records = run_attack_loop(
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/scripts/run_attack.py", line 119, in run_attack_loop
+    out = attack_fn(uid)
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/scripts/run_attack.py", line 273, in attack_fn
+    target = OpenVlaGcgTarget(
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/src/evasion_tax/attack/gcg_openvla.py", line 373, in __init__
+    proc = processor(_PROMPT_PREFIX.format(instruction=instruction) + _PROMPT_TAIL, image)
+  File "/home/40473058@eeecs.qub.ac.uk/.cache/huggingface/modules/transformers_modules/openvla/openvla-7b/47a0ec7fc4ec123775a391911046cf33cf9ed83f/processing_prismatic.py", line 212, in __call__
+    pixel_values = self.image_processor(images, return_tensors=return_tensors)["pixel_values"]
+  File "/home/40473058@eeecs.qub.ac.uk/.cache/huggingface/modules/transformers_modules/openvla/openvla-7b/47a0ec7fc4ec123775a391911046cf33cf9ed83f/processing_prismatic.py", line 173, in __call__
+    return self.preprocess(images, **kwargs)
+  File "/home/40473058@eeecs.qub.ac.uk/.cache/huggingface/modules/transformers_modules/openvla/openvla-7b/47a0ec7fc4ec123775a391911046cf33cf9ed83f/processing_prismatic.py", line 167, in preprocess
+    pixel_values = torch.stack([self.apply_transform(img.convert("RGB")) for img in images])
+  File "/home/40473058@eeecs.qub.ac.uk/.cache/huggingface/modules/transformers_modules/openvla/openvla-7b/47a0ec7fc4ec123775a391911046cf33cf9ed83f/processing_prismatic.py", line 167, in <listcomp>
+    pixel_values = torch.stack([self.apply_transform(img.convert("RGB")) for img in images])
+AttributeError: 'numpy.ndarray' object has no attribute 'convert'
+[pipe] ATTACK retry #1 (transient OOM?) Mon 29 Jun 18:46:30 UTC 2026
+2026-06-29 19:47:32.999384: I tensorflow/core/util/port.cc:113] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-06-29 19:47:33.031525: E external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:9261] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+2026-06-29 19:47:33.031588: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:607] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-06-29 19:47:33.032633: E external/local_xla/xla/stream_executor/cuda/cuda_blas.cc:1515] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2026-06-29 19:47:33.037906: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2026-06-29 19:47:33.768044: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+[robosuite WARNING] No private macro file found! (macros.py:53)
+[robosuite WARNING] It is recommended to use a private macro file (macros.py:54)
+[robosuite WARNING] To setup, run: python /home/40473058@eeecs.qub.ac.uk/vla-injection/.venv/lib/python3.10/site-packages/robosuite/scripts/setup_macros.py (macros.py:55)
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+Users of this version of Gym should be able to simply replace 'import gym' with 'import gymnasium as gym' in the vast majority of cases.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+<frozen importlib._bootstrap>:283: DeprecationWarning: the load_module() method is deprecated and slated for removal in Python 3.12; use exec_module() instead
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:00<00:00,  3.45it/s]Loading checkpoint shards:  50%|█████     | 2/4 [00:00<00:00,  3.74it/s]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:00<00:00,  3.85it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:01<00:00,  3.95it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:01<00:00,  3.86it/s]
+[info] using task orders [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+Traceback (most recent call last):
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/scripts/run_attack.py", line 352, in <module>
+    raise SystemExit(main())
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/scripts/run_attack.py", line 348, in main
+    return _run(args, config)
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/scripts/run_attack.py", line 310, in _run
+    records = run_attack_loop(
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/scripts/run_attack.py", line 119, in run_attack_loop
+    out = attack_fn(uid)
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/scripts/run_attack.py", line 273, in attack_fn
+    target = OpenVlaGcgTarget(
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/src/evasion_tax/attack/gcg_openvla.py", line 373, in __init__
+    proc = processor(_PROMPT_PREFIX.format(instruction=instruction) + _PROMPT_TAIL, image)
+  File "/home/40473058@eeecs.qub.ac.uk/.cache/huggingface/modules/transformers_modules/openvla/openvla-7b/47a0ec7fc4ec123775a391911046cf33cf9ed83f/processing_prismatic.py", line 212, in __call__
+    pixel_values = self.image_processor(images, return_tensors=return_tensors)["pixel_values"]
+  File "/home/40473058@eeecs.qub.ac.uk/.cache/huggingface/modules/transformers_modules/openvla/openvla-7b/47a0ec7fc4ec123775a391911046cf33cf9ed83f/processing_prismatic.py", line 173, in __call__
+    return self.preprocess(images, **kwargs)
+  File "/home/40473058@eeecs.qub.ac.uk/.cache/huggingface/modules/transformers_modules/openvla/openvla-7b/47a0ec7fc4ec123775a391911046cf33cf9ed83f/processing_prismatic.py", line 167, in preprocess
+    pixel_values = torch.stack([self.apply_transform(img.convert("RGB")) for img in images])
+  File "/home/40473058@eeecs.qub.ac.uk/.cache/huggingface/modules/transformers_modules/openvla/openvla-7b/47a0ec7fc4ec123775a391911046cf33cf9ed83f/processing_prismatic.py", line 167, in <listcomp>
+    pixel_values = torch.stack([self.apply_transform(img.convert("RGB")) for img in images])
+AttributeError: 'numpy.ndarray' object has no attribute 'convert'
+[pipe] ATTACK retry #2 (transient OOM?) Mon 29 Jun 18:47:56 UTC 2026
+2026-06-29 19:48:59.162218: I tensorflow/core/util/port.cc:113] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-06-29 19:48:59.194541: E external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:9261] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+2026-06-29 19:48:59.194603: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:607] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-06-29 19:48:59.195650: E external/local_xla/xla/stream_executor/cuda/cuda_blas.cc:1515] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2026-06-29 19:48:59.201187: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2026-06-29 19:48:59.917652: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+[robosuite WARNING] No private macro file found! (macros.py:53)
+[robosuite WARNING] It is recommended to use a private macro file (macros.py:54)
+[robosuite WARNING] To setup, run: python /home/40473058@eeecs.qub.ac.uk/vla-injection/.venv/lib/python3.10/site-packages/robosuite/scripts/setup_macros.py (macros.py:55)
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+Users of this version of Gym should be able to simply replace 'import gym' with 'import gymnasium as gym' in the vast majority of cases.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+<frozen importlib._bootstrap>:283: DeprecationWarning: the load_module() method is deprecated and slated for removal in Python 3.12; use exec_module() instead
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:00<00:00,  3.43it/s]Loading checkpoint shards:  50%|█████     | 2/4 [00:00<00:00,  3.73it/s]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:00<00:00,  3.83it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:01<00:00,  3.94it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:01<00:00,  3.85it/s]
+[info] using task orders [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+Traceback (most recent call last):
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/scripts/run_attack.py", line 352, in <module>
+    raise SystemExit(main())
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/scripts/run_attack.py", line 348, in main
+    return _run(args, config)
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/scripts/run_attack.py", line 310, in _run
+    records = run_attack_loop(
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/scripts/run_attack.py", line 119, in run_attack_loop
+    out = attack_fn(uid)
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/scripts/run_attack.py", line 273, in attack_fn
+    target = OpenVlaGcgTarget(
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/src/evasion_tax/attack/gcg_openvla.py", line 373, in __init__
+    proc = processor(_PROMPT_PREFIX.format(instruction=instruction) + _PROMPT_TAIL, image)
+  File "/home/40473058@eeecs.qub.ac.uk/.cache/huggingface/modules/transformers_modules/openvla/openvla-7b/47a0ec7fc4ec123775a391911046cf33cf9ed83f/processing_prismatic.py", line 212, in __call__
+    pixel_values = self.image_processor(images, return_tensors=return_tensors)["pixel_values"]
+  File "/home/40473058@eeecs.qub.ac.uk/.cache/huggingface/modules/transformers_modules/openvla/openvla-7b/47a0ec7fc4ec123775a391911046cf33cf9ed83f/processing_prismatic.py", line 173, in __call__
+    return self.preprocess(images, **kwargs)
+  File "/home/40473058@eeecs.qub.ac.uk/.cache/huggingface/modules/transformers_modules/openvla/openvla-7b/47a0ec7fc4ec123775a391911046cf33cf9ed83f/processing_prismatic.py", line 167, in preprocess
+    pixel_values = torch.stack([self.apply_transform(img.convert("RGB")) for img in images])
+  File "/home/40473058@eeecs.qub.ac.uk/.cache/huggingface/modules/transformers_modules/openvla/openvla-7b/47a0ec7fc4ec123775a391911046cf33cf9ed83f/processing_prismatic.py", line 167, in <listcomp>
+    pixel_values = torch.stack([self.apply_transform(img.convert("RGB")) for img in images])
+AttributeError: 'numpy.ndarray' object has no attribute 'convert'
+[pipe] ATTACK retry #3 (transient OOM?) Mon 29 Jun 18:49:23 UTC 2026
+2026-06-29 19:50:25.411282: I tensorflow/core/util/port.cc:113] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-06-29 19:50:25.444264: E external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:9261] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+2026-06-29 19:50:25.444342: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:607] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-06-29 19:50:25.445430: E external/local_xla/xla/stream_executor/cuda/cuda_blas.cc:1515] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2026-06-29 19:50:25.450976: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2026-06-29 19:50:26.201483: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+[robosuite WARNING] No private macro file found! (macros.py:53)
+[robosuite WARNING] It is recommended to use a private macro file (macros.py:54)
+[robosuite WARNING] To setup, run: python /home/40473058@eeecs.qub.ac.uk/vla-injection/.venv/lib/python3.10/site-packages/robosuite/scripts/setup_macros.py (macros.py:55)
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+Users of this version of Gym should be able to simply replace 'import gym' with 'import gymnasium as gym' in the vast majority of cases.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+<frozen importlib._bootstrap>:283: DeprecationWarning: the load_module() method is deprecated and slated for removal in Python 3.12; use exec_module() instead
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:00<00:00,  3.13it/s]Loading checkpoint shards:  50%|█████     | 2/4 [00:00<00:00,  3.37it/s]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:00<00:00,  3.46it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:01<00:00,  3.54it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:01<00:00,  3.47it/s]
+[info] using task orders [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+Traceback (most recent call last):
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/scripts/run_attack.py", line 352, in <module>
+    raise SystemExit(main())
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/scripts/run_attack.py", line 348, in main
+    return _run(args, config)
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/scripts/run_attack.py", line 310, in _run
+    records = run_attack_loop(
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/scripts/run_attack.py", line 119, in run_attack_loop
+    out = attack_fn(uid)
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/scripts/run_attack.py", line 273, in attack_fn
+    target = OpenVlaGcgTarget(
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/src/evasion_tax/attack/gcg_openvla.py", line 373, in __init__
+    proc = processor(_PROMPT_PREFIX.format(instruction=instruction) + _PROMPT_TAIL, image)
+  File "/home/40473058@eeecs.qub.ac.uk/.cache/huggingface/modules/transformers_modules/openvla/openvla-7b/47a0ec7fc4ec123775a391911046cf33cf9ed83f/processing_prismatic.py", line 212, in __call__
+    pixel_values = self.image_processor(images, return_tensors=return_tensors)["pixel_values"]
+  File "/home/40473058@eeecs.qub.ac.uk/.cache/huggingface/modules/transformers_modules/openvla/openvla-7b/47a0ec7fc4ec123775a391911046cf33cf9ed83f/processing_prismatic.py", line 173, in __call__
+    return self.preprocess(images, **kwargs)
+  File "/home/40473058@eeecs.qub.ac.uk/.cache/huggingface/modules/transformers_modules/openvla/openvla-7b/47a0ec7fc4ec123775a391911046cf33cf9ed83f/processing_prismatic.py", line 167, in preprocess
+    pixel_values = torch.stack([self.apply_transform(img.convert("RGB")) for img in images])
+  File "/home/40473058@eeecs.qub.ac.uk/.cache/huggingface/modules/transformers_modules/openvla/openvla-7b/47a0ec7fc4ec123775a391911046cf33cf9ed83f/processing_prismatic.py", line 167, in <listcomp>
+    pixel_values = torch.stack([self.apply_transform(img.convert("RGB")) for img in images])
+AttributeError: 'numpy.ndarray' object has no attribute 'convert'
+[pipe] ATTACK retry #4 (transient OOM?) Mon 29 Jun 18:50:50 UTC 2026
+2026-06-29 19:51:52.451089: I tensorflow/core/util/port.cc:113] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-06-29 19:51:52.483985: E external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:9261] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+2026-06-29 19:51:52.484053: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:607] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-06-29 19:51:52.485140: E external/local_xla/xla/stream_executor/cuda/cuda_blas.cc:1515] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2026-06-29 19:51:52.490749: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2026-06-29 19:51:53.255949: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+[robosuite WARNING] No private macro file found! (macros.py:53)
+[robosuite WARNING] It is recommended to use a private macro file (macros.py:54)
+[robosuite WARNING] To setup, run: python /home/40473058@eeecs.qub.ac.uk/vla-injection/.venv/lib/python3.10/site-packages/robosuite/scripts/setup_macros.py (macros.py:55)
+Gym has been unmaintained since 2022 and does not support NumPy 2.0 amongst other critical functionality.
+Please upgrade to Gymnasium, the maintained drop-in replacement of Gym, or contact the authors of your software and request that they upgrade.
+Users of this version of Gym should be able to simply replace 'import gym' with 'import gymnasium as gym' in the vast majority of cases.
+See the migration guide at https://gymnasium.farama.org/introduction/migration_guide/ for additional information.
+<frozen importlib._bootstrap>:283: DeprecationWarning: the load_module() method is deprecated and slated for removal in Python 3.12; use exec_module() instead
+Loading checkpoint shards:   0%|          | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██▌       | 1/4 [00:00<00:00,  3.44it/s]Loading checkpoint shards:  50%|█████     | 2/4 [00:00<00:00,  3.73it/s]Loading checkpoint shards:  75%|███████▌  | 3/4 [00:00<00:00,  3.84it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:01<00:00,  3.93it/s]Loading checkpoint shards: 100%|██████████| 4/4 [00:01<00:00,  3.85it/s]
+[info] using task orders [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+[Warning]: datasets path /home/40473058@eeecs.qub.ac.uk/LIBERO/libero/libero/../datasets does not exist!
+Traceback (most recent call last):
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/scripts/run_attack.py", line 352, in <module>
+    raise SystemExit(main())
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/scripts/run_attack.py", line 348, in main
+    return _run(args, config)
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/scripts/run_attack.py", line 310, in _run
+    records = run_attack_loop(
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/scripts/run_attack.py", line 119, in run_attack_loop
+    out = attack_fn(uid)
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/scripts/run_attack.py", line 273, in attack_fn
+    target = OpenVlaGcgTarget(
+  File "/home/40473058@eeecs.qub.ac.uk/vla-injection/src/evasion_tax/attack/gcg_openvla.py", line 373, in __init__
+    proc = processor(_PROMPT_PREFIX.format(instruction=instruction) + _PROMPT_TAIL, image)
+  File "/home/40473058@eeecs.qub.ac.uk/.cache/huggingface/modules/transformers_modules/openvla/openvla-7b/47a0ec7fc4ec123775a391911046cf33cf9ed83f/processing_prismatic.py", line 212, in __call__
+    pixel_values = self.image_processor(images, return_tensors=return_tensors)["pixel_values"]
+  File "/home/40473058@eeecs.qub.ac.uk/.cache/huggingface/modules/transformers_modules/openvla/openvla-7b/47a0ec7fc4ec123775a391911046cf33cf9ed83f/processing_prismatic.py", line 173, in __call__
+    return self.preprocess(images, **kwargs)
+  File "/home/40473058@eeecs.qub.ac.uk/.cache/huggingface/modules/transformers_modules/openvla/openvla-7b/47a0ec7fc4ec123775a391911046cf33cf9ed83f/processing_prismatic.py", line 167, in preprocess
+    pixel_values = torch.stack([self.apply_transform(img.convert("RGB")) for img in images])
+  File "/home/40473058@eeecs.qub.ac.uk/.cache/huggingface/modules/transformers_modules/openvla/openvla-7b/47a0ec7fc4ec123775a391911046cf33cf9ed83f/processing_prismatic.py", line 167, in <listcomp>
+    pixel_values = torch.stack([self.apply_transform(img.convert("RGB")) for img in images])
+AttributeError: 'numpy.ndarray' object has no attribute 'convert'
+[pipe] ATTACK retry #5 (transient OOM?) Mon 29 Jun 18:52:16 UTC 2026
+[pipe] ATTACK gave up after 5 Mon 29 Jun 18:52:16 UTC 2026
+[pipe] ALL DONE Mon 29 Jun 18:52:16 UTC 2026
