@@ -38,12 +38,12 @@
 
 ## Task list
 
-- [ ] Task 1: Anchor target family (Tier A, RoboGCG-clean)
-- [ ] Task 2: Relax `reached`/success to a goal-dims subset (exclude gripper)
-- [ ] Task 3: Adversary-instruction registry (pre-registered, per scene)
-- [ ] Task 4: Semantic target builder (GPU — policy-derived decode)
-- [ ] Task 5: World-frame ASR scorer (Tier B, detector's 3-D frame)
-- [ ] Task 6: Separation / validity guard (pre-registration check)
+- [x] Task 1: Anchor target family (Tier A, RoboGCG-clean)
+- [x] Task 2: Relax `reached`/success to a goal-dims subset (exclude gripper)
+- [~] Task 3: Adversary-instruction registry (pre-registered, per scene)  <!-- module+resolver done; real config JSON pending scene inspection + author sign-off -->
+- [x] Task 4: Semantic target builder (GPU — policy-derived decode)
+- [x] Task 5: World-frame ASR scorer (Tier B, detector's 3-D frame)
+- [~] Task 6: Separation / validity guard (pre-registration check)  <!-- model-free checks + artifact done; GPU benign/adversary reach-floor deferred behind the Task-8 GPU gate -->
 - [ ] Task 7: Driver wiring — two tiers, both success notions recorded
 - [ ] Task 8: Validation-pilot config (GPU-gated — ask before launch)
 
