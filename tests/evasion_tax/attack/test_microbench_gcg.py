@@ -18,7 +18,9 @@ All model-free: the script must import without torch (clean-import test below).
 from __future__ import annotations
 
 import importlib
+import subprocess
 import sys
+import textwrap
 from pathlib import Path
 
 import pytest
@@ -258,5 +260,25 @@ def test_registered_run_invalid_when_not_reproducible():
 
 
 def test_microbench_module_imports_without_torch():
-    _load_microbench()
-    assert "torch" not in sys.modules
+    # sys.modules is process-global, so an in-process check flakes on suite ordering (an
+    # earlier test that imports torch fails it regardless of this module). Verify the real
+    # invariant — "importing microbench_gcg pulls in no torch" — in a fresh interpreter
+    # whose sys.modules starts clean. _SCRIPTS is passed as argv[1] (its _bootstrap then
+    # puts src/ on the path).
+    check = textwrap.dedent(
+        """
+        import importlib
+        import sys
+
+        sys.path.insert(0, sys.argv[1])
+        importlib.import_module("microbench_gcg")
+
+        heavy = sorted(n for n in sys.modules if n == "torch" or n.startswith("torch."))
+        assert not heavy, "import pulled in torch: " + repr(heavy)
+        """
+    )
+    proc = subprocess.run(
+        [sys.executable, "-c", check, str(_SCRIPTS)],
+        capture_output=True, text=True, cwd=str(_REPO_ROOT),
+    )
+    assert proc.returncode == 0, proc.stderr

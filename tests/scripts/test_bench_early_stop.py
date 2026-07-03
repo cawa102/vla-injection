@@ -18,7 +18,9 @@ from __future__ import annotations
 
 import importlib
 import json
+import subprocess
 import sys
+import textwrap
 from pathlib import Path
 
 import pytest
@@ -60,9 +62,13 @@ def _outcome(target_id, *, reached, steps, censored, best_loss=0.5):
 # --------------------------------------------------------------------------- #
 
 
-def test_main_exits_with_gpu_required_when_no_cuda(tmp_path):
-    # No CUDA on the mac -> the guard must exit 2 (no silent no-op), like the microbench.
+def test_main_exits_with_gpu_required_when_no_cuda(tmp_path, monkeypatch):
+    # The guard must exit 2 (no silent no-op) when CUDA is absent. Force cuda_available
+    # False so this holds on ANY host: on a real GPU box the *unmocked* guard falls
+    # through and main() runs the actual multi-hour bench — a unit test must never do GPU
+    # work. (Same cuda_available monkeypatch pattern as tests/scripts/test_run_attack.py.)
     bench = _load_bench()
+    monkeypatch.setattr(bench, "cuda_available", lambda: False)
     rc = bench.main(["--config", str(_CONFIG), "--results-root", str(tmp_path)])
     assert rc == 2
 
@@ -257,5 +263,25 @@ def test_quarantine_suffix_is_write_once_idempotent(tmp_path):
 
 
 def test_bench_module_imports_without_torch():
-    _load_bench()
-    assert "torch" not in sys.modules
+    # sys.modules is process-global, so an in-process check flakes on suite ordering (an
+    # earlier test that imports torch fails it regardless of this module). Verify the real
+    # invariant — "importing bench_early_stop pulls in no torch" — in a fresh interpreter
+    # whose sys.modules starts clean. _SCRIPTS is passed as argv[1] (its _bootstrap then
+    # puts src/ on the path).
+    check = textwrap.dedent(
+        """
+        import importlib
+        import sys
+
+        sys.path.insert(0, sys.argv[1])
+        importlib.import_module("bench_early_stop")
+
+        heavy = sorted(n for n in sys.modules if n == "torch" or n.startswith("torch."))
+        assert not heavy, "import pulled in torch: " + repr(heavy)
+        """
+    )
+    proc = subprocess.run(
+        [sys.executable, "-c", check, str(_SCRIPTS)],
+        capture_output=True, text=True, cwd=str(_REPO_ROOT),
+    )
+    assert proc.returncode == 0, proc.stderr
