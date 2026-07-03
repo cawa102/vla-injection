@@ -9,8 +9,12 @@ action stream in Task 2).
 """
 
 import numpy as np
+import pytest
 
 from evasion_tax.attack.redirect_target import (
+    _BIN_CENTERS,
+    anchor_action_space,
+    anchor_spec_for,
     redirect_spec_for,
     target_action_ids_for,
 )
@@ -73,3 +77,80 @@ def test_target_action_ids_round_trip_through_codec():
     decoded = codec.decode(ids)
     one_bin = 2.0 / (codec.n_bins - 1)
     assert np.allclose(decoded, spec.target_action, atol=one_bin)
+
+
+# --- Task 1: RoboGCG-clean single-dim anchor target family (Tier A) ---------
+
+
+def test_anchor_action_space_max_mag_yields_twelve_single_dim_edge_targets():
+    # RoboGCG max_mag_actions_only == 12 == 6 motion dims x 2 edge bins; gripper
+    # (dim 6) is excluded from anchor targets.
+    space = anchor_action_space(max_mag_only=True)
+    assert len(space) == 12
+    edges = {float(_BIN_CENTERS[0]), float(_BIN_CENTERS[-1])}
+    for target in space:
+        assert len(target) == ACTION_DIM
+        nonzero = [i for i, v in enumerate(target) if v != 0.0]
+        assert len(nonzero) == 1  # exactly one nonzero motion dim
+        d = nonzero[0]
+        assert d in range(6)  # a motion dim, never the gripper
+        assert float(target[d]) in edges  # at an edge bin centre, not literal +/-1
+        assert target[6] == 0.0  # gripper never targeted
+
+
+def test_anchor_spec_constrains_single_motion_dim_excluding_gripper():
+    space = anchor_action_space(max_mag_only=True)
+    for idx in range(len(space)):
+        spec = anchor_spec_for(idx, persistence_steps=4)
+        # region constrains exactly the one targeted motion dim; gripper never
+        assert spec.target_action == space[idx]
+        assert len(spec.region.dims) == 1
+        assert 6 not in spec.region.dims
+        assert spec.region.dims[0] in range(6)
+        # DM-2 consistency: the forced-decode target is a member of its region
+        assert spec.region.reached(spec.target_action)
+        assert spec.region.persistence_steps == 4
+
+
+def test_anchor_spec_is_deterministic_and_stable_per_idx():
+    a = anchor_spec_for(5, persistence_steps=3)
+    b = anchor_spec_for(5, persistence_steps=3)
+    assert a == b
+
+
+def test_anchor_target_token_is_the_edge_bin_id_and_round_trips_exactly():
+    # Because the anchor target sits on an exact bin centre, its forced-decode
+    # token is that edge bin's id and codec.decode recovers it with no rounding.
+    codec = _passthrough_codec()
+    n_centers = _BIN_CENTERS.shape[0]
+    for idx in range(len(anchor_action_space())):
+        spec = anchor_spec_for(idx, persistence_steps=2)
+        ids = target_action_ids_for(spec, codec.vocab_size)
+        (dim,) = spec.region.dims
+        if spec.target_action[dim] == float(_BIN_CENTERS[0]):
+            assert ids[dim] == codec.vocab_size - 1  # bin 0 (most-negative edge)
+        else:
+            assert ids[dim] == codec.vocab_size - n_centers  # last bin (most-positive)
+        decoded = codec.decode(ids)
+        np.testing.assert_array_equal(decoded, np.asarray(spec.target_action))
+
+
+def test_anchor_action_space_sweep_yields_six_dims_times_k_single_dim_targets():
+    # max_mag_only=False sweeps `action_dim_size` bin centres per motion dim.
+    k = 5
+    space = anchor_action_space(max_mag_only=False, action_dim_size=k)
+    assert len(space) == 6 * k
+    centers = {float(c) for c in _BIN_CENTERS}
+    for target in space:
+        assert len(target) == ACTION_DIM
+        nonzero = [i for i, v in enumerate(target) if v != 0.0]
+        assert len(nonzero) <= 1  # a swept ~0 bin centre leaves the target all-zero
+        for i in nonzero:
+            assert i in range(6)  # motion dim only
+            assert float(target[i]) in centers  # a genuine bin centre
+        assert target[6] == 0.0  # gripper never targeted
+
+
+def test_anchor_action_space_sweep_requires_a_size():
+    with pytest.raises(ValueError):
+        anchor_action_space(max_mag_only=False, action_dim_size=None)

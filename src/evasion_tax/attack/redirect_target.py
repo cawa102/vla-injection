@@ -78,6 +78,66 @@ def redirect_spec_for(seed: int, *, persistence_steps: int) -> RedirectSpec:
     return RedirectSpec(target_action=tuple(target), region=region)
 
 
+# --- Tier A: RoboGCG-clean single-dim anchor targets ------------------------
+# A 6-motion-dim variant of RoboGCG's ``generate_action_space``
+# (experiments/single_step/utils.py). The gripper (dim 6) is deliberately
+# excluded — RoboGCG's *full* sweep is 7x256 incl. gripper; ours targets one
+# motion dim at a time so the anchor is the reachability floor / prior-comparable
+# target / harness-bug falsifier.
+_MOTION_DIMS: tuple[int, ...] = (0, 1, 2, 3, 4, 5)
+
+
+def anchor_action_space(
+    *, max_mag_only: bool = True, action_dim_size: int | None = None
+) -> list[tuple[float, ...]]:
+    """RoboGCG-clean single-dim anchor targets in normalized action space.
+
+    ``max_mag_only`` (default) sets each of the 6 motion dims to the two **edge
+    bin centres** ``_BIN_CENTERS[0]`` / ``_BIN_CENTERS[-1]`` (12 targets), all
+    other dims 0.0 — the real edge bin centre, not literal +/-1, so the
+    forced-decode token is exact. Otherwise ``action_dim_size`` bin centres are
+    swept evenly across the grid per motion dim (``6 * action_dim_size`` targets).
+    Order is deterministic (dim 0 first bin, ..., dim 1 first bin, ...) so an
+    ``idx`` is stable.
+    """
+    if max_mag_only:
+        centres = (float(_BIN_CENTERS[0]), float(_BIN_CENTERS[-1]))
+    else:
+        if action_dim_size is None or action_dim_size < 1:
+            raise ValueError(
+                "action_dim_size must be a positive int when max_mag_only=False, "
+                f"got {action_dim_size}"
+            )
+        idxs = np.linspace(0, _BIN_CENTERS.shape[0] - 1, action_dim_size).round().astype(int)
+        centres = tuple(float(_BIN_CENTERS[i]) for i in idxs)
+    space: list[tuple[float, ...]] = []
+    for d in _MOTION_DIMS:
+        for centre in centres:
+            target = [0.0] * ACTION_DIM
+            target[d] = centre
+            space.append(tuple(target))
+    return space
+
+
+def anchor_spec_for(
+    idx: int, *, persistence_steps: int, half_width: float = _REGION_HALF_WIDTH
+) -> RedirectSpec:
+    """Anchor ``RedirectSpec`` for target ``idx`` of ``anchor_action_space()``.
+
+    The region constrains the **single** targeted motion dim to a fixed
+    half-window (clipped to ``[-1, 1]``); the gripper (dim 6) is left free.
+    ``target_action in region`` holds by construction.
+    """
+    target = anchor_action_space(max_mag_only=True)[idx]
+    (dim,) = (d for d, v in enumerate(target) if v != 0.0)
+    low = (float(np.clip(target[dim] - half_width, -1.0, 1.0)),)
+    high = (float(np.clip(target[dim] + half_width, -1.0, 1.0)),)
+    region = TargetActionSpec(
+        dims=(dim,), low=low, high=high, persistence_steps=persistence_steps
+    )
+    return RedirectSpec(target_action=target, region=region)
+
+
 def target_action_ids_for(spec: RedirectSpec, vocab_size: int) -> np.ndarray:
     """Forced-decode action-token ids for ``spec.target_action`` (256-bin codec).
 
