@@ -45,7 +45,7 @@
 - [x] Task 5: World-frame ASR scorer (Tier B, detector's 3-D frame)
 - [~] Task 6: Separation / validity guard (pre-registration check)  <!-- model-free checks + artifact done; GPU benign/adversary reach-floor deferred behind the Task-8 GPU gate -->
 - [x] Task 7: Driver wiring — two tiers, both success notions recorded  <!-- pure glue + schema + verdict guard fully TDD'd; GPU _run body [VERIFY on box] -->
-- [x] Task 8: Validation-pilot config (GPU-gated — ask before launch)  <!-- config written; NOT launched (GPU gate) -->
+- [x] Task 8: Validation-pilot config (GPU-gated — ask before launch)  <!-- config written; ANCHOR arm LAUNCHED+COMPLETE 2026-07-03 (author-approved), results/m1-pilot-anchor: loss_history 20.68->4.62 (crosses old 6.63 plateau by step 18), exact single-frame reach False (censored @500), rollout_asr_reached True -> harness vindicated / target-difficulty confirmed; exact-reach gap -> candidate-filter (Task 2 note) prime suspect. SEMANTIC arm NOT launched (needs Task-6 GPU reach-floor guard BUILT + distractor sign-off). -->
 - [~] Task 3b (added): Draft Tier B config from LIBERO scene inspection — pending (needs box scene enumeration + author sign-off)
 
 ---
