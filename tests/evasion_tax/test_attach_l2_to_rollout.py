@@ -18,7 +18,9 @@ import dataclasses
 import importlib
 import json
 import math
+import subprocess
 import sys
+import textwrap
 from pathlib import Path
 
 import pytest
@@ -208,9 +210,34 @@ def test_main_accepts_unverified_bare_steps_json(attach_module, tmp_path, capsys
     assert "unverified" in capsys.readouterr().out.lower()
 
 
-def test_module_imports_clean_without_torch_or_libero(attach_module):
-    # Loaded in the core .venv — the model-free gate must not pull heavy deps.
-    assert "torch" not in sys.modules
-    assert "libero" not in sys.modules
-    for name in ("score_rollout_l2", "action_stream_check", "geometry_stats", "main"):
-        assert callable(getattr(attach_module, name))
+def test_module_imports_clean_without_torch_or_libero():
+    # The model-free gate must not pull heavy deps when imported. `sys.modules` is
+    # process-global, so an in-process check flakes on suite ordering (an earlier test
+    # that imported torch makes it fail regardless of this module). Verify the real
+    # invariant — "importing attach_l2_to_rollout pulls in no torch / LIBERO" — in a
+    # FRESH interpreter whose `sys.modules` starts clean. `_SCRIPTS` is passed as argv[1]
+    # (its `_bootstrap` then puts src/ on the path).
+    check = textwrap.dedent(
+        """
+        import importlib
+        import sys
+
+        sys.path.insert(0, sys.argv[1])
+        module = importlib.import_module("attach_l2_to_rollout")
+
+        heavy = sorted(
+            name for name in sys.modules
+            if name == "torch" or name.startswith("torch.")
+            or name == "libero" or name.startswith("libero.")
+        )
+        assert not heavy, "import pulled in heavy deps: " + repr(heavy)
+
+        for attr in ("score_rollout_l2", "action_stream_check", "geometry_stats", "main"):
+            assert callable(getattr(module, attr)), "missing callable: " + attr
+        """
+    )
+    proc = subprocess.run(
+        [sys.executable, "-c", check, str(_SCRIPTS)],
+        capture_output=True, text=True, cwd=str(_REPO_ROOT),
+    )
+    assert proc.returncode == 0, proc.stderr
