@@ -19,7 +19,7 @@ smoke scripts.
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import Any
 
@@ -353,6 +353,7 @@ class OpenVlaGcgTarget:
         device: Any,
         init_suffix_token_id: int | None = None,
         eval_batch: int | None = None,
+        match_positions: Sequence[int] | None = None,
     ) -> None:
         if suffix_len < 1:
             raise ValueError(f"suffix_len must be >= 1, got {suffix_len}")
@@ -364,6 +365,9 @@ class OpenVlaGcgTarget:
         self._vocab_size = int(self._tokenizer.vocab_size)
         self._suffix_len = int(suffix_len)
         self._target_action_ids = np.asarray(target_action_ids, dtype=np.int64)
+        # Single-frame reach scored on this goal-dims subset (e.g. [0..5] to exclude
+        # the gripper); None = all target tokens. The CE *loss* still spans all 7.
+        self._match_positions = match_positions
 
         # Text token layout by concatenation (exact, search-free suffix span).
         prefix_ids = self._encode(_PROMPT_PREFIX.format(instruction=instruction), bos=True)
@@ -548,7 +552,9 @@ class OpenVlaGcgTarget:
         # checks argmax(pred_logits[j]) == target[j] at every target position.
         logits_slice = out.logits[0, -n_target - 1 :, :].float().cpu().numpy()  # [n_target+1, V]
         labels_slice = np.concatenate([[_LABEL_IGNORE], self._target_action_ids])  # [n_target+1]
-        return target_span_argmax_matches(logits_slice, labels_slice)
+        return target_span_argmax_matches(
+            logits_slice, labels_slice, positions=self._match_positions
+        )
 
     def predict_target_action_ids(self, suffix_ids: np.ndarray) -> np.ndarray:
         """Greedy victim/surrogate target-span token ids for a fixed suffix (GPU).

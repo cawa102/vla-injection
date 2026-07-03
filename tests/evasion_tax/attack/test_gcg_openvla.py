@@ -258,6 +258,24 @@ def test_predict_target_action_ids_signature_matches_transfer_eval_contract():
     assert params == ["self", "suffix_ids"]
 
 
+def test_init_accepts_match_positions_keyword_defaulting_to_none():
+    # Task 2: the single-frame reach predicate can be scored on a goal-dims subset
+    # (e.g. [0..5] to exclude the gripper). Pinned as a keyword-only param, default
+    # None (= all-token behaviour, so existing callers are unaffected).
+    import inspect
+
+    from evasion_tax.attack.gcg_openvla import OpenVlaGcgTarget
+
+    p = inspect.signature(OpenVlaGcgTarget.__init__).parameters["match_positions"]
+    assert p.kind is inspect.Parameter.KEYWORD_ONLY
+    assert p.default is None
+    # The subset-scoring behaviour itself is pinned torch-free in
+    # tests/evasion_tax/attack/test_early_stop.py (target_span_argmax_matches with
+    # positions=...); reached() threads this param through and is on-box-gated,
+    # matching how the rest of the GPU body is validated. Off-GPU tests here stay
+    # torch-free so the module's clean-import guard holds.
+
+
 # --------------------------------------------------------------------------- #
 # Guard: torch / transformers / PIL only inside methods, never at module top   #
 # --------------------------------------------------------------------------- #

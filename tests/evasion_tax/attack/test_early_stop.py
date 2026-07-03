@@ -71,3 +71,48 @@ def test_ce_near_zero_sequence_also_argmax_matches():
     ce = per_sequence_ce(logits[None, :, :], labels[None, :])[0]
     assert ce == pytest.approx(0.0, abs=1e-6)
     assert target_span_argmax_matches(logits, labels) is True
+
+
+# --- Task 2: score single-frame reach on a goal-dims subset (gripper excluded) ---
+#
+# The predicate is called on the aligned [ignore] + target_ids block (Codex R1), so
+# after the causal shift the 7 action targets are the ordered non-ignored positions
+# and ``positions`` (0..6) index them -- NOT raw label indices.
+
+_VOCAB = 8
+_TARGET_IDS = [1, 2, 3, 4, 5, 6, 7]  # the 7 forced-decode action target ids
+
+
+def _peaked(argmax_ids, vocab=_VOCAB):
+    """Rows peaked so ``argmax(row_i) == argmax_ids[i]`` (a forced greedy decode)."""
+    rows = np.zeros((len(argmax_ids), vocab))
+    for i, a in enumerate(argmax_ids):
+        rows[i, a] = 10.0
+    return rows
+
+
+def test_positions_subset_ignores_gripper_mismatch():
+    # Motion dims 0..5 decode correctly; the gripper (dim 6) decodes wrong.
+    # logits row i predicts target position i; the trailing row is dropped by the shift.
+    labels = np.array([-100, *_TARGET_IDS])
+    decode = _peaked([1, 2, 3, 4, 5, 6, 0, 0])  # row6 (gripper) -> 0 != target 7
+    assert target_span_argmax_matches(decode, labels, positions=[0, 1, 2, 3, 4, 5]) is True
+
+
+def test_positions_subset_still_fails_on_a_scored_motion_dim_mismatch():
+    # A wrong decode on a scored motion dim (dim 2) still fails, even though the
+    # gripper is excluded -- the subset does not make it lenient on motion dims.
+    labels = np.array([-100, *_TARGET_IDS])
+    decode = _peaked([1, 2, 0, 4, 5, 6, 7, 0])  # row2 -> 0 != target 3
+    assert target_span_argmax_matches(decode, labels, positions=[0, 1, 2, 3, 4, 5]) is False
+
+
+def test_positions_none_reproduces_all_seven_behaviour():
+    # Regression guard: positions=None is exactly the pre-Task-2 all-non-ignored check.
+    labels = np.array([-100, *_TARGET_IDS])
+    all_correct = _peaked([1, 2, 3, 4, 5, 6, 7, 0])  # row7 dropped by the shift
+    wrong_gripper = _peaked([1, 2, 3, 4, 5, 6, 0, 0])  # row6 -> 0 != target 7
+    assert target_span_argmax_matches(all_correct, labels, positions=None) is True
+    assert target_span_argmax_matches(wrong_gripper, labels, positions=None) is False
+    # identical to the default (no positions arg) -- the new param is additive
+    assert target_span_argmax_matches(wrong_gripper, labels) is False

@@ -71,6 +71,12 @@ def sample_candidates(
     Returns:
         ``[B, L]`` int array of candidate suffixes, each differing from ``cur`` in
         at most one position.
+
+    Note:
+        Deviation from RoboGCG (logged, Task 2 / Codex R1): RoboGCG filters
+        candidate ids to ASCII / retokenization-safe tokens; we draw arbitrary
+        ids from the gradient ``top_k`` set. A ``filter_ids`` pass is deferred
+        (YAGNI) until this is shown to matter for reachability.
     """
     suffix_len = cur.shape[0]
     k = topk.shape[1]

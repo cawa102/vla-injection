@@ -12,6 +12,8 @@ logits, so the on-GPU predicate agrees bit-for-bit with this off-GPU one.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 import numpy as np
 
 
@@ -19,6 +21,7 @@ def target_span_argmax_matches(
     logits: np.ndarray,  # [T, V] next-token logits for ONE sequence
     labels: np.ndarray,  # [T] target ids, ignore_index where masked
     *,
+    positions: Sequence[int] | None = None,
     ignore_index: int = -100,
 ) -> bool:
     """Greedy forced-decode "target reached" check for one sequence (DE-1).
@@ -31,12 +34,17 @@ def target_span_argmax_matches(
     Args:
         logits: ``[T, V]`` next-token logits for a single sequence.
         labels: ``[T]`` target ids, ``ignore_index`` where masked.
+        positions: Indices ``0..n_target-1`` into the **ordered non-ignored target
+            positions** (e.g. ``[0..5]`` = the 6 motion dims, excluding the gripper
+            at index 6) — *not* raw label indices. ``None`` scores every non-ignored
+            position (the all-token default). Score only the goal-relevant dims here;
+            the loss still teacher-forces all target tokens (Task 2).
         ignore_index: Label value excluded from the check.
 
     Returns:
-        ``True`` iff ``argmax`` matches the label at every non-ignored shifted
-        position (== "target reached"). A fully-ignored ``labels`` has no positions
-        to fail, so it returns ``True`` vacuously (documented, never crashes).
+        ``True`` iff ``argmax`` matches the label at every scored shifted position
+        (== "target reached"). A fully-ignored ``labels`` has no positions to fail,
+        so it returns ``True`` vacuously (documented, never crashes).
     """
     logits = np.asarray(logits)
     labels = np.asarray(labels)
@@ -44,4 +52,10 @@ def target_span_argmax_matches(
     shift_labels = labels[1:]  # [T-1]
     valid = shift_labels != ignore_index
     preds = np.argmax(shift_logits, axis=-1)  # [T-1]
-    return bool(np.all(preds[valid] == shift_labels[valid]))
+    valid_preds = preds[valid]
+    valid_labels = shift_labels[valid]
+    if positions is not None:
+        sel = np.asarray(list(positions), dtype=int)
+        valid_preds = valid_preds[sel]
+        valid_labels = valid_labels[sel]
+    return bool(np.all(valid_preds == valid_labels))
