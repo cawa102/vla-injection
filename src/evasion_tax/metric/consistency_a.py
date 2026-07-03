@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields, replace
 from math import prod
 from typing import Protocol, runtime_checkable
 
@@ -81,6 +81,10 @@ class Semantics:
     progress: float
     distractor_engagement: float
     grasp_appropriateness: float
+
+
+# The valid primitive names for ablation (== the Semantics fields == SchemaA.primitives).
+_PRIMITIVE_NAMES: frozenset[str] = frozenset(f.name for f in fields(Semantics))
 
 
 @runtime_checkable
@@ -147,13 +151,25 @@ class ConsistencyMetricA:
 
     # -- public API ---------------------------------------------------------- #
 
-    def score(self, step_index: int, rollout: Rollout, trusted_goal: str = "") -> Score:
+    def score(
+        self,
+        step_index: int,
+        rollout: Rollout,
+        trusted_goal: str = "",
+        *,
+        ablate_primitives: frozenset[str] = frozenset(),
+    ) -> Score:
         """Causal consistency score for ``step_index`` over ``a_{t-k+1:t}``.
 
         ``trusted_goal`` is accepted for the resolver-seam signature but is
         **unused** by the default :class:`PrivilegedGoalResolver` (which anchors
         on ``target_region`` in the privileged state). A deployable resolver
         (B/C, M4) that parses the instruction would consume it.
+
+        ``ablate_primitives`` names primitives (e.g. ``{"distractor_engagement"}``)
+        to mask to 0 **before** aggregation — a detector-independent variant used
+        for Tier B, whose world-frame ASR reuses the P2 (``distractor_engagement``)
+        primitive (so reporting the full L2 on Tier B would be near-tautological).
         """
         prefix = rollout.prefix_window(step_index, self.k)
         states = self._states(prefix)
@@ -171,12 +187,25 @@ class ConsistencyMetricA:
                 "uncovered/abstained cell that bypassed the coverage manifest.",
                 step_index,
             )
-        sem = self._semantics(states, anchor)
+        sem = self._ablate(self._semantics(states, anchor), ablate_primitives)
         return Score(value=self._combine(sem), window_end=step_index)
 
-    def score_rollout(self, rollout: Rollout, trusted_goal: str = "") -> list[Score]:
-        """One causal score per step (invariant #1)."""
-        return [self.score(t, rollout, trusted_goal) for t in range(len(rollout))]
+    def score_rollout(
+        self,
+        rollout: Rollout,
+        trusted_goal: str = "",
+        *,
+        ablate_primitives: frozenset[str] = frozenset(),
+    ) -> list[Score]:
+        """One causal score per step (invariant #1).
+
+        ``ablate_primitives`` is forwarded to :meth:`score` — pass
+        ``{"distractor_engagement"}`` for the detector-independent Tier-B score.
+        """
+        return [
+            self.score(t, rollout, trusted_goal, ablate_primitives=ablate_primitives)
+            for t in range(len(rollout))
+        ]
 
     def score_rollout_monitoring_ceiling(
         self, rollout: Rollout, trusted_goal: str = ""
@@ -210,6 +239,22 @@ class ConsistencyMetricA:
 
     def _states(self, steps: Sequence[RolloutStep]) -> list[PrivilegedState]:
         return [self.state_adapter.to_privileged_state(s.privileged_state) for s in steps]
+
+    def _ablate(self, sem: Semantics, names: frozenset[str]) -> Semantics:
+        """Mask the named primitives to 0.0 (detector-independent variant).
+
+        Raises ``ValueError`` on an unknown primitive name — masking nothing would
+        silently produce the full score under a Tier-B label.
+        """
+        if not names:
+            return sem
+        unknown = set(names) - _PRIMITIVE_NAMES
+        if unknown:
+            raise ValueError(
+                f"unknown primitive(s) to ablate: {sorted(unknown)}; "
+                f"valid: {sorted(_PRIMITIVE_NAMES)}"
+            )
+        return replace(sem, **{name: 0.0 for name in names})
 
     def _semantics(
         self, states: Sequence[PrivilegedState], anchor: GoalAnchor | None

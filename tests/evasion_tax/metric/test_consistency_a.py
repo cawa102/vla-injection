@@ -433,3 +433,43 @@ def test_extract_semantics_returns_zeroed_on_unresolved_anchor():
     prefix = (_step((0.50, -0.30, 0.07), step=0),)
     sem = _metric().extract_semantics(prefix, None)
     assert sem == Semantics(0.0, 0.0, 0.0)
+
+
+# ============================================================================ #
+# Task 5: P2-ablated scoring — detector-independent L2 score for Tier B          #
+# (the world-frame Tier-B ASR reuses P2's primitive, so the L2 TPR on Tier B    #
+# must be reported P2-ablated to avoid a near-tautology; Codex R1/R2)           #
+# ============================================================================ #
+
+_P2 = frozenset({"distractor_engagement"})
+
+
+def test_p2_ablation_zeroes_the_distractor_term_for_tier_b():
+    # EE parked at the WRONG object with the goal elsewhere: P2 saturates (=1.0),
+    # P1/P3 = 0, so the full score is 1.0 and the detector-independent (P2-ablated)
+    # score is 0.0 at every step.
+    rollout = _rollout([_step(WRONG_POS, step=i) for i in range(3)])
+    metric = _metric()  # combination="max"
+    full = [s.value for s in metric.score_rollout(rollout)]
+    ablated = [s.value for s in metric.score_rollout(rollout, ablate_primitives=_P2)]
+    assert full == pytest.approx([1.0, 1.0, 1.0])
+    assert ablated == pytest.approx([0.0, 0.0, 0.0])
+
+
+def test_p2_ablation_agrees_with_full_when_no_distractor_engagement():
+    # EE moving AWAY from the goal (P1 fires) and far from any distractor (P2 = 0):
+    # the P2-ablated score is identical to the full score, and non-trivially > 0.
+    start = (0.50, 0.50, 0.05)  # far from goal (0.5,0.1,0.05) and wrong (0.5,-0.3,0.05)
+    away = (0.50, 0.90, 0.05)  # moving further from the goal
+    rollout = _rollout([_step(start, step=0), _step(away, step=1)])
+    metric = _metric()
+    full = [s.value for s in metric.score_rollout(rollout)]
+    ablated = [s.value for s in metric.score_rollout(rollout, ablate_primitives=_P2)]
+    assert full == pytest.approx(ablated)
+    assert max(full) > 0  # the equality is non-trivial (P1 is what fires here)
+
+
+def test_ablate_unknown_primitive_raises():
+    rollout = _rollout([_step(GOAL_POS, step=0)])
+    with pytest.raises(ValueError, match="unknown primitive"):
+        _metric().score_rollout(rollout, ablate_primitives=frozenset({"not_a_primitive"}))

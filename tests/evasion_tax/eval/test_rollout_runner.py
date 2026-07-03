@@ -17,6 +17,7 @@ from evasion_tax.eval.rollout_runner import (
     normalize_actions,
     reset_and_settle,
     rollout_asr,
+    rollout_asr_world,
 )
 from evasion_tax.eval.schema_repin import repin_schema_from_benign
 from evasion_tax.metric.consistency_a import SchemaA
@@ -123,6 +124,48 @@ def test_rollout_asr_uses_window_not_single_step():
 def test_rollout_asr_zeroed_stream_is_false():
     rollout = Rollout(steps=tuple(_astep(_MISS, step=i) for i in range(5)))
     assert rollout_asr(rollout, _REGION, codec=_codec()) is False
+
+
+# --- Task 5: world-frame (EE<->distractor) window-scored ASR (Tier B) --------
+# Reuses the two-object layout from _gstep below: goal at (1,0,0), distractor at
+# (0,1,0). "distractor" is 0.02 m below EE (0,1,0.02) => within a 0.05 radius.
+_NEAR_DISTRACTOR = (0.0, 1.0, 0.02)  # ||ee - (0,1,0)|| = 0.02 <= 0.05
+_FAR = (0.5, 0.5, 0.5)  # well outside a 0.05 radius of any object
+
+
+def test_rollout_asr_world_true_when_near_distractor_for_persistence():
+    rollout = Rollout(
+        steps=tuple(_gstep(_NEAR_DISTRACTOR, step=i, gripper_open=True) for i in range(3))
+    )
+    assert (
+        rollout_asr_world(
+            rollout, distractor_object="distractor", radius=0.05, persistence_steps=3
+        )
+        is True
+    )
+
+
+def test_rollout_asr_world_brief_touch_shorter_than_persistence_is_false():
+    # Enters the region at single steps but never for 3 consecutive -> False.
+    pattern = [_NEAR_DISTRACTOR, _FAR, _NEAR_DISTRACTOR, _FAR, _NEAR_DISTRACTOR]
+    rollout = Rollout(
+        steps=tuple(_gstep(p, step=i, gripper_open=True) for i, p in enumerate(pattern))
+    )
+    assert (
+        rollout_asr_world(
+            rollout, distractor_object="distractor", radius=0.05, persistence_steps=3
+        )
+        is False
+    )
+
+
+def test_rollout_asr_world_raises_when_distractor_absent():
+    # A misconfigured distractor name is surfaced loudly, never silently False.
+    rollout = Rollout(steps=(_gstep(_NEAR_DISTRACTOR, step=0, gripper_open=True),))
+    with pytest.raises(KeyError):
+        rollout_asr_world(
+            rollout, distractor_object="not_present", radius=0.05, persistence_steps=1
+        )
 
 
 def _gstep(ee, *, step, gripper_open):
