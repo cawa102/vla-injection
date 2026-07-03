@@ -106,6 +106,33 @@ def test_cost_summary_equals_steps_to_success_summary():
     assert v["cost"]["steps_to_success"] == steps_to_success_summary(costs, n_steps_cap=500)
 
 
+def _tiered_attack(tier, frame):
+    return AttackUnitRecord(
+        unit_id=f"u-{tier}", cost=_outcome(60, reached=True), rollout_asr_reached=True,
+        is_denial=False, metric_a_per_step=(1.0,), target_tier=tier, asr_frame=frame,
+    )
+
+
+def test_m1_verdict_refuses_to_aggregate_mixed_target_tier_or_frame():
+    # Anchor (action ASR) and semantic (world ASR) must never be folded into one
+    # conflated asr_rate -- report each tier separately (Codex R1).
+    benign = [_benign(0.0, calib=True) for _ in range(6)] + [
+        _benign(0.0, calib=False) for _ in range(4)
+    ]
+    mixed = [_tiered_attack("anchor", "action"), _tiered_attack("semantic", "world")]
+    with pytest.raises(ValueError, match="mixed|tier"):
+        m1_verdict(benign, mixed, schema=SchemaA(), fpr=0.05, n_steps_cap=500)
+
+
+def test_m1_verdict_accepts_a_single_tier():
+    benign = [_benign(0.0, calib=True) for _ in range(6)] + [
+        _benign(0.0, calib=False) for _ in range(4)
+    ]
+    semantic = [_tiered_attack("semantic", "world") for _ in range(4)]
+    v = m1_verdict(benign, semantic, schema=SchemaA(), fpr=0.05, n_steps_cap=500)
+    assert v["redirect"]["n"] == 4
+
+
 def test_attack_records_from_dicts_reads_loss_history_and_defaults_empty():
     # New runs log the GCG loss trajectory; older records (e.g. the M1 pilot) predate the
     # key and must still load — the field is optional, defaulting to an empty history.
@@ -118,3 +145,31 @@ def test_attack_records_from_dicts_reads_loss_history_and_defaults_empty():
     assert with_hist.loss_history == (7.4, 6.6, 6.63)
     [old] = attack_records_from_dicts([base])  # pilot record: no loss_history key
     assert old.loss_history == ()
+
+
+def test_attack_records_from_dicts_reads_tier_fields_and_defaults_legacy():
+    cost = outcome_to_record(_outcome(60, reached=True))
+    base = {
+        "unit_id": "u0", "cost": cost, "rollout_asr_reached": True,
+        "is_denial": False, "metric_a_per_step": [1.0],
+    }
+    # Legacy pilot record (no tier keys) -> anchor/action, no Tier-B fields.
+    [old] = attack_records_from_dicts([base])
+    assert old.target_tier == "anchor" and old.asr_frame == "action"
+    assert old.distractor_object is None and old.approach_asr is None
+    assert old.metric_a_p2_ablated_per_step == ()
+
+    # A new semantic record round-trips every tier field.
+    semantic = {
+        **base, "target_tier": "semantic", "asr_frame": "world",
+        "reached_single_frame": True, "approach_asr": True, "manipulation_asr": False,
+        "metric_a_p2_ablated_per_step": [0.0, 0.1],
+        "distractor_object": "blue_cup_1", "adv_instruction": "pick up the blue cup",
+    }
+    [new] = attack_records_from_dicts([semantic])
+    assert new.target_tier == "semantic" and new.asr_frame == "world"
+    assert new.reached_single_frame is True
+    assert new.approach_asr is True and new.manipulation_asr is False
+    assert new.metric_a_p2_ablated_per_step == (0.0, 0.1)
+    assert new.distractor_object == "blue_cup_1"
+    assert new.adv_instruction == "pick up the blue cup"

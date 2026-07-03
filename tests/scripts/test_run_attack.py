@@ -57,6 +57,29 @@ def test_guard_without_cuda_exits_2(monkeypatch, capsys, tmp_path):
     assert mod.STAGE in capsys.readouterr().err
 
 
+def test_main_accepts_target_tier_and_registry_args(monkeypatch, tmp_path):
+    # Parses the new two-tier flags, then guards off-GPU (rc 2) before the GPU body.
+    mod = _load()
+    monkeypatch.setattr(mod, "cuda_available", lambda: False)
+    cfg = _REPO_ROOT / "configs" / "example_m2.yaml"
+    schema = tmp_path / "schema.json"
+    schema.write_text(json.dumps({"engagement_radius": 0.04, "grasp_radius": 0.12}))
+    rc = mod.main([
+        "--config", str(cfg), "--schema-from", str(schema), "--results-root", str(tmp_path),
+        "--target-tier", "semantic", "--semantic-registry", "configs/semantic_targets",
+    ])
+    assert rc == 2
+
+
+def test_main_rejects_unknown_target_tier(tmp_path):
+    mod = _load()
+    cfg = _REPO_ROOT / "configs" / "example_m2.yaml"
+    schema = tmp_path / "schema.json"
+    schema.write_text(json.dumps({"engagement_radius": 0.04, "grasp_radius": 0.12}))
+    with pytest.raises(SystemExit):  # argparse enforces choices={anchor, semantic}
+        mod.main(["--config", str(cfg), "--schema-from", str(schema), "--target-tier", "bogus"])
+
+
 def test_is_denial_only_when_neither_region_nor_goal_reached():
     mod = _load()
     assert mod.is_denial(asr_reached=False, task_success=False) is True
@@ -102,6 +125,40 @@ def test_run_attack_loop_records_both_notions_and_quarantines(tmp_path):
     assert len(list(quarantine.glob("*.txt"))) == 3
 
 
+def test_run_attack_loop_threads_tier_fields_from_attack_fn(tmp_path):
+    mod = _load()
+
+    def attack_fn(uid):
+        return {
+            **_attack_out(uid, asr=True),
+            "target_tier": "semantic", "asr_frame": "world", "reached_single_frame": True,
+            "approach_asr": True, "manipulation_asr": False,
+            "metric_a_p2_ablated_per_step": [0.0, 0.1],
+            "distractor_object": "blue_cup_1", "adv_instruction": "pick up the blue cup",
+        }
+
+    records = mod.run_attack_loop(
+        tmp_path / "units", tmp_path / "q", units=["t0:r0:42"], attack_fn=attack_fn, resume=False
+    )
+    r = records[0]
+    assert r["target_tier"] == "semantic" and r["asr_frame"] == "world"
+    assert r["reached_single_frame"] is True
+    assert r["approach_asr"] is True and r["manipulation_asr"] is False
+    assert r["metric_a_p2_ablated_per_step"] == [0.0, 0.1]
+    assert r["distractor_object"] == "blue_cup_1"
+
+
+def test_run_attack_loop_defaults_anchor_when_attack_fn_omits_tier(tmp_path):
+    # The legacy anchor attack_fn output (no tier keys) records as anchor/action.
+    mod = _load()
+    records = mod.run_attack_loop(
+        tmp_path / "units", tmp_path / "q", units=["t0:r0:42"],
+        attack_fn=lambda u: _attack_out(u), resume=False,
+    )
+    assert records[0]["target_tier"] == "anchor"
+    assert records[0]["asr_frame"] == "action"
+
+
 def test_attack_unit_record_persists_loss_history():
     # The GCG per-step best-so-far trajectory (run_gcg's loss_history) is logged so the
     # loss curve is regenerable from the write-once record (not just the final best_loss).
@@ -112,6 +169,36 @@ def test_attack_unit_record_persists_loss_history():
     )
     assert rec["loss_history"] == [7.4, 6.6, 6.6]
     assert all(isinstance(x, float) for x in rec["loss_history"])  # coerced to float
+
+
+def test_attack_unit_record_defaults_to_anchor_action_tier():
+    mod = _load()
+    rec = mod.attack_unit_record(
+        "t0:r0:42", _outcome("t0:r0:42"), rollout_asr_reached=True, is_denial_=False,
+        metric_a_per_step=[1.0], loss_history=[7.0],
+    )
+    assert rec["target_tier"] == "anchor"
+    assert rec["asr_frame"] == "action"
+    assert rec["distractor_object"] is None
+    assert rec["adv_instruction"] is None
+    assert rec["metric_a_p2_ablated_per_step"] == []
+
+
+def test_attack_unit_record_carries_semantic_tier_fields():
+    mod = _load()
+    rec = mod.attack_unit_record(
+        "t0:r0:42", _outcome("t0:r0:42"), rollout_asr_reached=True, is_denial_=False,
+        metric_a_per_step=[1.0], loss_history=[7.0],
+        target_tier="semantic", asr_frame="world", reached_single_frame=True,
+        approach_asr=True, manipulation_asr=False, metric_a_p2_ablated_per_step=[0.0, 0.1],
+        distractor_object="blue_cup_1", adv_instruction="pick up the blue cup",
+    )
+    assert rec["target_tier"] == "semantic" and rec["asr_frame"] == "world"
+    assert rec["reached_single_frame"] is True
+    assert rec["approach_asr"] is True and rec["manipulation_asr"] is False
+    assert rec["metric_a_p2_ablated_per_step"] == [0.0, 0.1]
+    assert rec["distractor_object"] == "blue_cup_1"
+    assert rec["adv_instruction"] == "pick up the blue cup"
 
 
 def test_run_attack_loop_writes_loss_history_to_unit_json(tmp_path):
@@ -230,3 +317,21 @@ def test_assert_resume_compatible_raises_naming_changed_field(tmp_path):
     with pytest.raises(SystemExit) as exc:
         mod.assert_resume_compatible(tmp_path, _header(n_steps=20))
     assert "n_steps" in str(exc.value)
+
+
+def test_assert_resume_compatible_rejects_target_tier_mismatch(tmp_path):
+    # A semantic run must never resume an anchor run dir (BUG3 extended to tiers).
+    mod = _load()
+    (tmp_path / "run.json").write_text(json.dumps(_header(target_tier="anchor")))
+    with pytest.raises(SystemExit) as exc:
+        mod.assert_resume_compatible(tmp_path, _header(target_tier="semantic"))
+    assert "target_tier" in str(exc.value)
+
+
+def test_assert_resume_compatible_rejects_registry_hash_mismatch(tmp_path):
+    # A semantic run under a different adversary registry can't reuse existing units.
+    mod = _load()
+    (tmp_path / "run.json").write_text(json.dumps(_header(registry_sha256="aaa")))
+    with pytest.raises(SystemExit) as exc:
+        mod.assert_resume_compatible(tmp_path, _header(registry_sha256="bbb"))
+    assert "registry_sha256" in str(exc.value)

@@ -277,7 +277,7 @@
 - Write-once `results/`; anchor vs semantic in separate run dirs.
 - Report negative results (a tier that fails to reach is a finding, not a bug — even RoboGCG misses a minority of targets, e.g. 77.4% ASR on LIBERO-10).
 
-## Open decisions to confirm with the author/supervisor before Task 7 lands
-- Gripper handling per threat: exclude (default) vs include when the adversary goal *is* grasp/drop.
-- Persistence window length for world-frame ASR (reuse `persistence_steps`, or scene-specific).
-- Whether to keep `redirect_spec_for` at all (pure-controllability ablation) or delete it.
+## Open decisions — RESOLVED (author, 2026-07-03, provisional; supervisor sign-off still pending on the wider theme)
+- **Gripper handling:** *exclude* — single-frame `reached` scores motion dims `[0..5]` only (RoboGCG-comparable); CE loss still spans all 7. Applies to **both** tiers. Revisit only for a concrete grasp/drop threat.
+- **World-frame ASR window:** *reuse* `persistence_steps` (=5) for Tier B — one window across both tiers, no per-scene knob.
+- **`redirect_spec_for`:** *keep* as a pure-controllability ablation (retired as primary, not deleted).

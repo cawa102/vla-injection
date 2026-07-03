@@ -52,7 +52,17 @@ class BenignRecord:
 
 @dataclass(frozen=True)
 class AttackUnitRecord:
-    """One attacked unit ``(task, target, seed)`` — cost + both success notions (DM-2)."""
+    """One attacked unit ``(task, target, seed)`` — cost + both success notions (DM-2).
+
+    Two-tier fields (defaulting to the legacy anchor/action semantics so pre-tier
+    pilot records still load): ``target_tier`` in ``{anchor, semantic}`` and
+    ``asr_frame`` in ``{action, world}`` — ``rollout_asr_reached`` is the
+    tier-appropriate window-scored ASR (action-space for anchor, world-frame
+    *approach* for semantic). For **Tier B** only: ``approach_asr`` (== the world
+    ASR, headline), ``manipulation_asr`` (logged **diagnostic only** — never a
+    headline claim), ``metric_a_p2_ablated_per_step`` (detector-independent L2),
+    ``distractor_object`` and ``adv_instruction``.
+    """
 
     unit_id: str
     cost: TargetOutcome
@@ -62,6 +72,14 @@ class AttackUnitRecord:
     # run_gcg's per-step best-so-far loss trajectory (non-increasing). Diagnostic only —
     # the verdict reads cost.best_loss; optional/empty for records logged before it existed.
     loss_history: tuple[float, ...] = ()
+    target_tier: str = "anchor"
+    asr_frame: str = "action"
+    reached_single_frame: bool = False
+    approach_asr: bool | None = None
+    manipulation_asr: bool | None = None
+    metric_a_p2_ablated_per_step: tuple[float, ...] = ()
+    distractor_object: str | None = None
+    adv_instruction: str | None = None
 
 
 def _separation(
@@ -106,6 +124,17 @@ def m1_verdict(
     """
     if not benign_records or not attack_records:
         raise ValueError("m1_verdict needs non-empty benign and attacked records")
+
+    # Refuse to conflate tiers: anchor (action-space ASR) and semantic (world-frame
+    # ASR) are different success notions in different coordinate frames, so a single
+    # aggregate asr_rate across them would be meaningless (Codex R1). Report each tier
+    # in its own run/verdict.
+    tiers = {(r.target_tier, r.asr_frame) for r in attack_records}
+    if len(tiers) > 1:
+        raise ValueError(
+            "m1_verdict refuses to aggregate across mixed (target_tier, asr_frame): "
+            f"{sorted(tiers)}; report each tier separately."
+        )
 
     # (a) benign reproduced
     n_benign = len(benign_records)
@@ -216,6 +245,25 @@ def attack_records_from_dicts(items: Sequence[Mapping]) -> list[AttackUnitRecord
             is_denial=bool(d["is_denial"]),
             metric_a_per_step=tuple(float(x) for x in d["metric_a_per_step"]),
             loss_history=tuple(float(x) for x in d.get("loss_history", ())),
+            # Two-tier fields — legacy records predate them and default to anchor/action.
+            target_tier=str(d.get("target_tier", "anchor")),
+            asr_frame=str(d.get("asr_frame", "action")),
+            reached_single_frame=bool(d.get("reached_single_frame", False)),
+            approach_asr=_opt_bool(d.get("approach_asr")),
+            manipulation_asr=_opt_bool(d.get("manipulation_asr")),
+            metric_a_p2_ablated_per_step=tuple(
+                float(x) for x in d.get("metric_a_p2_ablated_per_step", ())
+            ),
+            distractor_object=_opt_str(d.get("distractor_object")),
+            adv_instruction=_opt_str(d.get("adv_instruction")),
         )
         for d in items
     ]
+
+
+def _opt_bool(x: object) -> bool | None:
+    return None if x is None else bool(x)
+
+
+def _opt_str(x: object) -> str | None:
+    return None if x is None else str(x)

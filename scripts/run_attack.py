@@ -41,7 +41,15 @@ _QUARANTINE_ROOT = "artifacts/untrusted"
 # a mismatch means the on-disk units were produced under a different attack config.
 _RESUME_KEYS = (
     "seed", "git_commit", "model", "n_steps", "search_width", "eval_batch", "schema_sha256",
+    # Two-tier guard: a semantic run must never resume an anchor dir, and a semantic
+    # run under a different pinned adversary registry can't reuse existing units.
+    "target_tier", "asr_frame", "registry_path", "registry_sha256",
 )
+
+# Single-frame reach is scored on the 6 motion dims only — the gripper (dim 6) is
+# excluded (author decision 2026-07-03, RoboGCG-comparable). The CE *loss* still
+# teacher-forces all 7 tokens; only the success predicate is subset (Task 2).
+_MATCH_POSITIONS = (0, 1, 2, 3, 4, 5)
 
 
 # --------------------------------------------------------------------------- #
@@ -115,6 +123,14 @@ def attack_unit_record(
     is_denial_: bool,
     metric_a_per_step: Sequence[float],
     loss_history: Sequence[float],
+    target_tier: str = "anchor",
+    asr_frame: str = "action",
+    reached_single_frame: bool = False,
+    approach_asr: bool | None = None,
+    manipulation_asr: bool | None = None,
+    metric_a_p2_ablated_per_step: Sequence[float] = (),
+    distractor_object: str | None = None,
+    adv_instruction: str | None = None,
 ) -> dict:
     """The per-unit record (both success notions + folded cost) — m1_gate's schema.
 
@@ -122,6 +138,12 @@ def attack_unit_record(
     logged so the optimisation curve is regenerable from the write-once record — not
     only the final ``cost.best_loss`` (diagnosing a flat/plateauing search needs the
     whole trajectory, not two endpoints).
+
+    Two-tier fields (all emitted so a record is never silently mis-tiered): ``target_tier``
+    / ``asr_frame`` name the tier and the ASR coordinate frame; ``rollout_asr_reached`` is
+    the tier-appropriate window-scored ASR. Tier-B-only: ``approach_asr`` (headline),
+    ``manipulation_asr`` (**diagnostic only**), ``metric_a_p2_ablated_per_step``
+    (detector-independent L2), ``distractor_object`` and ``adv_instruction``.
     """
     return {
         "unit_id": uid,
@@ -130,6 +152,14 @@ def attack_unit_record(
         "is_denial": is_denial_,
         "metric_a_per_step": [float(x) for x in metric_a_per_step],
         "loss_history": [float(x) for x in loss_history],
+        "target_tier": target_tier,
+        "asr_frame": asr_frame,
+        "reached_single_frame": bool(reached_single_frame),
+        "approach_asr": approach_asr,
+        "manipulation_asr": manipulation_asr,
+        "metric_a_p2_ablated_per_step": [float(x) for x in metric_a_p2_ablated_per_step],
+        "distractor_object": distractor_object,
+        "adv_instruction": adv_instruction,
     }
 
 
@@ -175,6 +205,14 @@ def run_attack_loop(
                 uid, out["cost"], rollout_asr_reached=out["rollout_asr_reached"],
                 is_denial_=denial, metric_a_per_step=out["metric_a_per_step"],
                 loss_history=out["loss_history"],
+                target_tier=out.get("target_tier", "anchor"),
+                asr_frame=out.get("asr_frame", "action"),
+                reached_single_frame=out.get("reached_single_frame", False),
+                approach_asr=out.get("approach_asr"),
+                manipulation_asr=out.get("manipulation_asr"),
+                metric_a_p2_ablated_per_step=out.get("metric_a_p2_ablated_per_step", ()),
+                distractor_object=out.get("distractor_object"),
+                adv_instruction=out.get("adv_instruction"),
             )
             # Quarantine the adversarial suffix BEFORE recording (D6-6; never in results/).
             (quarantine_dir / f"{_safe(uid)}.txt").write_text(out["suffix_text"])
@@ -235,10 +273,19 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
 
     from evasion_tax.attack.gcg import GcgConfig, run_gcg
     from evasion_tax.attack.gcg_openvla import OpenVlaGcgTarget
-    from evasion_tax.attack.redirect_target import redirect_spec_for, target_action_ids_for
-    from evasion_tax.eval.rollout_runner import reset_and_settle, rollout_asr, run_episode
+    from evasion_tax.attack.redirect_target import anchor_spec_for, target_action_ids_for
+    from evasion_tax.attack.semantic_registry import adversary_spec_for
+    from evasion_tax.attack.semantic_target import build_semantic_target
+    from evasion_tax.eval.rollout_runner import (
+        reset_and_settle,
+        rollout_asr,
+        rollout_asr_world,
+        run_episode,
+    )
     from evasion_tax.metric.consistency_a import ConsistencyMetricA
     from evasion_tax.repro import capture_env, seed_everything
+
+    _P2 = frozenset({"distractor_engagement"})  # detector-independent Tier-B ablation
 
     if args.openvla_root:
         sys.path.insert(0, args.openvla_root)
@@ -290,12 +337,19 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
 
     run_dir, first = prepare_run_dir(args.results_root, args.run_name)
     schema_sha256 = hashlib.sha256(Path(args.schema_from).read_bytes()).hexdigest()
+    asr_frame = "world" if args.target_tier == "semantic" else "action"
+    registry_path = registry_sha256 = None
+    if args.target_tier == "semantic":
+        registry_path = str(Path(args.semantic_registry) / f"{config.env.suite}.json")
+        registry_sha256 = hashlib.sha256(Path(registry_path).read_bytes()).hexdigest()
     header = {
         "stage": STAGE, "run_name": args.run_name, "seed": config.seed,
         "git_commit": git_commit, "hardware": env_rec, "model": mid,
         "schema_from": args.schema_from, "schema_sha256": schema_sha256,
         "search_width": args.search_width, "n_steps": args.n_steps,
         "eval_batch": args.eval_batch, "exclusive_gpu": args.exclusive_gpu,
+        "target_tier": args.target_tier, "asr_frame": asr_frame,
+        "registry_path": registry_path, "registry_sha256": registry_sha256,
     }
     if first:  # write-once §8 header on the FIRST launch only; a resume reuses the dir
         (run_dir / "run.json").write_text(json.dumps(header, indent=2, sort_keys=True) + "\n")
@@ -325,14 +379,35 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
             )
             start_image = get_libero_image(start_obs, resize_size)
 
-            spec = redirect_spec_for(
-                target_idx, persistence_steps=config.attack.persistence_steps
-            )
-            target_ids = target_action_ids_for(spec, vocab_size)
+            # Build the tier-appropriate forced-decode target ids. [VERIFY on box]
+            if args.target_tier == "semantic":
+                adv = adversary_spec_for(
+                    config.env.suite, task_s, config_dir=args.semantic_registry
+                )
+                # Runtime validation (Codex R1): the distractor must be present in the
+                # POST-settle scene (availability varies by init state) — fail fast,
+                # before the multi-hour search, if the registry names a missing object.
+                settle_poses = adapter.to_privileged_state(start_obs).object_poses
+                if adv.distractor_object not in settle_poses:
+                    raise SystemExit(
+                        f"[{STAGE}] distractor {adv.distractor_object!r} absent from "
+                        f"object_poses after reset for {uid} (present: {sorted(settle_poses)})"
+                    )
+                sem = build_semantic_target(
+                    model, processor, image=start_image, adv_instruction=adv.adv_instruction,
+                    action_vocab_size=vocab_size, codec=codec, device=device,
+                )
+                target_ids = sem.target_action_ids
+            else:
+                spec = anchor_spec_for(
+                    target_idx, persistence_steps=config.attack.persistence_steps
+                )
+                target_ids = target_action_ids_for(spec, vocab_size)
+
             target = OpenVlaGcgTarget(
                 model, processor, image=start_image, instruction=str(task_description),
                 suffix_len=args.suffix_len, target_action_ids=target_ids, device=device,
-                eval_batch=args.eval_batch,
+                eval_batch=args.eval_batch, match_positions=_MATCH_POSITIONS,
             )
             gcfg = GcgConfig(
                 suffix_len=args.suffix_len, n_steps=args.n_steps,
@@ -347,7 +422,7 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
                 target_id=uid, reached=result.reached, steps_to_success=result.n_steps_run,
                 censored=not result.reached, best_loss=result.best_loss, wall_seconds=wall,
                 peak_vram_gib=getattr(target, "_last_peak_bytes", 0) / (1024**3),
-                suffix_sha256=__import__("hashlib").sha256(suffix_text.encode()).hexdigest(),
+                suffix_sha256=hashlib.sha256(suffix_text.encode()).hexdigest(),
             )
             ep = run_episode(
                 model, processor, env=env, init_state=init_states[unit_seed % len(init_states)],
@@ -356,13 +431,36 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
                 git_commit=git_commit, suite=config.env.suite, task_id=str(task.name),
                 suffix_text=suffix_text, max_steps=config.env.max_steps,
             )
-            asr = rollout_asr(ep.rollout, spec.region, codec=codec)
             scores = metric.score_rollout(ep.rollout)
-            return {
-                "cost": cost, "suffix_text": suffix_text, "rollout_asr_reached": asr,
-                "task_success": ep.success, "metric_a_per_step": [s.value for s in scores],
+            base = {
+                "cost": cost, "suffix_text": suffix_text, "task_success": ep.success,
+                "metric_a_per_step": [s.value for s in scores],
                 "loss_history": list(result.loss_history),  # per-step best-so-far GCG loss
+                "target_tier": args.target_tier, "asr_frame": asr_frame,
+                "reached_single_frame": result.reached,  # single-frame reach (dims 0..5)
             }
+            if args.target_tier == "semantic":
+                # Headline = world-frame approach ASR; a P2-ablated L2 accompanies it so
+                # the Tier-B detector result isn't tautological (Tier-B independence guard).
+                approach = rollout_asr_world(
+                    ep.rollout, distractor_object=adv.distractor_object,
+                    radius=schema.engagement_radius,
+                    persistence_steps=config.attack.persistence_steps,
+                )
+                p2_ablated = metric.score_rollout(ep.rollout, ablate_primitives=_P2)
+                return {
+                    **base,
+                    "rollout_asr_reached": approach,
+                    "approach_asr": approach,
+                    # manipulation_asr is a logged diagnostic; the full scorer (gripper
+                    # close / object displacement) is future work (Codex R2), so None here.
+                    "manipulation_asr": None,
+                    "metric_a_p2_ablated_per_step": [s.value for s in p2_ablated],
+                    "distractor_object": adv.distractor_object,
+                    "adv_instruction": adv.adv_instruction,
+                }
+            asr = rollout_asr(ep.rollout, spec.region, codec=codec)
+            return {**base, "rollout_asr_reached": asr}
         finally:
             env.close()
 
@@ -397,6 +495,15 @@ def main(argv: list[str] | None = None) -> int:
                         help="stable run-dir under results-root, reused across restarts")
     parser.add_argument("--exclusive-gpu", action="store_true", help="record an exclusive window")
     parser.add_argument("--resume", action="store_true", help="skip units already on disk")
+    parser.add_argument(
+        "--target-tier", choices=["anchor", "semantic"], default="anchor",
+        help="attack target family: anchor (Tier A, action-space ASR) or "
+             "semantic (Tier B, world-frame approach ASR)",
+    )
+    parser.add_argument(
+        "--semantic-registry", default="configs/semantic_targets",
+        help="dir of pre-registered adversary-instruction registries (Tier B only)",
+    )
     args = parser.parse_args(argv)
 
     config = load_config(args.config)  # validate locally before GPU time
