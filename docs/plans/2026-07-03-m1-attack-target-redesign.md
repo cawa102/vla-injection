@@ -45,7 +45,8 @@
 - [x] Task 5: World-frame ASR scorer (Tier B, detector's 3-D frame)
 - [~] Task 6: Separation / validity guard (pre-registration check)  <!-- model-free checks + artifact done; GPU benign/adversary reach-floor deferred behind the Task-8 GPU gate -->
 - [x] Task 7: Driver wiring — two tiers, both success notions recorded  <!-- pure glue + schema + verdict guard fully TDD'd; GPU _run body [VERIFY on box] -->
-- [ ] Task 8: Validation-pilot config (GPU-gated — ask before launch)
+- [x] Task 8: Validation-pilot config (GPU-gated — ask before launch)  <!-- config written; NOT launched (GPU gate) -->
+- [~] Task 3b (added): Draft Tier B config from LIBERO scene inspection — pending (needs box scene enumeration + author sign-off)
 
 ---
 

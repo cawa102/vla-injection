@@ -83,3 +83,23 @@ def test_adversary_spec_is_frozen(tmp_path):
     spec = adversary_spec_for("libero_spatial", "task_0", config_dir=tmp_path)
     with pytest.raises(dataclasses.FrozenInstanceError):
         spec.distractor_object = "tampered"  # type: ignore[misc]
+
+
+def test_real_libero_spatial_registry_is_well_formed():
+    # The committed pre-registration config (DRAFT) must be structurally valid: every
+    # eval task_0/1/2 resolves; the distractor is an object-name key form (not a
+    # robot0_* proprio key, not a *_to_* relative delta) and differs from the benign
+    # target_region (plate_1 for this suite); the two key forms agree. Robust to the
+    # author changing which distractor is chosen. (Presence-after-reset is the driver's
+    # runtime check — extract_object_poses returns the stripped object name.)
+    config_dir = Path(__file__).resolve().parents[3] / "configs" / "semantic_targets"
+    for i in range(3):
+        spec = adversary_spec_for("libero_spatial", f"task_{i}", config_dir=config_dir)
+        assert spec.adv_instruction.strip(), "adv_instruction must be non-empty"
+        assert spec.distractor_object != "plate_1", "distractor must differ from benign target"
+        assert not spec.distractor_object.startswith("robot0_"), "not a proprio key"
+        assert "_to_" not in spec.distractor_object, "not a relative-delta key"
+        by_name = adversary_spec_for(
+            "libero_spatial", spec.libero_task_name, config_dir=config_dir
+        )
+        assert by_name == spec, "task_<i> and the LIBERO task.name must resolve identically"
