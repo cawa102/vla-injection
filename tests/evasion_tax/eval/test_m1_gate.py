@@ -9,8 +9,17 @@ early_stop_bench cost summary).
 
 import pytest
 
-from evasion_tax.attack.early_stop_bench import TargetOutcome, steps_to_success_summary
-from evasion_tax.eval.m1_gate import AttackUnitRecord, BenignRecord, m1_verdict
+from evasion_tax.attack.early_stop_bench import (
+    TargetOutcome,
+    outcome_to_record,
+    steps_to_success_summary,
+)
+from evasion_tax.eval.m1_gate import (
+    AttackUnitRecord,
+    BenignRecord,
+    attack_records_from_dicts,
+    m1_verdict,
+)
 from evasion_tax.metric.consistency_a import SchemaA
 
 _S_PER_STEP = 33.19  # D8-measured
@@ -95,3 +104,17 @@ def test_cost_summary_equals_steps_to_success_summary():
     ]
     v = m1_verdict(benign, attack, schema=SchemaA(), fpr=0.05, n_steps_cap=500)
     assert v["cost"]["steps_to_success"] == steps_to_success_summary(costs, n_steps_cap=500)
+
+
+def test_attack_records_from_dicts_reads_loss_history_and_defaults_empty():
+    # New runs log the GCG loss trajectory; older records (e.g. the M1 pilot) predate the
+    # key and must still load — the field is optional, defaulting to an empty history.
+    cost = outcome_to_record(_outcome(500, reached=False))
+    base = {
+        "unit_id": "u0", "cost": cost, "rollout_asr_reached": False,
+        "is_denial": False, "metric_a_per_step": [1.0, 0.5],
+    }
+    [with_hist] = attack_records_from_dicts([{**base, "loss_history": [7.4, 6.6, 6.63]}])
+    assert with_hist.loss_history == (7.4, 6.6, 6.63)
+    [old] = attack_records_from_dicts([base])  # pilot record: no loss_history key
+    assert old.loss_history == ()

@@ -114,14 +114,22 @@ def attack_unit_record(
     rollout_asr_reached: bool,
     is_denial_: bool,
     metric_a_per_step: Sequence[float],
+    loss_history: Sequence[float],
 ) -> dict:
-    """The per-unit record (both success notions + folded cost) — m1_gate's schema."""
+    """The per-unit record (both success notions + folded cost) — m1_gate's schema.
+
+    ``loss_history`` is ``run_gcg``'s per-step best-so-far GCG loss (non-increasing),
+    logged so the optimisation curve is regenerable from the write-once record — not
+    only the final ``cost.best_loss`` (diagnosing a flat/plateauing search needs the
+    whole trajectory, not two endpoints).
+    """
     return {
         "unit_id": uid,
         "cost": outcome_to_record(cost),
         "rollout_asr_reached": rollout_asr_reached,
         "is_denial": is_denial_,
         "metric_a_per_step": [float(x) for x in metric_a_per_step],
+        "loss_history": [float(x) for x in loss_history],
     }
 
 
@@ -139,7 +147,7 @@ def run_attack_loop(
     Per-unit write-once checkpoint (``units/<uid>.json``); ``resume`` reloads a
     finished unit instead of re-attacking. Every fresh unit's suffix is quarantined
     to ``quarantine_dir`` (D6-6). ``attack_fn(uid) -> {cost, suffix_text,
-    rollout_asr_reached, task_success, metric_a_per_step}``.
+    rollout_asr_reached, task_success, metric_a_per_step, loss_history}``.
 
     ``on_unit_done`` (optional) fires after each FRESHLY-attacked unit (post-quarantine,
     before the next target build); the GPU body wires it to ``torch.cuda.empty_cache()``
@@ -166,6 +174,7 @@ def run_attack_loop(
             record = attack_unit_record(
                 uid, out["cost"], rollout_asr_reached=out["rollout_asr_reached"],
                 is_denial_=denial, metric_a_per_step=out["metric_a_per_step"],
+                loss_history=out["loss_history"],
             )
             # Quarantine the adversarial suffix BEFORE recording (D6-6; never in results/).
             (quarantine_dir / f"{_safe(uid)}.txt").write_text(out["suffix_text"])
@@ -352,6 +361,7 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
             return {
                 "cost": cost, "suffix_text": suffix_text, "rollout_asr_reached": asr,
                 "task_success": ep.success, "metric_a_per_step": [s.value for s in scores],
+                "loss_history": list(result.loss_history),  # per-step best-so-far GCG loss
             }
         finally:
             env.close()

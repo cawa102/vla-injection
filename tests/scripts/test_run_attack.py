@@ -41,6 +41,7 @@ def _attack_out(uid, *, asr=True, task_success=False):
         "rollout_asr_reached": asr,
         "task_success": task_success,
         "metric_a_per_step": [1.0, 1.0],
+        "loss_history": [7.4, 6.6, 6.6],  # per-step GCG best-so-far (non-increasing)
     }
 
 
@@ -99,6 +100,31 @@ def test_run_attack_loop_records_both_notions_and_quarantines(tmp_path):
         assert r["is_denial"] is False
     # exactly one quarantined suffix per fresh unit
     assert len(list(quarantine.glob("*.txt"))) == 3
+
+
+def test_attack_unit_record_persists_loss_history():
+    # The GCG per-step best-so-far trajectory (run_gcg's loss_history) is logged so the
+    # loss curve is regenerable from the write-once record (not just the final best_loss).
+    mod = _load()
+    rec = mod.attack_unit_record(
+        "t0:r0:42", _outcome("t0:r0:42"), rollout_asr_reached=True, is_denial_=False,
+        metric_a_per_step=[1.0, 0.9], loss_history=[7.4, 6.6, 6.6],
+    )
+    assert rec["loss_history"] == [7.4, 6.6, 6.6]
+    assert all(isinstance(x, float) for x in rec["loss_history"])  # coerced to float
+
+
+def test_run_attack_loop_writes_loss_history_to_unit_json(tmp_path):
+    # The trajectory reaches the on-disk write-once unit record, so a later figure script
+    # can plot the loss curve without re-running the multi-hour search.
+    mod = _load()
+    units_dir = tmp_path / "units"
+    mod.run_attack_loop(
+        units_dir, tmp_path / "untrusted", units=["t0:r0:42"],
+        attack_fn=lambda u: _attack_out(u), resume=False,
+    )
+    rec = json.loads((units_dir / "t0_r0_42.json").read_text())
+    assert rec["loss_history"] == [7.4, 6.6, 6.6]
 
 
 def test_run_attack_loop_resume_skips_finished_unit(tmp_path):

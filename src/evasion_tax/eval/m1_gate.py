@@ -59,6 +59,9 @@ class AttackUnitRecord:
     rollout_asr_reached: bool
     is_denial: bool
     metric_a_per_step: tuple[float, ...]
+    # run_gcg's per-step best-so-far loss trajectory (non-increasing). Diagnostic only —
+    # the verdict reads cost.best_loss; optional/empty for records logged before it existed.
+    loss_history: tuple[float, ...] = ()
 
 
 def _separation(
@@ -203,7 +206,8 @@ def attack_records_from_dicts(items: Sequence[Mapping]) -> list[AttackUnitRecord
     """Reconstruct attacked-unit records from logged dicts (the Task-5 attack output).
 
     ``cost`` is an ``outcome_to_record`` dict (its keys are the ``TargetOutcome``
-    fields, so ``TargetOutcome(**cost)`` reconstructs it)."""
+    fields, so ``TargetOutcome(**cost)`` reconstructs it). ``loss_history`` is
+    optional — records logged before it existed default to an empty trajectory."""
     return [
         AttackUnitRecord(
             unit_id=str(d["unit_id"]),
@@ -211,6 +215,7 @@ def attack_records_from_dicts(items: Sequence[Mapping]) -> list[AttackUnitRecord
             rollout_asr_reached=bool(d["rollout_asr_reached"]),
             is_denial=bool(d["is_denial"]),
             metric_a_per_step=tuple(float(x) for x in d["metric_a_per_step"]),
+            loss_history=tuple(float(x) for x in d.get("loss_history", ())),
         )
         for d in items
     ]
