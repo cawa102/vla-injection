@@ -306,8 +306,8 @@ footer a{ color:var(--indigo); text-decoration:none; }
   <div class="status">
     <span class="chip"><span class="k">Phase</span><span class="dot amber"></span>Design → starting experiments</span>
     <span class="chip"><span class="k">Code</span><span class="dot green"></span>Local prep done · real-LIBERO adapter · 395 tests green</span>
-    <span class="chip"><span class="k">Waiting on</span><span class="dot grey"></span>GPU access (Kelvin2)</span>
-    <span class="chip"><span class="k">Updated</span>2026-06-09</span>
+    <span class="chip"><span class="k">GPU</span><span class="dot green"></span>CSB A5000 available</span>
+    <span class="chip"><span class="k">Updated</span>2026-07-03</span>
   </div>
   <p style="font-size:.92rem;color:var(--ink-3);max-width:60ch;margin-top:14px">
     One question in one sentence: <em>when someone secretly hijacks a robot's instructions,
@@ -590,14 +590,14 @@ footer a{ color:var(--indigo); text-decoration:none; }
   </div>
 
   <h3>The compute branches (chosen by the M1 timing test)</h3>
-  <p>We don't yet know how fast the attack and probes run on the granted GPU. So we pre-register three
-  honest paths and let the <em>measured</em> speed pick one — no wishful thinking:</p>
+  <p>The attack and probe budget is measured on the registered CSB A5000 GPU PC. The plan keeps three
+  honest paths and lets measured speed pick one — no wishful thinking:</p>
   <div class="branches">
     <div class="branch n"><div class="n">Branch N</div><p><strong>Full tax.</strong> Everything fits → commit the H6-D headline in full, with room to spare.</p></div>
     <div class="branch nm"><div class="n">Branch N−</div><p><strong>Scoped tax.</strong> Tight budget → a smaller but still real H6-D, with the gaps reported honestly.</p></div>
     <div class="branch f"><div class="n">Branch F</div><p><strong>Oracle only.</strong> Too slow → publish H6-A; mark the deployable tax unresolved; title falls back.</p></div>
   </div>
-  <p style="font-size:.9rem;color:var(--ink-3);margin-top:14px">Hardware: <strong>Kelvin2</strong> (A100/H100 GPUs, NI-HPC at QUB), running OpenVLA-7B in <code>bf16</code>. Reproducibility rule: log the exact card + settings every run, and never compare results across different hardware within one claim.</p>
+  <p style="font-size:.9rem;color:var(--ink-3);margin-top:14px">Hardware: <strong>CSB ecs3-0202</strong> (2× RTX A5000, 24 GB each), running OpenVLA-7B in <code>bf16</code>. Kelvin2 A100/H100 is backup only. Reproducibility rule: log the exact card + settings every run, and never compare results across different hardware within one claim.</p>
 </section>
 
 <!-- ============================== CODE MAP ============================== -->

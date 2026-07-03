@@ -45,17 +45,18 @@ tax headline belongs to H6-D, never H6-A.
 
 ## Current status
 
-**Phase: Design → M0 exiting.** The model-free local components are implemented and unit-tested; all
-GPU-dependent runs (OpenVLA inference, GCG optimisation, LIBERO rollouts) are deferred to the granted A100/H100
-node.
+**Phase: M1 execution.** The model-free components are implemented and unit-tested; GPU-dependent runs
+(OpenVLA inference, GCG optimisation, LIBERO rollouts) now run from this repo on the registered CSB
+`ecs3-0202` GPU PC (2× RTX A5000, 24 GB each). There is no current local no-GPU limitation; keep exact
+hardware/env logging and never mix hardware within a claim.
 
 ```
-MODEL-FREE (local, in this repo · 395 tests green)   GPU NODE (deferred to A100/H100)
-──────────────────────────────────────────────────  ──────────────────────────────────
-metric A scorer · FP-calibrated detector             OpenVLA-7B inference
-eval stats (ROC/AUC · TPR@FPR · confidence intervals) GCG suffix optimisation
-idealized action-space attacker + frontier           LIBERO rollouts
-cross-layer ΔASR tax + cluster bootstrap              (fill the SAME contract via Real* seams)
+MODEL-FREE CORE (synthetic/mock seams · 395 tests green)   REGISTERED GPU PC (CSB A5000)
+─────────────────────────────────────────────────────────  ───────────────────────────
+metric A scorer · FP-calibrated detector                    OpenVLA-7B inference
+eval stats (ROC/AUC · TPR@FPR · confidence intervals)        GCG suffix optimisation
+idealized action-space attacker + frontier                  LIBERO rollouts
+cross-layer ΔASR tax + cluster bootstrap                     fills the SAME contract via Real* seams
 ```
 
 Every GPU piece sits behind a Python `Protocol` (`Dynamics`, `ActivationExtractor`, `PerplexityScorer`,
@@ -121,7 +122,8 @@ uv run pytest           # run the 395 model-free unit tests
 
 The heavy simulation stack (`mujoco`, `robosuite`, and `libero` from source) is an isolated optional extra so
 it can never break the core environment — see `pyproject.toml` `[project.optional-dependencies].libero` and
-`configs/env/requirements-gpu.txt`. GPU runs are driven from `scripts/` on the node, not locally.
+`configs/env/requirements-gpu.txt`. GPU runs are driven from `scripts/` on the registered CSB GPU PC;
+model-free commands remain runnable without CUDA.
 
 ---
 

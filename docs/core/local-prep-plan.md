@@ -1,4 +1,4 @@
-# Embodiment Evasion Tax — Pre-GPU Local Preparation Plan (M1 / 8 GB)
+# Embodiment Evasion Tax — Historical Pre-GPU Local Preparation Plan (M1 / 8 GB)
 
 > **For Claude:** REQUIRED SUB-SKILL — implement this plan task-by-task with the **`test-driven-development`**
 > skill (`/tdd`): one failing behaviour test at a time → minimal code → refactor. Use **`executing-plans`**
@@ -6,26 +6,29 @@
 >
 > Companion to the **execution playbook** (`execution-playbook.md`, operational source of truth) and the
 > **Phase-3 plan** (`phase3-implementation-plan.md`, the M1–M2 component contracts this plan realises).
-> This plan covers **only what is buildable on the M1 (8 GB) without the model/GPU**, plus a GPU runbook —
-> it does **not** add scope beyond M1–M2.
+> This historical plan covered **only what was buildable on the earlier M1 (8 GB) without the model/GPU**, plus
+> a GPU runbook; it did **not** add scope beyond M1–M2. Current GPU execution lives in
+> `execution-playbook.md` and `docs/gpu/CSB/plan.md`.
 >
 > ⚠️ AI-assisted scaffold for author review (CLAUDE.md §1/§5). Provisional items are marked.
 
 **Goal:** Build and unit-test every **model-free** M1–M2 engineering component locally (repro infra,
 metric-(A) scorer, calibrated detector, eval statistics, action-codec, baselines, configs/scripts/figures),
-so that when the GPU arrives the remaining work is "plug in OpenVLA + LIBERO and run", and so metric-(A)'s
+so that once the GPU became available the remaining work was "plug in OpenVLA + LIBERO and run", and so metric-(A)'s
 annotation schema is **frozen before any attack output exists** (a hard requirement we can only satisfy now).
 
 **Architecture:** A small `src/evasion_tax` Python package, feature-organised (Phase-3 §3). Everything that touches the
 7B model, GCG, or LIBERO *rollouts* is hidden behind thin interfaces with **synthetic fixtures** for tests;
-the real implementations of those interfaces are deferred to the GPU node. The scientific core — privileged-state
+the real implementations of those interfaces were deferred at plan time; current real OpenVLA/LIBERO/GCG work
+runs under the execution playbook and CSB GPU plan. The scientific core — privileged-state
 metric (A), FP-calibration, ROC/AUC + per-rollout TPR@FPR with CIs, detection latency, write-once logging — is
 pure NumPy/SciPy and fully testable on M1. One optional, **time-boxed** state-only LIBERO smoke test validates
 the metric-(A) ground-truth adapter against the real environment; it falls back to mocks if installation fights.
 
-**Tech Stack:** Python **3.11** local (code kept **3.10-compatible** for the GPU-node OpenVLA stack), **uv** for
-env management, `numpy` `scipy` `scikit-learn` `pyyaml` `pydantic`, `pytest` + `ruff`. LIBERO smoke test (opt):
-`mujoco` + `robosuite` + `libero` in an isolated extras group. No model weights, no CUDA, no GPU.
+**Tech Stack (historical local):** Python **3.11** local (code kept **3.10-compatible** for the GPU OpenVLA stack),
+**uv** for env management, `numpy` `scipy` `scikit-learn` `pyyaml` `pydantic`, `pytest` + `ruff`. LIBERO
+smoke test (opt): `mujoco` + `robosuite` + `libero` in an isolated extras group. This plan used no model
+weights, no CUDA, and no GPU; that is not a current machine limitation.
 
 ---
 
@@ -365,7 +368,8 @@ RoboGCG repos and marked `[VERIFY ON THE GPU NODE]`** — do not invent pins (in
 
 ## Boundary check (what this plan deliberately does NOT build — guards against scope creep)
 
-- ❌ OpenVLA inference / rollouts / GCG optimisation / benign-baseline + attack reproduction → **the GPU node**.
+- ❌ OpenVLA inference / rollouts / GCG optimisation / benign-baseline + attack reproduction were intentionally
+  outside this historical plan; current runs use the registered GPU PC per the playbook.
 - ❌ Metric (B)/(C) deployable detectors → **M4**. ❌ Trusted-reference rung construction → **M3**.
   ❌ Adaptive attack → **M5 (stretch)**. ❌ Final eval matrix sizing (D4) / compute budget (D7) → **M1 micro-bench**.
 - Everything above is interface + synthetic-data-tested only where the model would otherwise be required.

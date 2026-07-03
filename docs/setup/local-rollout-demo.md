@@ -204,9 +204,9 @@ detection (`detector/`) is unit-tested (`tests/`) and consumes exactly these `Ro
 
 ---
 
-## 5. The GPU-node experiment this previews (per [`gpu-runbook.md`](./gpu-runbook.md))
+## 5. The GPU-PC experiment this previews (per [`gpu-runbook.md`](./gpu-runbook.md))
 
-On Kelvin2 (`k2-gpu-a100`/`k2-gpu-h100`) the same record path runs for real:
+On the registered CSB `ecs3-0202` A5000 GPU PC the same record path runs for real (Kelvin2 remains backup):
 
 1. **Step 3 — benign baseline:** OpenVLA-7B rolls out LIBERO tasks → `rollout_benign`-shaped
    records, logged write-once (this is what `scripts/run_benign.py` will produce; it currently
