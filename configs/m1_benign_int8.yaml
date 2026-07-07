@@ -1,0 +1,42 @@
+# Derived from m1_viability.yaml — ONLY model.quantization changed (one variable).
+# Benign precision-sanity arm: measures unattacked LIBERO success at int8 so the
+# surrogate-GCG "quantization breaks the gradient" finding can be separated from a
+# generally-degraded forward policy. Run with scripts/run_benign.py (GPU-gated).
+# All other fields are byte-identical to m1_viability.yaml (assert one_variable_diff).
+
+seed: 42
+
+model:
+  name: openvla-7b
+  unnorm_key: libero_spatial  # finetuned checkpoint key (box-verified, NOT *_no_noops)
+  checkpoint: openvla/openvla-7b-finetuned-libero-spatial
+  quantization: int8
+
+env:
+  suite: libero_spatial
+  tasks: [task_0, task_1, task_2]
+  max_steps: 220  # match the registered bf16 baseline
+
+attack:
+  name: robogcg
+  targets_per_task: 20
+  persistence_steps: 5
+
+metric:
+  k: 5  # causal prefix-window length a_{t-k+1:t}
+
+detector:
+  fpr_targets: [0.01, 0.05]
+  primary_fpr: 0.05
+
+eval:
+  matrix: [clean_ceiling, coarse_goal]
+  splits:
+    calib:
+      tasks: [task_0]
+      scenes: [scene_0]
+      seeds: [42]
+    test:
+      tasks: [task_1, task_2]
+      scenes: [scene_1, scene_2]
+      seeds: [43, 44]
