@@ -27,6 +27,11 @@ from pathlib import Path
 
 import _bootstrap  # noqa: F401  (import side effect: puts src/ on sys.path)
 
+from evasion_tax.attack.openvla_loader import (  # noqa: E402
+    OpenVlaPrecision,
+    _check_precision,
+    load_openvla_with_attn_fallback,
+)
 from evasion_tax.config import cuda_available, gpu_required_message, load_config  # noqa: E402
 from evasion_tax.eval.rollout_runner import EpisodeResult, geometry_stats  # noqa: E402
 from evasion_tax.metric.consistency_a import ConsistencyMetricA, SchemaA  # noqa: E402
@@ -38,6 +43,18 @@ _EXIT_REQUIRES_GPU = 2
 # --------------------------------------------------------------------------- #
 # Pure glue (unit-tested with the GPU episode call mocked)                     #
 # --------------------------------------------------------------------------- #
+
+
+def resolve_precision(config, cli_override: str | None) -> OpenVlaPrecision:
+    """The OpenVLA load precision for a benign run: CLI > config > bf16 default.
+
+    Precedence: ``--precision`` (``cli_override``) beats ``config.model.quantization``
+    beats ``"bf16"`` (which reproduces the original hardcoded frozen-bf16 load exactly).
+    Validation is delegated to the shared loader so the allowed set stays single-sourced;
+    an unknown value raises ``ValueError``. Pure — no torch, off-GPU testable.
+    """
+    precision = cli_override or config.model.quantization or "bf16"
+    return _check_precision(precision)
 
 
 def assign_calibration(index: int, n: int, calib_frac: float) -> bool:
@@ -154,8 +171,13 @@ def _model_id(config) -> str:
     return config.model.checkpoint or config.model.name
 
 
-def _build_episode_fn(args, config, *, git_commit, run_id):  # pragma: no cover - GPU only
-    """Build the per-episode GPU runner (model + env) → an ``episode_fn``."""
+def _build_episode_fn(args, config, *, precision, git_commit, run_id):  # pragma: no cover - GPU
+    """Build the per-episode GPU runner (model + env) → an ``episode_fn``.
+
+    ``precision`` (the resolved ``bf16 | int8 | nf4_4bit``) selects the load path via
+    the shared :func:`load_openvla_with_attn_fallback`; ``bf16`` reproduces the original
+    frozen-bf16 load exactly.
+    """
     if args.openvla_root:
         sys.path.insert(0, args.openvla_root)
     from types import SimpleNamespace
@@ -168,10 +190,6 @@ def _build_episode_fn(args, config, *, git_commit, run_id):  # pragma: no cover 
         get_image_resize_size,
     )
     from libero.libero import benchmark  # type: ignore[import-not-found]
-    from transformers import (  # type: ignore[import-not-found]
-        AutoModelForVision2Seq,
-        AutoProcessor,
-    )
 
     from evasion_tax.eval.rollout_runner import run_episode
     from evasion_tax.metric.state_libero import LiberoStateAdapter
@@ -180,20 +198,15 @@ def _build_episode_fn(args, config, *, git_commit, run_id):  # pragma: no cover 
     cfg = SimpleNamespace(
         model_family="openvla",
         pretrained_checkpoint=model_id,
-        load_in_8bit=False,
-        load_in_4bit=False,
+        load_in_8bit=(precision == "int8"),
+        load_in_4bit=(precision == "nf4_4bit"),
         center_crop=True,
         unnorm_key=config.model.unnorm_key,
         task_suite_name=config.env.suite,
     )
-    processor = AutoProcessor.from_pretrained(model_id, trust_remote_code=True)
-    model = AutoModelForVision2Seq.from_pretrained(
-        model_id,
-        attn_implementation=args.attn_impl,
-        torch_dtype=torch.bfloat16,
-        low_cpu_mem_usage=True,
-        trust_remote_code=True,
-    ).to(torch.device(args.device))
+    model, processor, _ = load_openvla_with_attn_fallback(
+        torch, model_id, torch.device(args.device), args.attn_impl, precision=precision
+    )
     resize_size = get_image_resize_size(cfg)
 
     task_suite = benchmark.get_benchmark_dict()[config.env.suite]()
@@ -229,6 +242,7 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
     schema = _load_schema(args.schema_from)
 
     run_dir, first = prepare_run_dir(args.results_root, args.run_name)
+    precision = resolve_precision(config, args.precision)  # CLI > config > bf16; validated
     if first:  # write-once §8 header on the FIRST launch only; a resume reuses the dir
         (run_dir / "run.json").write_text(
             json.dumps(
@@ -238,7 +252,7 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
                     "config": {
                         "model": _model_id(config), "suite": config.env.suite,
                         "n_benign": args.n_benign, "calib_frac": args.calib_frac,
-                        "k": config.metric.k,
+                        "k": config.metric.k, "quantization": precision,
                     },
                     "schema_from": args.schema_from,
                 },
@@ -247,7 +261,9 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
             + "\n"
         )
 
-    episode_fn = _build_episode_fn(args, config, git_commit=git_commit, run_id=run_dir.name)
+    episode_fn = _build_episode_fn(
+        args, config, precision=precision, git_commit=git_commit, run_id=run_dir.name
+    )
     records, summary = run_benign_loop(
         run_dir / "episodes", n_benign=args.n_benign, calib_frac=args.calib_frac,
         seed=config.seed, schema=schema, k=config.metric.k, episode_fn=episode_fn,
@@ -284,6 +300,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--n-benign", type=int, default=300, help="benign episodes to roll")
     parser.add_argument("--calib-frac", type=float, default=0.25, help="calibration split fraction")
     parser.add_argument("--device", default="cuda:0")
+    parser.add_argument("--precision", default=None,
+                        choices=["bf16", "int8", "nf4_4bit"],
+                        help="override config.model.quantization (default: config value / bf16)")
     parser.add_argument("--attn-impl", default="flash_attention_2",
                         choices=["sdpa", "eager", "flash_attention_2"])
     parser.add_argument("--openvla-root", default=None, help="cloned openvla repo (eval helpers)")

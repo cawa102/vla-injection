@@ -11,6 +11,9 @@ import importlib
 import json
 import sys
 from pathlib import Path
+from types import SimpleNamespace
+
+import pytest
 
 from evasion_tax.eval.rollout_runner import EpisodeResult
 from evasion_tax.metric.consistency_a import SchemaA
@@ -117,3 +120,40 @@ def test_run_benign_loop_resume_skips_finished(tmp_path):
     assert len(records) == 5           # reloaded from disk
     geom = [r["geometry"] for r in records]
     assert all(json.dumps(g) for g in geom)  # geometry round-trips through JSON
+
+
+# --------------------------------------------------------------------------- #
+# resolve_precision — pure precision resolution (Task 1)                       #
+# --------------------------------------------------------------------------- #
+
+
+def _cfg(quantization):
+    """Minimal config stub carrying only what resolve_precision reads."""
+    return SimpleNamespace(model=SimpleNamespace(quantization=quantization))
+
+
+def test_resolve_precision_defaults_to_bf16_preserving_baseline():
+    mod = _load()
+    # quantization unset + no CLI override → bf16 (byte-for-byte the current load)
+    assert mod.resolve_precision(_cfg(None), None) == "bf16"
+
+
+def test_resolve_precision_reads_config_quantization():
+    mod = _load()
+    # no CLI override → the config's pinned precision is used
+    assert mod.resolve_precision(_cfg("int8"), None) == "int8"
+
+
+def test_resolve_precision_cli_override_beats_config():
+    mod = _load()
+    # --precision wins over config.model.quantization (one-variable override)
+    assert mod.resolve_precision(_cfg("bf16"), "nf4_4bit") == "nf4_4bit"
+
+
+def test_resolve_precision_rejects_unknown_value():
+    mod = _load()
+    # an unrecognised precision fails fast at the boundary, from config or CLI
+    with pytest.raises(ValueError):
+        mod.resolve_precision(_cfg("fp8"), None)
+    with pytest.raises(ValueError):
+        mod.resolve_precision(_cfg(None), "fp8")
