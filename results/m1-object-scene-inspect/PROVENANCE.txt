@@ -1,0 +1,3 @@
+git_commit=1eecd34b01a3568ea9530bf88d7766406563e5cf
+method=model-free MuJoCo reset (no OpenVLA); MUJOCO_GL=egl; scratchpad/inspect_object_scene.py
+host=ecs3-0202  card=NVIDIA RTX A5000

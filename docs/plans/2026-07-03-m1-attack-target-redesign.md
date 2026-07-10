@@ -46,7 +46,7 @@
 - [~] Task 6: Separation / validity guard (pre-registration check)  <!-- model-free checks + artifact done; GPU benign/adversary reach-floor deferred behind the Task-8 GPU gate -->
 - [x] Task 7: Driver wiring — two tiers, both success notions recorded  <!-- pure glue + schema + verdict guard fully TDD'd; GPU _run body [VERIFY on box] -->
 - [x] Task 8: Validation-pilot config (GPU-gated — ask before launch)  <!-- config written; ANCHOR arm LAUNCHED+COMPLETE 2026-07-03 (author-approved), results/m1-pilot-anchor: loss_history 20.68->4.62 (crosses old 6.63 plateau by step 18), exact single-frame reach False (censored @500), rollout_asr_reached True -> harness vindicated / target-difficulty confirmed; exact-reach gap -> candidate-filter (Task 2 note) prime suspect. SEMANTIC arm NOT launched (needs Task-6 GPU reach-floor guard BUILT + distractor sign-off). -->
-- [~] Task 3b (added): Draft Tier B config from LIBERO scene inspection — pending (needs box scene enumeration + author sign-off)
+- [~] Task 3b (added): Draft Tier B config from LIBERO scene inspection — **libero_object DRAFTED 2026-07-10** (`configs/semantic_targets/libero_object.json`: task_0 alphabet-soup → `salad_dressing_1`; model-free separation guard PASSES 0.362/0.284 m; artifact `results/m1-object-scene-inspect/`). This is the author's minimal single-scenario **attack-feasibility demo** (2026-07-10 directive; cap 1500 + early-stop; `configs/m1_object_pilot.yaml`) — supersedes the libero_spatial pilot as the near-term Tier-B target. libero_spatial config still DRAFT/pending. Reach-floor (GPU) + supervisor sign-off still pending for both.
 
 ---
 

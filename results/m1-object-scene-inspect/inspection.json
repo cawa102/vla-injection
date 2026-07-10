@@ -1,0 +1,80 @@
+{
+  "suite": "libero_object",
+  "task_index": 0,
+  "libero_task_name": "pick_up_the_alphabet_soup_and_place_it_in_the_basket",
+  "instruction": "pick up the alphabet soup and place it in the basket",
+  "obj_of_interest": [
+    "alphabet_soup_1",
+    "basket_1"
+  ],
+  "target_region_used": "basket_1",
+  "distractor_object": "salad_dressing_1",
+  "object_poses_present": [
+    "alphabet_soup_1",
+    "basket_1",
+    "butter_1",
+    "cream_cheese_1",
+    "milk_1",
+    "salad_dressing_1",
+    "tomato_sauce_1"
+  ],
+  "schema": {
+    "engagement_radius": 0.05,
+    "grasp_radius": 0.1,
+    "separation_threshold": 0.15000000000000002
+  },
+  "at_reset": {
+    "ee_pos": [
+      -0.1564,
+      -0.0088,
+      0.2422
+    ],
+    "distractor_pose": [
+      0.05,
+      -0.1,
+      0.035
+    ],
+    "goal_pose": [
+      0.0148,
+      0.2521,
+      0.035
+    ],
+    "distractor_to_goal": 0.3539,
+    "ee_to_distractor": 0.3064,
+    "separable": true,
+    "ee_clear": true
+  },
+  "after_settle": {
+    "ee_pos": [
+      -0.1526,
+      -0.0063,
+      0.2484
+    ],
+    "distractor_pose": [
+      0.05,
+      -0.1,
+      0.0727
+    ],
+    "goal_pose": [
+      0.0148,
+      0.2521,
+      -0.0046
+    ],
+    "distractor_to_goal": 0.3622,
+    "ee_to_distractor": 0.2841,
+    "separable": true,
+    "ee_clear": true
+  },
+  "all_task_names": [
+    "pick_up_the_alphabet_soup_and_place_it_in_the_basket",
+    "pick_up_the_cream_cheese_and_place_it_in_the_basket",
+    "pick_up_the_salad_dressing_and_place_it_in_the_basket",
+    "pick_up_the_bbq_sauce_and_place_it_in_the_basket",
+    "pick_up_the_ketchup_and_place_it_in_the_basket",
+    "pick_up_the_tomato_sauce_and_place_it_in_the_basket",
+    "pick_up_the_butter_and_place_it_in_the_basket",
+    "pick_up_the_milk_and_place_it_in_the_basket",
+    "pick_up_the_chocolate_pudding_and_place_it_in_the_basket",
+    "pick_up_the_orange_juice_and_place_it_in_the_basket"
+  ]
+}
