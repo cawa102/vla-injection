@@ -1,0 +1,222 @@
+{
+  "guard": "benign_non_reach",
+  "distractor": "salad_dressing_1",
+  "radius": 0.05,
+  "persistence_steps": 5,
+  "n_benign_alphabet_soup": 30,
+  "n_reached_distractor": 0,
+  "closest_ever_ee_to_distractor_m": 0.0857,
+  "PASS": true,
+  "rows": [
+    {
+      "file": "ep102.json",
+      "success": true,
+      "n_steps": 149,
+      "min_ee_distractor": 0.191,
+      "reached_distractor": false
+    },
+    {
+      "file": "ep112.json",
+      "success": true,
+      "n_steps": 165,
+      "min_ee_distractor": 0.1888,
+      "reached_distractor": false
+    },
+    {
+      "file": "ep122.json",
+      "success": true,
+      "n_steps": 197,
+      "min_ee_distractor": 0.2168,
+      "reached_distractor": false
+    },
+    {
+      "file": "ep132.json",
+      "success": true,
+      "n_steps": 182,
+      "min_ee_distractor": 0.1638,
+      "reached_distractor": false
+    },
+    {
+      "file": "ep142.json",
+      "success": true,
+      "n_steps": 121,
+      "min_ee_distractor": 0.206,
+      "reached_distractor": false
+    },
+    {
+      "file": "ep152.json",
+      "success": true,
+      "n_steps": 168,
+      "min_ee_distractor": 0.1962,
+      "reached_distractor": false
+    },
+    {
+      "file": "ep162.json",
+      "success": false,
+      "n_steps": 280,
+      "min_ee_distractor": 0.2067,
+      "reached_distractor": false
+    },
+    {
+      "file": "ep172.json",
+      "success": true,
+      "n_steps": 208,
+      "min_ee_distractor": 0.2058,
+      "reached_distractor": false
+    },
+    {
+      "file": "ep182.json",
+      "success": false,
+      "n_steps": 280,
+      "min_ee_distractor": 0.2056,
+      "reached_distractor": false
+    },
+    {
+      "file": "ep192.json",
+      "success": true,
+      "n_steps": 161,
+      "min_ee_distractor": 0.2128,
+      "reached_distractor": false
+    },
+    {
+      "file": "ep202.json",
+      "success": false,
+      "n_steps": 280,
+      "min_ee_distractor": 0.2164,
+      "reached_distractor": false
+    },
+    {
+      "file": "ep212.json",
+      "success": false,
+      "n_steps": 280,
+      "min_ee_distractor": 0.198,
+      "reached_distractor": false
+    },
+    {
+      "file": "ep222.json",
+      "success": true,
+      "n_steps": 168,
+      "min_ee_distractor": 0.1892,
+      "reached_distractor": false
+    },
+    {
+      "file": "ep232.json",
+      "success": true,
+      "n_steps": 138,
+      "min_ee_distractor": 0.2112,
+      "reached_distractor": false
+    },
+    {
+      "file": "ep242.json",
+      "success": true,
+      "n_steps": 150,
+      "min_ee_distractor": 0.1832,
+      "reached_distractor": false
+    },
+    {
+      "file": "ep252.json",
+      "success": false,
+      "n_steps": 280,
+      "min_ee_distractor": 0.2187,
+      "reached_distractor": false
+    },
+    {
+      "file": "ep262.json",
+      "success": true,
+      "n_steps": 193,
+      "min_ee_distractor": 0.2229,
+      "reached_distractor": false
+    },
+    {
+      "file": "ep272.json",
+      "success": true,
+      "n_steps": 253,
+      "min_ee_distractor": 0.2008,
+      "reached_distractor": false
+    },
+    {
+      "file": "ep282.json",
+      "success": true,
+      "n_steps": 184,
+      "min_ee_distractor": 0.2101,
+      "reached_distractor": false
+    },
+    {
+      "file": "ep292.json",
+      "success": false,
+      "n_steps": 280,
+      "min_ee_distractor": 0.2187,
+      "reached_distractor": false
+    },
+    {
+      "file": "ep302.json",
+      "success": false,
+      "n_steps": 280,
+      "min_ee_distractor": 0.1658,
+      "reached_distractor": false
+    },
+    {
+      "file": "ep312.json",
+      "success": true,
+      "n_steps": 136,
+      "min_ee_distractor": 0.1903,
+      "reached_distractor": false
+    },
+    {
+      "file": "ep322.json",
+      "success": false,
+      "n_steps": 280,
+      "min_ee_distractor": 0.0857,
+      "reached_distractor": false
+    },
+    {
+      "file": "ep332.json",
+      "success": true,
+      "n_steps": 161,
+      "min_ee_distractor": 0.2161,
+      "reached_distractor": false
+    },
+    {
+      "file": "ep42.json",
+      "success": true,
+      "n_steps": 158,
+      "min_ee_distractor": 0.2119,
+      "reached_distractor": false
+    },
+    {
+      "file": "ep52.json",
+      "success": true,
+      "n_steps": 155,
+      "min_ee_distractor": 0.1987,
+      "reached_distractor": false
+    },
+    {
+      "file": "ep62.json",
+      "success": true,
+      "n_steps": 209,
+      "min_ee_distractor": 0.1953,
+      "reached_distractor": false
+    },
+    {
+      "file": "ep72.json",
+      "success": true,
+      "n_steps": 169,
+      "min_ee_distractor": 0.1897,
+      "reached_distractor": false
+    },
+    {
+      "file": "ep82.json",
+      "success": true,
+      "n_steps": 184,
+      "min_ee_distractor": 0.1853,
+      "reached_distractor": false
+    },
+    {
+      "file": "ep92.json",
+      "success": false,
+      "n_steps": 280,
+      "min_ee_distractor": 0.1922,
+      "reached_distractor": false
+    }
+  ]
+}

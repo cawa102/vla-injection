@@ -1,0 +1,9 @@
+{
+  "engagement_radius": 0.05,
+  "grasp_radius": 0.1,
+  "combination": "max",
+  "base_engagement_radius": 0.05,
+  "base_grasp_radius": 0.1,
+  "n_benign_geometry": 75,
+  "geometry_source": "results/m1-object-benign/geometry_stats.json"
+}

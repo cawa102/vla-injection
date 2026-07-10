@@ -65,7 +65,13 @@ def build_semantic_target(
     prompt = _PROMPT_PREFIX.format(instruction=adv_instruction) + _PROMPT_TAIL
     inputs = processor(prompt, _to_pil(image))
     if hasattr(inputs, "to"):
-        inputs = inputs.to(device)
+        # OpenVLA's vision backbone runs in the model dtype (bf16); the processor emits
+        # float32 pixel_values, so cast the whole batch to model.dtype exactly as OpenVLA's
+        # own get_vla_action does (`.to(DEVICE, dtype=bf16)`). HF BatchFeature.to casts only
+        # the float tensors, leaving input_ids/attention_mask integer. Without this,
+        # model.generate raises "Input type (float) and bias type (BFloat16) should be the
+        # same" at the vision conv (box-verified 2026-07-10); gcg_openvla casts identically.
+        inputs = inputs.to(device, dtype=model.dtype)
     generated = model.generate(
         **inputs, max_new_tokens=_N_ACTION_TOKENS, do_sample=False
     )

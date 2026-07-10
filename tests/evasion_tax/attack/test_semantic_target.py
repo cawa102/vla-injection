@@ -44,12 +44,42 @@ class _FakeProcessor:
         }
 
 
+class _FakeInputs(dict):
+    """Dict-like batch that records ``.to(device, dtype=...)`` (HF BatchFeature stand-in).
+
+    A ``dict`` subclass so ``model.generate(**inputs, ...)`` still unpacks it, while the
+    ``.to`` method lets a test assert the dtype cast (the box-2026-07-10 regression).
+    """
+
+    def __init__(self, data) -> None:
+        super().__init__(data)
+        self.to_calls: list[tuple] = []
+
+    def to(self, device, dtype=None):
+        self.to_calls.append((device, dtype))
+        return self
+
+
+class _FakeProcessorWithTo(_FakeProcessor):
+    """Like ``_FakeProcessor`` but returns a ``_FakeInputs`` exposing ``.to``."""
+
+    def __init__(self, prompt_len: int) -> None:
+        super().__init__(prompt_len)
+        self.last_inputs: _FakeInputs | None = None
+
+    def __call__(self, prompt, image):
+        base = super().__call__(prompt, image)
+        self.last_inputs = _FakeInputs(base)
+        return self.last_inputs
+
+
 class _FakeModel:
     """Greedy generation returns [prompt ⊕ the 7 action ids]; predict_action decodes them."""
 
     def __init__(self, action_ids, codec) -> None:
         self._action_ids = np.asarray(action_ids, dtype=np.int64)
         self._codec = codec
+        self.dtype = "model-dtype-sentinel"  # stands in for torch.bfloat16
 
     def generate(self, *, input_ids, max_new_tokens, do_sample, **_kw):
         assert do_sample is False and max_new_tokens == 7
@@ -109,6 +139,19 @@ def test_captured_ids_decode_to_the_policy_greedy_action():
     predicted = model.predict_action(_IMAGE, "pick up the blue cup", do_sample=False)
     one_bin = 2.0 / (codec.n_bins - 1)
     assert np.allclose(codec.decode(tgt.target_action_ids), predicted, atol=one_bin)
+
+
+def test_inputs_cast_to_model_dtype_for_bf16_vision_backbone():
+    # Regression (box 2026-07-10): OpenVLA's vision backbone is bf16 but the processor
+    # emits float32 pixel_values, so build_semantic_target MUST cast the batch to
+    # model.dtype (matches openvla_utils.get_vla_action `.to(DEVICE, dtype=bf16)`), else
+    # model.generate raises "Input type (float) and bias type (BFloat16) should be the same".
+    codec = _codec()
+    proc = _FakeProcessorWithTo(5)
+    _build(_FakeModel(_ACTION_IDS, codec), proc, codec)
+    assert proc.last_inputs is not None and proc.last_inputs.to_calls, "inputs.to(...) never called"
+    _device, dtype = proc.last_inputs.to_calls[-1]
+    assert dtype == "model-dtype-sentinel", f"inputs not cast to model.dtype (got {dtype!r})"
 
 
 def test_ids_outside_action_range_raise():

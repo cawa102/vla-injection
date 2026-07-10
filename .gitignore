@@ -52,3 +52,6 @@ venv/
 #     caches, Obsidian vault, graph.json/html). Re-buildable with /graphify; not a
 #     dissertation deliverable, so it is not tracked (untracked 2026-06-10). ---
 graphify-out/
+
+# 80MB of per-step raw rollout JSONs — write-once on box disk, too bulky for git
+results/m1-object-benign/episodes/

@@ -1,0 +1,808 @@
+[
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.17751498378602648,
+    "min_distractor": 0.021526636777483406,
+    "grasp_events": []
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.1884190932486941,
+    "min_distractor": 0.00650384286379047,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.37403807332805356,
+        "min_distractor": 0.02701493108424629
+      }
+    ]
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.18433415380047297,
+    "min_distractor": 0.04234230161621507,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.40360319334851885,
+        "min_distractor": 0.042850962772290495
+      }
+    ]
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.20744136857416198,
+    "min_distractor": 0.0383227354389624,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.3741601188969707,
+        "min_distractor": 0.0632582388285323
+      },
+      {
+        "ee_anchor": 0.3795456300968876,
+        "min_distractor": 0.0383227354389624
+      }
+    ]
+  },
+  {
+    "success": false,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.3157497125070949,
+    "min_distractor": 0.03165005538824378,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.5521250548085183,
+        "min_distractor": 0.05084461261515221
+      },
+      {
+        "ee_anchor": 0.37477483632656644,
+        "min_distractor": 0.03314573429372292
+      }
+    ]
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.2031073087895376,
+    "min_distractor": 0.026867359004409258,
+    "grasp_events": []
+  },
+  {
+    "success": false,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.16647606424198158,
+    "min_distractor": 0.01154661305598499,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.5369362910855805,
+        "min_distractor": 0.01854299626299238
+      },
+      {
+        "ee_anchor": 0.5551547574633684,
+        "min_distractor": 0.011575550830291454
+      }
+    ]
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.19547348623895447,
+    "min_distractor": 0.04151773753196228,
+    "grasp_events": []
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.18913050323305383,
+    "min_distractor": 0.009547633481982044,
+    "grasp_events": []
+  },
+  {
+    "success": false,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.34076504392673895,
+    "min_distractor": 0.03941634144651838,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.3884840946328397,
+        "min_distractor": 0.07368828179018155
+      }
+    ]
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.1753468457811288,
+    "min_distractor": 0.015755846540150064,
+    "grasp_events": []
+  },
+  {
+    "success": false,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.36486329667303563,
+    "min_distractor": 0.0038835591765755506,
+    "grasp_events": []
+  },
+  {
+    "success": false,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.21519791241828926,
+    "min_distractor": 0.04632118653249922,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.3865549079465631,
+        "min_distractor": 0.04959799014290675
+      }
+    ]
+  },
+  {
+    "success": false,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.3408121000777071,
+    "min_distractor": 0.030464286409284346,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.3558327889613341,
+        "min_distractor": 0.0335751316528982
+      },
+      {
+        "ee_anchor": 0.34989060878498685,
+        "min_distractor": 0.06231265976653806
+      },
+      {
+        "ee_anchor": 0.35130540847499947,
+        "min_distractor": 0.11451443239710382
+      }
+    ]
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.21725006024146243,
+    "min_distractor": 0.04816564468778638,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.5441498328129941,
+        "min_distractor": 0.05229173653479698
+      }
+    ]
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.22063367188696711,
+    "min_distractor": 0.034366069194588005,
+    "grasp_events": []
+  },
+  {
+    "success": false,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.17412774359307723,
+    "min_distractor": 0.21087466744340858,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.3616538160272306,
+        "min_distractor": 0.2393369717853727
+      }
+    ]
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.19896328934700244,
+    "min_distractor": 0.03785766766829679,
+    "grasp_events": []
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.18143065461728844,
+    "min_distractor": 0.006032681878847938,
+    "grasp_events": []
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.17221594132197737,
+    "min_distractor": 0.029719361066446084,
+    "grasp_events": []
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.1821913942951537,
+    "min_distractor": 0.011936899654841826,
+    "grasp_events": []
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.15343842041863498,
+    "min_distractor": 0.0034241321068273155,
+    "grasp_events": []
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.20589212207949714,
+    "min_distractor": 0.04354845772585779,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.39086589781566,
+        "min_distractor": 0.04880690349273089
+      }
+    ]
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.18476699406716837,
+    "min_distractor": 0.02751231442508672,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.35490542337925945,
+        "min_distractor": 0.029972734431465444
+      }
+    ]
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.22641170415346168,
+    "min_distractor": 0.05100799965700908,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.5518881239782598,
+        "min_distractor": 0.05531307387484168
+      }
+    ]
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.18788723209251046,
+    "min_distractor": 0.024485132215763778,
+    "grasp_events": []
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.18302252511069475,
+    "min_distractor": 0.021403903285235115,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.5481210528280881,
+        "min_distractor": 0.02464599349953433
+      }
+    ]
+  },
+  {
+    "success": false,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.16943303496465875,
+    "min_distractor": 0.024341699101164172,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.4696265085541634,
+        "min_distractor": 0.05894039951713642
+      }
+    ]
+  },
+  {
+    "success": false,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.14547647468745548,
+    "min_distractor": 0.22178477177237022,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.37083376331802503,
+        "min_distractor": 0.22348685238091714
+      }
+    ]
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.20111339480441254,
+    "min_distractor": 0.023161722291191945,
+    "grasp_events": []
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.17757040641904354,
+    "min_distractor": 0.028538181503021495,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.5180579020197427,
+        "min_distractor": 0.08672111908735586
+      }
+    ]
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.1767564434533936,
+    "min_distractor": 0.004189547712854586,
+    "grasp_events": []
+  },
+  {
+    "success": false,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.18972472967068615,
+    "min_distractor": 0.05070631728944137,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.38340663141947723,
+        "min_distractor": 0.06266662833980147
+      }
+    ]
+  },
+  {
+    "success": false,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.388430334638982,
+    "min_distractor": 0.06909037282222297,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.390565844825056,
+        "min_distractor": 0.09380518323007628
+      },
+      {
+        "ee_anchor": 0.41326218310633067,
+        "min_distractor": 0.12151141519174687
+      },
+      {
+        "ee_anchor": 0.40716185473318983,
+        "min_distractor": 0.0735605732693452
+      }
+    ]
+  },
+  {
+    "success": false,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.3907690255111708,
+    "min_distractor": 0.038114431554610584,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.5039300062955675,
+        "min_distractor": 0.043911420731879695
+      },
+      {
+        "ee_anchor": 0.543809262965973,
+        "min_distractor": 0.09016195853835438
+      }
+    ]
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.20385912351314173,
+    "min_distractor": 0.021379621209454556,
+    "grasp_events": []
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.15862241665614804,
+    "min_distractor": 0.01987991650473735,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.496577108191876,
+        "min_distractor": 0.02904289591543645
+      },
+      {
+        "ee_anchor": 0.5068023628436876,
+        "min_distractor": 0.020343673587806203
+      }
+    ]
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.18542642880235294,
+    "min_distractor": 0.03679942705060189,
+    "grasp_events": []
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.18269469683613002,
+    "min_distractor": 0.02501928252642427,
+    "grasp_events": []
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.16582548145142306,
+    "min_distractor": 0.02304763366226229,
+    "grasp_events": []
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.18365515222579334,
+    "min_distractor": 0.014276592389030009,
+    "grasp_events": []
+  },
+  {
+    "success": false,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.18341717410045252,
+    "min_distractor": 0.04336358534040811,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.37477509153250244,
+        "min_distractor": 0.0450667416322667
+      }
+    ]
+  },
+  {
+    "success": false,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.36912588497162996,
+    "min_distractor": 0.06348431955546466,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.3806662984921641,
+        "min_distractor": 0.0646087157326886
+      },
+      {
+        "ee_anchor": 0.3941788953186172,
+        "min_distractor": 0.06967022383561058
+      },
+      {
+        "ee_anchor": 0.40254048740473597,
+        "min_distractor": 0.08886614859849945
+      }
+    ]
+  },
+  {
+    "success": false,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.3410609314560715,
+    "min_distractor": 0.04451460435373794,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.34664583924222564,
+        "min_distractor": 0.09322524473729007
+      },
+      {
+        "ee_anchor": 0.3552336545508135,
+        "min_distractor": 0.13116304187622757
+      },
+      {
+        "ee_anchor": 0.3733493021410204,
+        "min_distractor": 0.09593180418838083
+      }
+    ]
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.20435772962332152,
+    "min_distractor": 0.04517578456409887,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.5213171108875955,
+        "min_distractor": 0.04517578456409887
+      }
+    ]
+  },
+  {
+    "success": false,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.3708535219983469,
+    "min_distractor": 0.036789834646192884,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.38153159621529026,
+        "min_distractor": 0.08010295336375944
+      },
+      {
+        "ee_anchor": 0.37433054889461503,
+        "min_distractor": 0.05056358328753301
+      },
+      {
+        "ee_anchor": 0.37563249152770073,
+        "min_distractor": 0.054816130962586515
+      }
+    ]
+  },
+  {
+    "success": false,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.37966224455622855,
+    "min_distractor": 0.02589335237160062,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.5021497107285815,
+        "min_distractor": 0.04799216623594462
+      },
+      {
+        "ee_anchor": 0.5478156261822014,
+        "min_distractor": 0.11937496208769727
+      },
+      {
+        "ee_anchor": 0.45343430184720934,
+        "min_distractor": 0.026112832983276203
+      }
+    ]
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.19066451161391595,
+    "min_distractor": 0.03527661631282016,
+    "grasp_events": []
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.17173893725103961,
+    "min_distractor": 0.0032476648904902895,
+    "grasp_events": []
+  },
+  {
+    "success": false,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.1767861468727374,
+    "min_distractor": 0.023413612409704042,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.37971863861721467,
+        "min_distractor": 0.06703340928909295
+      }
+    ]
+  },
+  {
+    "success": false,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.40362808145242113,
+    "min_distractor": 0.02732548887465624,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.5476568829276658,
+        "min_distractor": 0.03413744669204288
+      },
+      {
+        "ee_anchor": 0.5753395510365947,
+        "min_distractor": 0.08910919547063822
+      }
+    ]
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.20174227056652405,
+    "min_distractor": 0.013467936112960302,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.21810754047661804,
+        "min_distractor": 0.06990918454949666
+      }
+    ]
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.18859379532382609,
+    "min_distractor": 0.04249267949967252,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.39430624350824406,
+        "min_distractor": 0.04266337297141606
+      }
+    ]
+  },
+  {
+    "success": false,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.40219958698044844,
+    "min_distractor": 0.19652200456317345,
+    "grasp_events": []
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.2056251462625604,
+    "min_distractor": 0.046339508702478466,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.5461713945689473,
+        "min_distractor": 0.04803399834309241
+      }
+    ]
+  },
+  {
+    "success": false,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.21310033232740624,
+    "min_distractor": 0.011044036391387494,
+    "grasp_events": []
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.15375829916411823,
+    "min_distractor": 0.014340216622878392,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.5465744724904429,
+        "min_distractor": 0.01649364821247561
+      },
+      {
+        "ee_anchor": 0.5479825644717495,
+        "min_distractor": 0.01559975703876666
+      }
+    ]
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.17668787700148889,
+    "min_distractor": 0.03033130151954776,
+    "grasp_events": []
+  },
+  {
+    "success": false,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.16875890947997402,
+    "min_distractor": 0.22188107637510687,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.3723677569429923,
+        "min_distractor": 0.23804376284344686
+      }
+    ]
+  },
+  {
+    "success": false,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.4107929642600382,
+    "min_distractor": 0.1954615518648008,
+    "grasp_events": []
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.16765432821119924,
+    "min_distractor": 0.025000334829954583,
+    "grasp_events": []
+  },
+  {
+    "success": false,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.21226448797561148,
+    "min_distractor": 0.014196680712666884,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.3602969633346288,
+        "min_distractor": 0.017980855360428424
+      }
+    ]
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.20785832937424784,
+    "min_distractor": 0.04344513888578724,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.3937641989807822,
+        "min_distractor": 0.04373115546318062
+      }
+    ]
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.20904109530383727,
+    "min_distractor": 0.04853521019094944,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.40329052281569333,
+        "min_distractor": 0.053591926819486144
+      }
+    ]
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.21172759273547026,
+    "min_distractor": 0.04275669053608281,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.5125364321007492,
+        "min_distractor": 0.043338757751120664
+      }
+    ]
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.2063866792441332,
+    "min_distractor": 0.026378525912736955,
+    "grasp_events": []
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.1934717531782332,
+    "min_distractor": 0.019643834765718966,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.5356088730106625,
+        "min_distractor": 0.020364453657586122
+      }
+    ]
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.17829063389608898,
+    "min_distractor": 0.028494100072609597,
+    "grasp_events": []
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.17579189602778228,
+    "min_distractor": 0.01789642108337814,
+    "grasp_events": []
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.17662896146587967,
+    "min_distractor": 0.029119213296813044,
+    "grasp_events": []
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.16288045717239794,
+    "min_distractor": 0.024520616184859585,
+    "grasp_events": []
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.1817797633682965,
+    "min_distractor": 0.013108608812080487,
+    "grasp_events": []
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.1970454222435962,
+    "min_distractor": 0.04289792429974644,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.3902710671112509,
+        "min_distractor": 0.04843102649888127
+      }
+    ]
+  },
+  {
+    "success": false,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.4073149150716702,
+    "min_distractor": 0.19706368765212431,
+    "grasp_events": []
+  },
+  {
+    "success": true,
+    "anchor_resolvable": true,
+    "min_ee_anchor": 0.20726293294719125,
+    "min_distractor": 0.04565344167656967,
+    "grasp_events": [
+      {
+        "ee_anchor": 0.533433302820302,
+        "min_distractor": 0.04631477124576227
+      }
+    ]
+  }
+]

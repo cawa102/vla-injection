@@ -41,7 +41,8 @@
 - [x] Task 1: Anchor target family (Tier A, RoboGCG-clean)
 - [x] Task 2: Relax `reached`/success to a goal-dims subset (exclude gripper)
 - [~] Task 3: Adversary-instruction registry (pre-registered, per scene)  <!-- module+resolver done; real config JSON pending scene inspection + author sign-off -->
-- [x] Task 4: Semantic target builder (GPU — policy-derived decode)
+- [x] Task 4: Semantic target builder (GPU — policy-derived decode)  <!-- box-fix 2026-07-10: build_semantic_target passed float32 pixel_values to the bf16 vision backbone -> RuntimeError at model.generate (the [VERIFY on box] path, invisible to fake-model tests). Fixed: inputs.to(device, dtype=model.dtype) (matches openvla_utils.get_vla_action + gcg_openvla) + regression test; box-verified. -->
+- [~] Task 8b (added): LIBERO_Object semantic attack execution — benign N=300 + re-pin + BOTH reach-floor guards DONE & PASS (results/m1-object-benign/); semantic attack relaunch pending (dtype bug fixed) + box now shared (user 40456786 on gpus 0,1).
 - [x] Task 5: World-frame ASR scorer (Tier B, detector's 3-D frame)
 - [~] Task 6: Separation / validity guard (pre-registration check)  <!-- model-free checks + artifact done; GPU benign/adversary reach-floor deferred behind the Task-8 GPU gate -->
 - [x] Task 7: Driver wiring — two tiers, both success notions recorded  <!-- pure glue + schema + verdict guard fully TDD'd; GPU _run body [VERIFY on box] -->

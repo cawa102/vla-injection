@@ -1,0 +1,12 @@
+{
+  "guard": "adversary_reach_floor",
+  "adv_instruction": "pick up the salad dressing and place it in the basket",
+  "distractor": "salad_dressing_1",
+  "radius": 0.05,
+  "persistence_steps": 5,
+  "n_steps": 280,
+  "reached_distractor": true,
+  "min_ee_distractor_m": 0.042,
+  "benign_success_flag_ignored": false,
+  "PASS": true
+}
