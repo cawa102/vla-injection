@@ -31,7 +31,7 @@
 
 ## Task list
 
-- [ ] Task 1: Capture the adversary demonstration trajectory (GPU) → quarantined artifact
+- [x] Task 1: Capture the adversary demonstration trajectory (GPU) → quarantined artifact
 - [ ] Task 2: Multi-frame GCG target (extend `OpenVlaGcgTarget`) — mean-over-frames loss, frame-chunked candidate eval, multi-frame `reached`
 - [ ] Task 3: Multi-frame target builder + `run_attack` wiring (new tier)
 - [ ] Task 4: Validation-pilot config (GPU-gated — ask before launch) + one-variable comparison
