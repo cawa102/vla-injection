@@ -396,6 +396,63 @@ class OpenVlaGcgTarget:
         model_dtype = next(model.parameters()).dtype
         self._pixel_values = proc["pixel_values"].to(device=device, dtype=model_dtype)
 
+        # Multi-frame target = a list of (pixel_values, target_action_ids); the single-frame
+        # construction is the length-1 case (Task 2). Frame 0's pixel/target stay on self for
+        # the single-frame reference methods (_loss_single, predict_target_action_ids, the
+        # D6-9 faithfulness gate). from_frames() appends the remaining frames.
+        self._reach_fraction = 1.0
+        self._frames: list[tuple[Any, np.ndarray]] = [
+            (self._pixel_values, self._target_action_ids)
+        ]
+
+    @classmethod
+    def from_frames(
+        cls,
+        model: Any,
+        processor: Any,
+        *,
+        frames: Sequence[Any],
+        instruction: str,
+        suffix_len: int,
+        device: Any,
+        eval_batch: int | None = None,
+        match_positions: Sequence[int] | None = None,
+        reach_fraction: float = 1.0,
+    ) -> OpenVlaGcgTarget:
+        """Build a multi-frame target teacher-forcing ONE suffix against K frames (Task 2).
+
+        Each ``FrameTarget`` supplies an image (→ its own ``pixel_values``) and the 7
+        target action-token ids for that frame; the prompt layout (prefix ⊕ suffix ⊕ tail)
+        is shared — the same benign ``instruction`` — so only ``pixel_values`` and the
+        target span differ per frame. The GCG loss becomes the **mean** per-frame CE and
+        :meth:`reached` the **fraction** of frames whose target span is greedily decoded
+        (``reach_fraction``). ``instruction`` (not raw ``prefix_ids``) is taken so the
+        processor can build each frame's ``pixel_values`` and the token layout reuses the
+        verified single-frame :meth:`__init__` (a length-1 list is exactly that path).
+        """
+        frames = list(frames)
+        if not frames:
+            raise ValueError("frames must be non-empty")
+        target = cls(
+            model, processor, image=frames[0].image, instruction=instruction,
+            suffix_len=suffix_len, target_action_ids=frames[0].target_action_ids,
+            device=device, eval_batch=eval_batch, match_positions=match_positions,
+        )
+        model_dtype = next(model.parameters()).dtype
+        prompt = _PROMPT_PREFIX.format(instruction=instruction) + _PROMPT_TAIL
+        extra = [
+            (
+                processor(prompt, _to_pil(f.image))["pixel_values"].to(
+                    device=device, dtype=model_dtype
+                ),
+                np.asarray(f.target_action_ids, dtype=np.int64),
+            )
+            for f in frames[1:]
+        ]
+        target._frames = [target._frames[0], *extra]
+        target._reach_fraction = float(reach_fraction)
+        return target
+
     # -- pure-ish helpers (still off-GPU-safe: tokenizer is CPU) --------------- #
 
     def _encode(self, text: str, *, bos: bool) -> np.ndarray:
@@ -421,11 +478,11 @@ class OpenVlaGcgTarget:
 
     # -- GPU body (torch imported inside; never runs off-GPU) ------------------ #
 
-    def _full_ids(self, suffix_ids: np.ndarray) -> np.ndarray:
-        """Concatenate prefix ⊕ suffix ⊕ tail ⊕ target into one text id row."""
+    def _full_ids(self, suffix_ids: np.ndarray, target_ids: np.ndarray) -> np.ndarray:
+        """Concatenate prefix ⊕ suffix ⊕ tail ⊕ target into one text id row (per frame)."""
         return np.concatenate(
             [self._prefix_ids, np.asarray(suffix_ids, dtype=np.int64),
-             self._tail_ids, self._target_action_ids]
+             self._tail_ids, np.asarray(target_ids, dtype=np.int64)]
         )
 
     def _labels(self, full_ids: np.ndarray) -> np.ndarray:
@@ -435,14 +492,25 @@ class OpenVlaGcgTarget:
         return labels
 
     def token_gradient(self, suffix_ids: np.ndarray) -> np.ndarray:
-        """``[L, vocab]`` one-hot token gradient at ``suffix_ids`` (GPU).
+        """``[L, vocab]`` one-hot token gradient at ``suffix_ids``, **mean over frames** (GPU).
 
-        Runs the 5.5 hooked backward, then projects the suffix-span input-embedding
-        gradient through the token-embedding matrix (:func:`project_onehot_grad`).
+        The GCG objective is the mean per-frame CE, so its gradient is the mean of the
+        per-frame token gradients — the direction GCG's top-k selection then follows.
+        For a single frame this is the verified 5.5 hooked backward unchanged.
         """
+        grads = [
+            self._frame_token_gradient(suffix_ids, pixel_values, target_ids)
+            for pixel_values, target_ids in self._frames
+        ]
+        return np.mean(np.stack(grads, axis=0), axis=0)
+
+    def _frame_token_gradient(
+        self, suffix_ids: np.ndarray, pixel_values: Any, target_ids: np.ndarray
+    ) -> np.ndarray:
+        """One frame's ``[L, vocab]`` token gradient (the 5.5 hooked backward + projection)."""
         import torch  # type: ignore[import-not-found]
 
-        full_ids = self._full_ids(suffix_ids)
+        full_ids = self._full_ids(suffix_ids, target_ids)
         input_ids = torch.tensor(full_ids[None, :], device=self._device, dtype=torch.long)
         attn = torch.ones_like(input_ids)
         labels = torch.tensor(
@@ -462,7 +530,7 @@ class OpenVlaGcgTarget:
             out = self._model(
                 input_ids=input_ids,
                 attention_mask=attn,
-                pixel_values=self._pixel_values,
+                pixel_values=pixel_values,
                 labels=labels,
             )
             out.loss.backward()
@@ -477,10 +545,10 @@ class OpenVlaGcgTarget:
         return token_grad
 
     def _loss_single(self, suffix_ids: np.ndarray) -> float:
-        """Reference per-candidate loss via OpenVLA's built-in CE (the 5.5 scalar)."""
+        """Reference per-candidate loss via OpenVLA's built-in CE (the 5.5 scalar; frame 0)."""
         import torch  # type: ignore[import-not-found]
 
-        full_ids = self._full_ids(suffix_ids)
+        full_ids = self._full_ids(suffix_ids, self._target_action_ids)
         input_ids = torch.tensor(full_ids[None, :], device=self._device, dtype=torch.long)
         attn = torch.ones_like(input_ids)
         labels = torch.tensor(
@@ -495,7 +563,7 @@ class OpenVlaGcgTarget:
             )
         return float(out.loss.detach().float())
 
-    def _target_span_ce_torch(self, logits: Any) -> Any:
+    def _target_span_ce_torch(self, logits: Any, target_ids: np.ndarray) -> Any:
         """Torch per-row mean CE over the trailing target span (equiv. of :func:`per_sequence_ce`).
 
         OpenVLA fuses image patches into the sequence, so ``out.logits`` (length ``S``)
@@ -505,12 +573,13 @@ class OpenVlaGcgTarget:
         *predict* the target tokens (``S-n_target-1 .. S-2``, predict-t-from-t-1) — exactly the
         non-ignored set OpenVLA's own ``out.loss`` uses, without needing the vision-token count.
         The batch-1 equality to :meth:`_loss_single` is the on-box ``batched_matches_single``
-        gate (D6-3/DB-4).
+        gate (D6-3/DB-4). ``target_ids`` is the current frame's target span (Task 2).
         """
         import torch  # type: ignore[import-not-found]
 
-        n_target = int(self._target_action_ids.shape[0])
-        target = torch.tensor(self._target_action_ids, device=self._device, dtype=torch.long)
+        target_ids = np.asarray(target_ids)
+        n_target = int(target_ids.shape[0])
+        target = torch.tensor(target_ids, device=self._device, dtype=torch.long)
         pred_logits = logits[:, -n_target - 1 : -1, :].float()  # [B, n_target, V]
         log_probs = torch.log_softmax(pred_logits, dim=-1)
         idx = target.view(1, -1, 1).expand(log_probs.shape[0], -1, 1)  # [B, n_target, 1]
@@ -518,14 +587,27 @@ class OpenVlaGcgTarget:
         return (-true_lp).mean(dim=-1)  # [B] mean CE over the target span
 
     def reached(self, suffix_ids: np.ndarray) -> bool:
-        """Whether the target action span is greedily decoded — the ``run_gcg`` ``reached_fn``.
+        """Whether ``>= reach_fraction`` of the frames greedily decode their target span.
 
-        The DE-1 success predicate on the GPU: one ``torch.no_grad()`` forward at the
-        current suffix, then the pure
-        :func:`~evasion_tax.attack.early_stop.target_span_argmax_matches` (the *same*
-        predicate the off-GPU tests pin). Callers pass ``reached_fn=target.reached`` to
-        ``run_gcg`` so the search stops once the argmax decode equals the target, checked
-        every step (DE-3) — one extra B=1 forward per step, the intended ~6 % overhead.
+        The DE-1 success predicate on the GPU, generalised to K frames (Task 2): each frame
+        gets one ``torch.no_grad()`` forward at the current suffix and the pure
+        :func:`~evasion_tax.attack.early_stop.target_span_argmax_matches` predicate; the
+        target is "reached" when the fraction of frames whose target span is greedily decoded
+        is at least ``reach_fraction`` (default 1.0 = all frames). Callers pass
+        ``reached_fn=target.reached`` to ``run_gcg`` so the search stops once the redirect is
+        decoded trajectory-wide — for a single frame this is the verified single-frame
+        predicate unchanged (one extra B=1 forward per step, DE-3).
+        """
+        matches = sum(
+            self._frame_reached(suffix_ids, pixel_values, target_ids)
+            for pixel_values, target_ids in self._frames
+        )
+        return bool(matches / len(self._frames) >= self._reach_fraction)
+
+    def _frame_reached(
+        self, suffix_ids: np.ndarray, pixel_values: Any, target_ids: np.ndarray
+    ) -> bool:
+        """Whether ONE frame's target span is greedily decoded at ``suffix_ids``.
 
         OpenVLA fuses image patches into the sequence, so ``out.logits`` (length ``S``)
         includes vision positions and does **not** align with the text ``_labels``. We take
@@ -536,22 +618,22 @@ class OpenVlaGcgTarget:
         """
         import torch  # type: ignore[import-not-found]
 
-        full_ids = self._full_ids(suffix_ids)
+        full_ids = self._full_ids(suffix_ids, target_ids)
         input_ids = torch.tensor(full_ids[None, :], device=self._device, dtype=torch.long)
         attn = torch.ones_like(input_ids)
         with torch.no_grad():
             out = self._model(
                 input_ids=input_ids,
                 attention_mask=attn,
-                pixel_values=self._pixel_values,
+                pixel_values=pixel_values,
             )
-        n_target = int(self._target_action_ids.shape[0])
+        n_target = int(np.asarray(target_ids).shape[0])
         # Trailing [n_target+1, V] slice: rows [:-1] are the positions predicting the target
         # tokens (== _target_span_ce_torch's slice); the final row is dropped by the
         # predicate's causal shift. Aligned labels = [ignore] ⊕ target, so the predicate
         # checks argmax(pred_logits[j]) == target[j] at every target position.
         logits_slice = out.logits[0, -n_target - 1 :, :].float().cpu().numpy()  # [n_target+1, V]
-        labels_slice = np.concatenate([[_LABEL_IGNORE], self._target_action_ids])  # [n_target+1]
+        labels_slice = np.concatenate([[_LABEL_IGNORE], np.asarray(target_ids)])  # [n_target+1]
         return target_span_argmax_matches(
             logits_slice, labels_slice, positions=self._match_positions
         )
@@ -566,7 +648,7 @@ class OpenVlaGcgTarget:
         """
         import torch  # type: ignore[import-not-found]
 
-        full_ids = self._full_ids(suffix_ids)
+        full_ids = self._full_ids(suffix_ids, self._target_action_ids)
         input_ids = torch.tensor(full_ids[None, :], device=self._device, dtype=torch.long)
         attn = torch.ones_like(input_ids)
         with torch.no_grad():
@@ -580,21 +662,18 @@ class OpenVlaGcgTarget:
         return pred_logits.argmax(dim=-1).detach().cpu().numpy().astype(np.int64)
 
     def loss_of(self, candidate_suffixes: np.ndarray) -> np.ndarray:
-        """``[B, L]`` candidates → ``[B]`` CE losses via no-grad forward(s) (DE-7 chunked).
+        """``[B, L]`` candidates → ``[B]`` **mean-over-frames** CE losses via no-grad forwards.
 
-        Candidates are fixed-length (``prefix ⊕ suffix(L) ⊕ tail ⊕ target``, identical length),
-        so they stack to ``[B, seq]`` with no padding. With ``eval_batch=None`` they run through
-        a **single** ``torch.no_grad()`` forward (the D8 ``sw=32`` path, unchanged); with an int
-        they are forwarded ``eval_batch`` at a time and the per-chunk ``[b]`` losses concatenated
-        (:func:`chunked_losses`), so a ``search_width=512`` attack fits 24 GB — peak VRAM becomes
-        the max single-chunk peak (DE-7). Per-row CE is read from ``out.logits`` by
-        :meth:`_target_span_ce_torch` — **not** ``out.loss``, which mean-reduces across the
-        batch. **``labels`` is intentionally NOT passed:** the model would then compute its own
-        (unused) full-vocab loss, materialising an fp32 ``shift_logits`` copy of ``[B, seq, V]``
-        that OOMs at large ``B`` on a 24 GB card; ``out.logits`` is identical with or without
-        ``labels``, so omitting it is a pure memory saving (the per-candidate :meth:`_loss_single`
-        reference still uses ``out.loss`` at ``B=1`` and the :meth:`batched_matches_single`
-        gate (D6-3/DB-4) confirms equality). Resets/reads CUDA peak so Task 4 records peak VRAM.
+        Candidates are fixed-length (``prefix ⊕ suffix(L) ⊕ tail ⊕ target``), so they stack
+        to ``[B, seq]`` with no padding. The frames are scored **one at a time**
+        (:meth:`_frame_candidate_losses`) and the per-frame ``[B]`` losses averaged, so peak
+        VRAM stays the single-frame footprint (the Task-2 OOM-safety requirement — never stack
+        K frames into one forward). Within a frame, ``eval_batch`` still chunks candidates
+        (:func:`chunked_losses`) so a ``search_width=512`` attack fits 24 GB. Per-row CE is read
+        from ``out.logits`` by :meth:`_target_span_ce_torch` — **not** ``out.loss`` (which
+        mean-reduces across the batch and, with ``labels``, OOMs an fp32 ``[B, seq, V]`` copy).
+        Resets/reads CUDA peak so Task 4 records peak VRAM (skipped on CPU, where the fake-model
+        tests run). For a single frame this is the D8 path unchanged (K=1 mean == the frame).
         """
         import torch  # type: ignore[import-not-found]
 
@@ -603,35 +682,54 @@ class OpenVlaGcgTarget:
             raise ValueError(
                 f"candidate_suffixes must be [B, {self._suffix_len}], got {cands.shape}"
             )
-        full = np.stack([self._full_ids(row) for row in cands])  # [B, seq]
+        use_cuda = torch.device(self._device).type == "cuda"
+        if use_cuda:
+            torch.cuda.reset_peak_memory_stats(self._device)
+        per_frame = [
+            self._frame_candidate_losses(
+                np.stack([self._full_ids(row, target_ids) for row in cands]),
+                pixel_values,
+                target_ids,
+                use_cuda=use_cuda,
+            )
+            for pixel_values, target_ids in self._frames
+        ]
+        self._last_peak_bytes = (
+            int(torch.cuda.max_memory_allocated(self._device)) if use_cuda else 0
+        )
+        return np.mean(np.stack(per_frame, axis=0), axis=0)
+
+    def _frame_candidate_losses(
+        self, full: np.ndarray, pixel_values: Any, target_ids: np.ndarray, *, use_cuda: bool
+    ) -> np.ndarray:
+        """Per-candidate CE for ONE frame's ``[B, seq]`` rows (candidate-chunked forward)."""
+        import torch  # type: ignore[import-not-found]
 
         def _forward_chunk(rows: np.ndarray) -> np.ndarray:
             input_ids = torch.tensor(rows, device=self._device, dtype=torch.long)
             attn = torch.ones_like(input_ids)
             # One observation broadcast across the chunk; forward only reads pixel_values (no
             # in-place write), so an expand+contiguous view is safe and non-aliasing.
-            pixel_values = self._pixel_values.expand(
-                input_ids.shape[0], *self._pixel_values.shape[1:]
+            pv = pixel_values.expand(
+                input_ids.shape[0], *pixel_values.shape[1:]
             ).contiguous()
             with torch.no_grad():
                 out = self._model(
                     input_ids=input_ids,
                     attention_mask=attn,
-                    pixel_values=pixel_values,
+                    pixel_values=pv,
                 )
             losses = (
-                self._target_span_ce_torch(out.logits).detach().float().cpu().numpy().astype(float)
+                self._target_span_ce_torch(out.logits, target_ids)
+                .detach().float().cpu().numpy().astype(float)
             )
-            if self._eval_batch is not None:
+            if self._eval_batch is not None and use_cuda:
                 # Return this chunk's reservation to the driver before the next chunk so the
                 # near-ceiling sw=512 sweep never accumulates fragmented blocks (DE-7).
                 torch.cuda.empty_cache()
             return losses
 
-        torch.cuda.reset_peak_memory_stats(self._device)
-        losses = chunked_losses(full, self._eval_batch, _forward_chunk)
-        self._last_peak_bytes = int(torch.cuda.max_memory_allocated(self._device))
-        return losses
+        return chunked_losses(full, self._eval_batch, _forward_chunk)
 
     # -- D6-9 faithfulness gate (on the box, BEFORE the tiny run) -------------- #
 
