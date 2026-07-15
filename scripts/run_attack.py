@@ -42,8 +42,10 @@ _QUARANTINE_ROOT = "artifacts/untrusted"
 _RESUME_KEYS = (
     "seed", "git_commit", "model", "n_steps", "search_width", "eval_batch", "schema_sha256",
     # Two-tier guard: a semantic run must never resume an anchor dir, and a semantic
-    # run under a different pinned adversary registry can't reuse existing units.
-    "target_tier", "asr_frame", "registry_path", "registry_sha256",
+    # run under a different pinned adversary registry can't reuse existing units. The
+    # semantic_multiframe tier adds the demonstration-trajectory artifact hash, so a run
+    # under a different captured trajectory (a different target) never reuses units.
+    "target_tier", "asr_frame", "registry_path", "registry_sha256", "trajectory_sha256",
 )
 
 # Single-frame reach is scored on the 6 motion dims only — the gripper (dim 6) is
@@ -131,6 +133,8 @@ def attack_unit_record(
     metric_a_p2_ablated_per_step: Sequence[float] = (),
     distractor_object: str | None = None,
     adv_instruction: str | None = None,
+    n_frames: int | None = None,
+    frame_indices: Sequence[int] = (),
 ) -> dict:
     """The per-unit record (both success notions + folded cost) — m1_gate's schema.
 
@@ -143,7 +147,10 @@ def attack_unit_record(
     / ``asr_frame`` name the tier and the ASR coordinate frame; ``rollout_asr_reached`` is
     the tier-appropriate window-scored ASR. Tier-B-only: ``approach_asr`` (headline),
     ``manipulation_asr`` (**diagnostic only**), ``metric_a_p2_ablated_per_step``
-    (detector-independent L2), ``distractor_object`` and ``adv_instruction``.
+    (detector-independent L2), ``distractor_object`` and ``adv_instruction``. Tier-B
+    ``semantic_multiframe``-only: ``n_frames`` + ``frame_indices`` — the pre-registered
+    demonstration frame count + step indices the multi-frame target teacher-forced
+    (``None``/empty for the single-frame tiers), so the target is regenerable from the record.
     """
     return {
         "unit_id": uid,
@@ -160,6 +167,8 @@ def attack_unit_record(
         "metric_a_p2_ablated_per_step": [float(x) for x in metric_a_p2_ablated_per_step],
         "distractor_object": distractor_object,
         "adv_instruction": adv_instruction,
+        "n_frames": n_frames,
+        "frame_indices": [int(x) for x in frame_indices],
     }
 
 
@@ -213,6 +222,8 @@ def run_attack_loop(
                 metric_a_p2_ablated_per_step=out.get("metric_a_p2_ablated_per_step", ()),
                 distractor_object=out.get("distractor_object"),
                 adv_instruction=out.get("adv_instruction"),
+                n_frames=out.get("n_frames"),
+                frame_indices=out.get("frame_indices", ()),
             )
             # Quarantine the adversarial suffix BEFORE recording (D6-6; never in results/).
             (quarantine_dir / f"{_safe(uid)}.txt").write_text(out["suffix_text"])
@@ -273,9 +284,11 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
 
     from evasion_tax.attack.gcg import GcgConfig, run_gcg
     from evasion_tax.attack.gcg_openvla import OpenVlaGcgTarget
+    from evasion_tax.attack.multiframe_target import build_multiframe_target
     from evasion_tax.attack.redirect_target import anchor_spec_for, target_action_ids_for
     from evasion_tax.attack.semantic_registry import adversary_spec_for
     from evasion_tax.attack.semantic_target import build_semantic_target
+    from evasion_tax.attack.trajectory_demo import load_trajectory_demo
     from evasion_tax.eval.rollout_runner import (
         reset_and_settle,
         rollout_asr,
@@ -337,11 +350,20 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
 
     run_dir, first = prepare_run_dir(args.results_root, args.run_name)
     schema_sha256 = hashlib.sha256(Path(args.schema_from).read_bytes()).hexdigest()
-    asr_frame = "world" if args.target_tier == "semantic" else "action"
+    _tier_is_semantic = args.target_tier in ("semantic", "semantic_multiframe")
+    asr_frame = "world" if _tier_is_semantic else "action"
     registry_path = registry_sha256 = None
-    if args.target_tier == "semantic":
+    trajectory_artifact = trajectory_sha256 = None
+    if _tier_is_semantic:  # both Tier-B tiers share the pinned adversary registry
         registry_path = str(Path(args.semantic_registry) / f"{config.env.suite}.json")
         registry_sha256 = hashlib.sha256(Path(registry_path).read_bytes()).hexdigest()
+    if args.target_tier == "semantic_multiframe":
+        if not args.trajectory_artifact:
+            raise SystemExit(
+                f"[{STAGE}] --trajectory-artifact is required for target-tier semantic_multiframe"
+            )
+        trajectory_artifact = str(args.trajectory_artifact)
+        trajectory_sha256 = hashlib.sha256(Path(trajectory_artifact).read_bytes()).hexdigest()
     header = {
         "stage": STAGE, "run_name": args.run_name, "seed": config.seed,
         "git_commit": git_commit, "hardware": env_rec, "model": mid,
@@ -350,6 +372,7 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
         "eval_batch": args.eval_batch, "exclusive_gpu": args.exclusive_gpu,
         "target_tier": args.target_tier, "asr_frame": asr_frame,
         "registry_path": registry_path, "registry_sha256": registry_sha256,
+        "trajectory_artifact": trajectory_artifact, "trajectory_sha256": trajectory_sha256,
     }
     if first:  # write-once §8 header on the FIRST launch only; a resume reuses the dir
         (run_dir / "run.json").write_text(json.dumps(header, indent=2, sort_keys=True) + "\n")
@@ -379,36 +402,54 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
             )
             start_image = get_libero_image(start_obs, resize_size)
 
-            # Build the tier-appropriate forced-decode target ids. [VERIFY on box]
-            if args.target_tier == "semantic":
+            # Resolve the Tier-B adversary spec (both semantic tiers share the registry)
+            # and validate the distractor is present in the POST-settle scene (Codex R1):
+            # fail fast before the multi-hour search if the registry names a missing object.
+            adv = None
+            if args.target_tier in ("semantic", "semantic_multiframe"):
                 adv = adversary_spec_for(
                     config.env.suite, task_s, config_dir=args.semantic_registry
                 )
-                # Runtime validation (Codex R1): the distractor must be present in the
-                # POST-settle scene (availability varies by init state) — fail fast,
-                # before the multi-hour search, if the registry names a missing object.
                 settle_poses = adapter.to_privileged_state(start_obs).object_poses
                 if adv.distractor_object not in settle_poses:
                     raise SystemExit(
                         f"[{STAGE}] distractor {adv.distractor_object!r} absent from "
                         f"object_poses after reset for {uid} (present: {sorted(settle_poses)})"
                     )
+
+            # Build the tier-appropriate GCG target. [VERIFY on box]
+            trajectory = spec = None
+            if args.target_tier == "semantic_multiframe":
+                # Multi-frame target teacher-forced against the captured approach (Task 3);
+                # the frozen suffix must sustain the redirect across the trajectory frames.
+                trajectory = load_trajectory_demo(args.trajectory_artifact)
+                target = build_multiframe_target(
+                    model, processor, trajectory=trajectory,
+                    instruction=str(task_description), suffix_len=args.suffix_len,
+                    device=device, action_vocab_size=vocab_size, codec=codec,
+                    eval_batch=args.eval_batch, match_positions=_MATCH_POSITIONS,
+                    reach_fraction=args.reach_fraction,
+                )
+            elif args.target_tier == "semantic":
                 sem = build_semantic_target(
                     model, processor, image=start_image, adv_instruction=adv.adv_instruction,
                     action_vocab_size=vocab_size, codec=codec, device=device,
                 )
-                target_ids = sem.target_action_ids
+                target = OpenVlaGcgTarget(
+                    model, processor, image=start_image, instruction=str(task_description),
+                    suffix_len=args.suffix_len, target_action_ids=sem.target_action_ids,
+                    device=device, eval_batch=args.eval_batch, match_positions=_MATCH_POSITIONS,
+                )
             else:
                 spec = anchor_spec_for(
                     target_idx, persistence_steps=config.attack.persistence_steps
                 )
-                target_ids = target_action_ids_for(spec, vocab_size)
-
-            target = OpenVlaGcgTarget(
-                model, processor, image=start_image, instruction=str(task_description),
-                suffix_len=args.suffix_len, target_action_ids=target_ids, device=device,
-                eval_batch=args.eval_batch, match_positions=_MATCH_POSITIONS,
-            )
+                target = OpenVlaGcgTarget(
+                    model, processor, image=start_image, instruction=str(task_description),
+                    suffix_len=args.suffix_len,
+                    target_action_ids=target_action_ids_for(spec, vocab_size), device=device,
+                    eval_batch=args.eval_batch, match_positions=_MATCH_POSITIONS,
+                )
             gcfg = GcgConfig(
                 suffix_len=args.suffix_len, n_steps=args.n_steps,
                 search_width=args.search_width, top_k=256, seed=unit_seed,
@@ -439,7 +480,7 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
                 "target_tier": args.target_tier, "asr_frame": asr_frame,
                 "reached_single_frame": result.reached,  # single-frame reach (dims 0..5)
             }
-            if args.target_tier == "semantic":
+            if args.target_tier in ("semantic", "semantic_multiframe"):
                 # Headline = world-frame approach ASR; a P2-ablated L2 accompanies it so
                 # the Tier-B detector result isn't tautological (Tier-B independence guard).
                 approach = rollout_asr_world(
@@ -448,7 +489,7 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
                     persistence_steps=config.attack.persistence_steps,
                 )
                 p2_ablated = metric.score_rollout(ep.rollout, ablate_primitives=_P2)
-                return {
+                record = {
                     **base,
                     "rollout_asr_reached": approach,
                     "approach_asr": approach,
@@ -459,6 +500,10 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
                     "distractor_object": adv.distractor_object,
                     "adv_instruction": adv.adv_instruction,
                 }
+                if trajectory is not None:  # semantic_multiframe demonstration provenance
+                    record["n_frames"] = target.n_frames
+                    record["frame_indices"] = [int(f.frame_index) for f in trajectory.frames]
+                return record
             asr = rollout_asr(ep.rollout, spec.region, codec=codec)
             return {**base, "rollout_asr_reached": asr}
         finally:
@@ -496,13 +541,23 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--exclusive-gpu", action="store_true", help="record an exclusive window")
     parser.add_argument("--resume", action="store_true", help="skip units already on disk")
     parser.add_argument(
-        "--target-tier", choices=["anchor", "semantic"], default="anchor",
-        help="attack target family: anchor (Tier A, action-space ASR) or "
-             "semantic (Tier B, world-frame approach ASR)",
+        "--target-tier", choices=["anchor", "semantic", "semantic_multiframe"], default="anchor",
+        help="attack target family: anchor (Tier A, action-space ASR), semantic (Tier B, "
+             "single-frame world-frame approach ASR), or semantic_multiframe (Tier B, "
+             "multi-frame trajectory target teacher-forced against a captured approach)",
     )
     parser.add_argument(
         "--semantic-registry", default="configs/semantic_targets",
         help="dir of pre-registered adversary-instruction registries (Tier B only)",
+    )
+    parser.add_argument(
+        "--trajectory-artifact", default=None,
+        help="Task-1 demonstration trajectory .npz (semantic_multiframe tier only)",
+    )
+    parser.add_argument(
+        "--reach-fraction", type=float, default=1.0,
+        help="fraction of demonstration frames whose target must be decoded to count as "
+             "reached (semantic_multiframe tier only; pre-registered, default 1.0 = all)",
     )
     args = parser.parse_args(argv)
 

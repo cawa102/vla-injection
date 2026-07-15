@@ -469,6 +469,11 @@ class OpenVlaGcgTarget:
         return self._suffix_span
 
     @property
+    def n_frames(self) -> int:
+        """Number of teacher-forcing frames (1 for the single-frame construction; Task 2)."""
+        return len(self._frames)
+
+    @property
     def target_action_ids(self) -> np.ndarray:
         """The teacher-forced target action-token ids this target optimises toward."""
         return self._target_action_ids.copy()

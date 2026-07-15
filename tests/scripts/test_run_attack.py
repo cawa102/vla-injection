@@ -71,6 +71,22 @@ def test_main_accepts_target_tier_and_registry_args(monkeypatch, tmp_path):
     assert rc == 2
 
 
+def test_main_accepts_semantic_multiframe_tier_and_trajectory_arg(monkeypatch, tmp_path):
+    # Parses the semantic_multiframe tier + --trajectory-artifact, then guards off-GPU
+    # (rc 2) before the GPU body (Task 3).
+    mod = _load()
+    monkeypatch.setattr(mod, "cuda_available", lambda: False)
+    cfg = _REPO_ROOT / "configs" / "example_m2.yaml"
+    schema = tmp_path / "schema.json"
+    schema.write_text(json.dumps({"engagement_radius": 0.04, "grasp_radius": 0.12}))
+    rc = mod.main([
+        "--config", str(cfg), "--schema-from", str(schema), "--results-root", str(tmp_path),
+        "--target-tier", "semantic_multiframe",
+        "--trajectory-artifact", "artifacts/untrusted/m1-object-adv-traj/frames.npz",
+    ])
+    assert rc == 2
+
+
 def test_main_rejects_unknown_target_tier(tmp_path):
     mod = _load()
     cfg = _REPO_ROOT / "configs" / "example_m2.yaml"
@@ -199,6 +215,35 @@ def test_attack_unit_record_carries_semantic_tier_fields():
     assert rec["metric_a_p2_ablated_per_step"] == [0.0, 0.1]
     assert rec["distractor_object"] == "blue_cup_1"
     assert rec["adv_instruction"] == "pick up the blue cup"
+
+
+def test_attack_unit_record_carries_multiframe_provenance():
+    # Tier-B multi-frame (Task 3): the record logs the pre-registered demonstration frame
+    # count + indices so the target that drove the search is regenerable from the record.
+    mod = _load()
+    rec = mod.attack_unit_record(
+        "t0:r0:42", _outcome("t0:r0:42"), rollout_asr_reached=True, is_denial_=False,
+        metric_a_per_step=[1.0], loss_history=[7.0],
+        target_tier="semantic_multiframe", asr_frame="world", reached_single_frame=True,
+        approach_asr=True, distractor_object="salad_dressing_1",
+        adv_instruction="pick up the salad dressing and place it in the basket",
+        n_frames=6, frame_indices=[0, 10, 20, 30, 40, 50],
+    )
+    assert rec["target_tier"] == "semantic_multiframe"
+    assert rec["n_frames"] == 6
+    assert rec["frame_indices"] == [0, 10, 20, 30, 40, 50]
+
+
+def test_attack_unit_record_defaults_multiframe_provenance_to_empty():
+    # Anchor/semantic (single-frame) records omit a frame count -> None + empty indices,
+    # never silently mis-tiered.
+    mod = _load()
+    rec = mod.attack_unit_record(
+        "t0:r0:42", _outcome("t0:r0:42"), rollout_asr_reached=True, is_denial_=False,
+        metric_a_per_step=[1.0], loss_history=[7.0],
+    )
+    assert rec["n_frames"] is None
+    assert rec["frame_indices"] == []
 
 
 def test_run_attack_loop_writes_loss_history_to_unit_json(tmp_path):
@@ -335,3 +380,13 @@ def test_assert_resume_compatible_rejects_registry_hash_mismatch(tmp_path):
     with pytest.raises(SystemExit) as exc:
         mod.assert_resume_compatible(tmp_path, _header(registry_sha256="bbb"))
     assert "registry_sha256" in str(exc.value)
+
+
+def test_assert_resume_compatible_rejects_trajectory_hash_mismatch(tmp_path):
+    # A semantic_multiframe run under a different demonstration trajectory artifact must
+    # never reuse existing units (the target that drove the search differs).
+    mod = _load()
+    (tmp_path / "run.json").write_text(json.dumps(_header(trajectory_sha256="aaa")))
+    with pytest.raises(SystemExit) as exc:
+        mod.assert_resume_compatible(tmp_path, _header(trajectory_sha256="bbb"))
+    assert "trajectory_sha256" in str(exc.value)

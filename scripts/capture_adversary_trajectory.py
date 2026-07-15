@@ -27,8 +27,6 @@ import json
 import sys
 from pathlib import Path
 
-import numpy as np
-
 import _bootstrap  # noqa: F401  (import side effect: puts src/ on sys.path)
 
 from evasion_tax.attack.semantic_registry import adversary_spec_for  # noqa: E402
@@ -74,6 +72,7 @@ def _run(args) -> int:  # pragma: no cover - GPU only
         sys.path.insert(0, args.openvla_root)
     from types import SimpleNamespace
 
+    import numpy as np
     import torch  # type: ignore[import-not-found]
     from experiments.robot.libero.libero_utils import (  # type: ignore[import-not-found]
         get_libero_dummy_action,
