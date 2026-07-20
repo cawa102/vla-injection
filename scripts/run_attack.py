@@ -455,12 +455,17 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
                 search_width=args.search_width, top_k=256, seed=unit_seed,
             )
             t0 = time.perf_counter()
+            ckpt_dir = Path(_QUARANTINE_ROOT) / args.run_name
+            ckpt_dir.mkdir(parents=True, exist_ok=True)
+            ckpt_path = ckpt_dir / f"checkpoint_{_safe(uid)}.json"
 
-            def _heartbeat(step: int, _suffix: np.ndarray, best_loss: float) -> None:
-                # Observability only (BUG: run_attack never wired run_gcg's on_step, so a
-                # multi-hour search printed nothing — a silent run that dies on session-loss
-                # is indistinguishable from one still working). Exception-isolated by run_gcg;
-                # never mutates search state.
+            def _heartbeat(step: int, suffix: np.ndarray, best_loss: float) -> None:
+                # Observability + durable recovery (BUG: run_attack never wired run_gcg's
+                # on_step, so a multi-hour search printed nothing — a silent run that dies on
+                # session-loss is indistinguishable from one still working, and its best suffix
+                # was lost). Exception-isolated by run_gcg; never mutates search state. The
+                # checkpoint is a mutable quarantined sidecar (mirrors run_surrogate_gcg); the
+                # write-once unit record is still only written on clean completion.
                 if step == 1 or step % args.log_every == 0:
                     peak = getattr(target, "_last_peak_bytes", 0) / (1024**3)
                     print(
@@ -468,6 +473,13 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
                         f"elapsed={time.perf_counter() - t0:.0f}s peak_vram={peak:.2f}GiB",
                         flush=True,
                     )
+                    tmp = ckpt_path.with_suffix(".json.tmp")
+                    tmp.write_text(json.dumps({
+                        "uid": uid, "step": step, "best_loss": best_loss,
+                        "suffix_ids": [int(x) for x in suffix],
+                        "suffix_text": target.decode_span(suffix),
+                    }))
+                    tmp.replace(ckpt_path)  # atomic overwrite
 
             result = run_gcg(target, gcfg, reached_fn=target.reached, on_step=_heartbeat)
             wall = time.perf_counter() - t0
