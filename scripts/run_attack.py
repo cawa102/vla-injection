@@ -282,7 +282,7 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
 
     import numpy as np
 
-    from evasion_tax.attack.gcg import GcgConfig, run_gcg
+    from evasion_tax.attack.gcg import GcgConfig, GcgResult, run_gcg
     from evasion_tax.attack.gcg_openvla import OpenVlaGcgTarget
     from evasion_tax.attack.multiframe_target import build_multiframe_target
     from evasion_tax.attack.redirect_target import anchor_spec_for, target_action_ids_for
@@ -455,33 +455,52 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
                 search_width=args.search_width, top_k=256, seed=unit_seed,
             )
             t0 = time.perf_counter()
-            ckpt_dir = Path(_QUARANTINE_ROOT) / args.run_name
-            ckpt_dir.mkdir(parents=True, exist_ok=True)
-            ckpt_path = ckpt_dir / f"checkpoint_{_safe(uid)}.json"
+            if args.eval_suffix_from:
+                # Eval-only: score a pre-computed suffix (e.g. a still-running search's
+                # checkpoint) through the SAME rollout + scoring pipeline below, skipping the
+                # GCG search. Lets a live checkpoint be evaluated for approach_asr on the
+                # second card without disturbing the search on the first.
+                ck = json.loads(Path(args.eval_suffix_from).read_text())
+                ck_ids = np.asarray(ck["suffix_ids"], dtype=np.int64)
+                result = GcgResult(
+                    best_suffix_ids=tuple(int(x) for x in ck_ids),
+                    best_loss=float(ck["best_loss"]),
+                    loss_history=tuple(float(x) for x in ck.get("loss_history", [ck["best_loss"]])),
+                    n_steps_run=int(ck.get("step", 0)),
+                    reached=bool(target.reached(ck_ids)),
+                )
+                print(
+                    f"[eval-suffix] {uid} step={ck.get('step')} best_loss={result.best_loss:.4f} "
+                    f"reached_single_frame={result.reached}", flush=True,
+                )
+            else:
+                ckpt_dir = Path(_QUARANTINE_ROOT) / args.run_name
+                ckpt_dir.mkdir(parents=True, exist_ok=True)
+                ckpt_path = ckpt_dir / f"checkpoint_{_safe(uid)}.json"
 
-            def _heartbeat(step: int, suffix: np.ndarray, best_loss: float) -> None:
-                # Observability + durable recovery (BUG: run_attack never wired run_gcg's
-                # on_step, so a multi-hour search printed nothing — a silent run that dies on
-                # session-loss is indistinguishable from one still working, and its best suffix
-                # was lost). Exception-isolated by run_gcg; never mutates search state. The
-                # checkpoint is a mutable quarantined sidecar (mirrors run_surrogate_gcg); the
-                # write-once unit record is still only written on clean completion.
-                if step == 1 or step % args.log_every == 0:
-                    peak = getattr(target, "_last_peak_bytes", 0) / (1024**3)
-                    print(
-                        f"[gcg] {uid} step {step}/{gcfg.n_steps} best_loss={best_loss:.4f} "
-                        f"elapsed={time.perf_counter() - t0:.0f}s peak_vram={peak:.2f}GiB",
-                        flush=True,
-                    )
-                    tmp = ckpt_path.with_suffix(".json.tmp")
-                    tmp.write_text(json.dumps({
-                        "uid": uid, "step": step, "best_loss": best_loss,
-                        "suffix_ids": [int(x) for x in suffix],
-                        "suffix_text": target.decode_span(suffix),
-                    }))
-                    tmp.replace(ckpt_path)  # atomic overwrite
+                def _heartbeat(step: int, suffix: np.ndarray, best_loss: float) -> None:
+                    # Observability + durable recovery (BUG: run_attack never wired run_gcg's
+                    # on_step, so a multi-hour search printed nothing — a silent run that dies
+                    # on session-loss is indistinguishable from one still working, and its best
+                    # suffix was lost). Exception-isolated by run_gcg; never mutates search
+                    # state. The checkpoint is a mutable quarantined sidecar (mirrors
+                    # run_surrogate_gcg); the write-once unit record is written on clean end.
+                    if step == 1 or step % args.log_every == 0:
+                        peak = getattr(target, "_last_peak_bytes", 0) / (1024**3)
+                        print(
+                            f"[gcg] {uid} step {step}/{gcfg.n_steps} best_loss={best_loss:.4f} "
+                            f"elapsed={time.perf_counter() - t0:.0f}s peak_vram={peak:.2f}GiB",
+                            flush=True,
+                        )
+                        tmp = ckpt_path.with_suffix(".json.tmp")
+                        tmp.write_text(json.dumps({
+                            "uid": uid, "step": step, "best_loss": best_loss,
+                            "suffix_ids": [int(x) for x in suffix],
+                            "suffix_text": target.decode_span(suffix),
+                        }))
+                        tmp.replace(ckpt_path)  # atomic overwrite
 
-            result = run_gcg(target, gcfg, reached_fn=target.reached, on_step=_heartbeat)
+                result = run_gcg(target, gcfg, reached_fn=target.reached, on_step=_heartbeat)
             wall = time.perf_counter() - t0
             suffix_ids = np.asarray(result.best_suffix_ids, dtype=np.int64)
             suffix_text = target.decode_span(suffix_ids)
@@ -558,6 +577,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--n-steps", type=int, default=500, help="GCG step cap (censoring)")
     parser.add_argument("--log-every", type=int, default=10,
                         help="print a [gcg] best-loss heartbeat every N steps (monitoring)")
+    parser.add_argument("--eval-suffix-from", default=None,
+                        help="score a pre-computed suffix (checkpoint JSON) through the rollout, "
+                             "skipping the GCG search (mid-run approach_asr check on the 2nd card)")
     parser.add_argument("--eval-batch", type=int, default=32, help="candidate-eval chunk (24 GB)")
     parser.add_argument("--device", default="cuda:0")
     parser.add_argument("--attn-impl", default="flash_attention_2",
