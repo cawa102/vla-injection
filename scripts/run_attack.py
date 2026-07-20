@@ -455,7 +455,21 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
                 search_width=args.search_width, top_k=256, seed=unit_seed,
             )
             t0 = time.perf_counter()
-            result = run_gcg(target, gcfg, reached_fn=target.reached)
+
+            def _heartbeat(step: int, _suffix: np.ndarray, best_loss: float) -> None:
+                # Observability only (BUG: run_attack never wired run_gcg's on_step, so a
+                # multi-hour search printed nothing — a silent run that dies on session-loss
+                # is indistinguishable from one still working). Exception-isolated by run_gcg;
+                # never mutates search state.
+                if step == 1 or step % args.log_every == 0:
+                    peak = getattr(target, "_last_peak_bytes", 0) / (1024**3)
+                    print(
+                        f"[gcg] {uid} step {step}/{gcfg.n_steps} best_loss={best_loss:.4f} "
+                        f"elapsed={time.perf_counter() - t0:.0f}s peak_vram={peak:.2f}GiB",
+                        flush=True,
+                    )
+
+            result = run_gcg(target, gcfg, reached_fn=target.reached, on_step=_heartbeat)
             wall = time.perf_counter() - t0
             suffix_ids = np.asarray(result.best_suffix_ids, dtype=np.int64)
             suffix_text = target.decode_span(suffix_ids)
@@ -530,6 +544,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--suffix-len", type=int, default=20, help="adversarial suffix tokens")
     parser.add_argument("--search-width", type=int, default=512, help="GCG candidates/step")
     parser.add_argument("--n-steps", type=int, default=500, help="GCG step cap (censoring)")
+    parser.add_argument("--log-every", type=int, default=10,
+                        help="print a [gcg] best-loss heartbeat every N steps (monitoring)")
     parser.add_argument("--eval-batch", type=int, default=32, help="candidate-eval chunk (24 GB)")
     parser.add_argument("--device", default="cuda:0")
     parser.add_argument("--attn-impl", default="flash_attention_2",
