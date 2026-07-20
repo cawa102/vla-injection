@@ -339,6 +339,11 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
         low_cpu_mem_usage=True, trust_remote_code=True,
     ).to(torch.device(args.device))
     model.requires_grad_(False)
+    # OpenVLA's eval helper hardcodes DEVICE=cuda:0 (openvla_utils.py:21) for the rollout's
+    # input tensors; align it with --device so the closed-loop rollout runs on the chosen card
+    # (e.g. --device cuda:1 to eval a checkpoint alongside a search occupying cuda:0).
+    import experiments.robot.openvla_utils as _openvla_utils  # type: ignore[import-not-found]
+    _openvla_utils.DEVICE = torch.device(args.device)
     resize_size = get_image_resize_size(cfg)
     device = torch.device(args.device)
     vocab_size = int(model.config.text_config.vocab_size - model.config.pad_to_multiple_of)
