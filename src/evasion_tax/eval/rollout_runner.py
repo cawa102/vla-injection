@@ -127,6 +127,27 @@ def rollout_asr_world(
     return False
 
 
+def min_ee_distractor(rollout: Rollout, *, distractor_object: str) -> float | None:
+    """Closest EE<->distractor distance over the rollout (diagnostic; ``None`` if empty).
+
+    The world-frame counterpart to :func:`rollout_asr_world`'s per-step test: it reports how
+    near the EE ever got to the distractor, so a denial (region never entered) can be told
+    apart from a near-miss. Shares the :class:`SyntheticStateAdapter` frame with
+    ``rollout_asr_world`` / ``ConsistencyMetricA``.
+    """
+    adapter = SyntheticStateAdapter()
+    best: float | None = None
+    for step in rollout.steps:
+        state = adapter.to_privileged_state(step.privileged_state)
+        if distractor_object not in state.object_poses:
+            continue
+        ee = np.asarray(state.ee_pos, dtype=float)
+        pos = np.asarray(state.object_poses[distractor_object], dtype=float)
+        d = float(np.linalg.norm(ee - pos))
+        best = d if best is None else min(best, d)
+    return best
+
+
 def geometry_stats(rollout: Rollout, *, success: bool) -> dict:
     """Per-rollout benign geometry record for the DM-3 re-pin (the schema
     :func:`evasion_tax.eval.schema_repin.repin_schema_from_benign` consumes).

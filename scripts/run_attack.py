@@ -290,6 +290,7 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
     from evasion_tax.attack.semantic_target import build_semantic_target
     from evasion_tax.attack.trajectory_demo import load_trajectory_demo
     from evasion_tax.eval.rollout_runner import (
+        min_ee_distractor,
         reset_and_settle,
         rollout_asr,
         rollout_asr_world,
@@ -537,6 +538,13 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
                     ep.rollout, distractor_object=adv.distractor_object,
                     radius=schema.engagement_radius,
                     persistence_steps=config.attack.persistence_steps,
+                )
+                # Diagnostic: closest EE<->distractor approach vs the ASR radius — tells a
+                # denial (never approaches) apart from a near-miss (approaches, misses window).
+                _min_d = min_ee_distractor(ep.rollout, distractor_object=adv.distractor_object)
+                print(
+                    f"[approach-diag] {uid} min_ee_distractor={_min_d} "
+                    f"radius={schema.engagement_radius} approach_asr={approach}", flush=True,
                 )
                 p2_ablated = metric.score_rollout(ep.rollout, ablate_primitives=_P2)
                 record = {

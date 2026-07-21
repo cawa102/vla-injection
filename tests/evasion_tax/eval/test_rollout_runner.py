@@ -14,6 +14,7 @@ import pytest
 from evasion_tax.eval.rollout_runner import (
     geometry_stats,
     inject_suffix,
+    min_ee_distractor,
     normalize_actions,
     reset_and_settle,
     rollout_asr,
@@ -166,6 +167,20 @@ def test_rollout_asr_world_raises_when_distractor_absent():
         rollout_asr_world(
             rollout, distractor_object="not_present", radius=0.05, persistence_steps=1
         )
+
+
+def test_min_ee_distractor_reports_closest_approach():
+    # distractor at (0,1,0); EE visits _FAR then _NEAR_DISTRACTOR (0.02 away) -> min == 0.02.
+    rollout = Rollout(steps=(
+        _gstep(_FAR, step=0, gripper_open=True),
+        _gstep(_NEAR_DISTRACTOR, step=1, gripper_open=True),
+    ))
+    d = min_ee_distractor(rollout, distractor_object="distractor")
+    assert d == pytest.approx(0.02, abs=1e-6)
+
+
+def test_min_ee_distractor_none_when_no_steps():
+    assert min_ee_distractor(Rollout(steps=()), distractor_object="distractor") is None
 
 
 def _gstep(ee, *, step, gripper_open):
