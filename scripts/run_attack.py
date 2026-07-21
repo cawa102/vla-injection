@@ -293,6 +293,7 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
     from evasion_tax.attack.multiframe_target import build_multiframe_target
     from evasion_tax.attack.redirect_target import (
         action_ids_from_norm,
+        amplify_to_directional,
         anchor_spec_for,
         directional_target_action,
         target_action_ids_for,
@@ -460,16 +461,28 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
                     device=device, eval_batch=args.eval_batch, match_positions=_MATCH_POSITIONS,
                 )
             elif args.target_tier == "directional":
-                # Self-sustaining max-magnitude action toward the distractor, aimed by the
-                # post-settle world geometry (RoboGCG's mechanism) — GCG-reachable and
-                # dominant, unlike the non-self-sustaining semantic decode that yielded denial.
-                tgt_action = directional_target_action(
-                    settle_state.ee_pos, settle_state.object_poses[adv.distractor_object]
-                )
+                # Self-sustaining max-magnitude action toward the distractor (RoboGCG mechanism):
+                # GCG-reachable + dominant, unlike the non-self-sustaining semantic decode.
+                if args.directional_source == "policy":
+                    # Direction from the policy's OWN toward-distractor action a*_0 (correct
+                    # action frame, no world-frame assumption), amplified to magnitude x edge.
+                    sem = build_semantic_target(
+                        model, processor, image=start_image, adv_instruction=adv.adv_instruction,
+                        action_vocab_size=vocab_size, codec=codec, device=device,
+                    )
+                    tgt_ids = amplify_to_directional(
+                        sem.target_action_ids, vocab_size, magnitude=args.directional_magnitude
+                    )
+                else:  # geometry: world EE->distractor direction (assumes world == action frame)
+                    tgt_ids = action_ids_from_norm(
+                        directional_target_action(
+                            settle_state.ee_pos, settle_state.object_poses[adv.distractor_object]
+                        ),
+                        vocab_size,
+                    )
                 target = OpenVlaGcgTarget(
                     model, processor, image=start_image, instruction=str(task_description),
-                    suffix_len=args.suffix_len,
-                    target_action_ids=action_ids_from_norm(tgt_action, vocab_size),
+                    suffix_len=args.suffix_len, target_action_ids=tgt_ids,
                     device=device, eval_batch=args.eval_batch, match_positions=_MATCH_POSITIONS,
                 )
             else:
@@ -644,6 +657,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--trajectory-artifact", default=None,
         help="Task-1 demonstration trajectory .npz (semantic_multiframe tier only)",
+    )
+    parser.add_argument(
+        "--directional-source", choices=["policy", "geometry"], default="policy",
+        help="directional tier: direction from the policy's a*_0 (policy, default; correct "
+             "action frame) or world EE->distractor geometry (geometry)",
+    )
+    parser.add_argument(
+        "--directional-magnitude", type=float, default=1.0,
+        help="directional tier: dominant-axis magnitude as a fraction of the edge bin, in (0,1]",
     )
     parser.add_argument(
         "--reach-fraction", type=float, default=1.0,

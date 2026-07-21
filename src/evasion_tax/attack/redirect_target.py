@@ -157,6 +157,45 @@ def target_action_ids_for(spec: RedirectSpec, vocab_size: int) -> np.ndarray:
     return action_ids_from_norm(spec.target_action, vocab_size)
 
 
+def norm_from_action_ids(action_ids: Sequence[int], vocab_size: int) -> np.ndarray:
+    """Normalized bin-centre values for action-token ids (inverse of ``action_ids_from_norm``)."""
+    n = _BIN_CENTERS.shape[0]
+    return np.array(
+        [float(_BIN_CENTERS[int(np.clip(vocab_size - int(t) - 1, 0, n - 1))]) for t in action_ids],
+        dtype=float,
+    )
+
+
+def amplify_to_directional(
+    ref_action_ids: Sequence[int], vocab_size: int, *, magnitude: float = 1.0
+) -> np.ndarray:
+    """Amplify a reference action's translation into a self-sustaining directional target.
+
+    Takes the policy's own toward-distractor action (``a*_0 = pi(image, adv_instruction)``,
+    which provably drives the EE to the distractor) and keeps its translation **direction**
+    (the correct action frame — no world-frame assumption) while scaling it so the dominant
+    translation axis reaches ``magnitude`` x the edge bin (RoboGCG-style self-sustaining
+    dominance). Rotation dims are zeroed; the reference gripper is kept. This fixes the
+    single-frame semantic target's failure mode: the direction is right, but a moderate
+    (non-self-sustaining) magnitude yielded denial — amplification makes it dominate.
+
+    Raises:
+        ValueError: if ``magnitude`` is outside ``(0, 1]`` or the reference has no translation.
+    """
+    if not 0.0 < magnitude <= 1.0:
+        raise ValueError(f"magnitude must be in (0, 1], got {magnitude}")
+    trans = norm_from_action_ids(ref_action_ids, vocab_size)[:3]
+    m = float(np.max(np.abs(trans)))
+    if m == 0.0:
+        raise ValueError("reference action has zero translation; no direction to amplify")
+    edge = float(_BIN_CENTERS[-1])
+    action = [0.0] * ACTION_DIM
+    for i in _REDIRECT_DIMS:  # (0, 1, 2) translation dims
+        action[i] = float(np.clip(trans[i] / m * magnitude * edge, float(_BIN_CENTERS[0]), edge))
+    action[6] = float(norm_from_action_ids(ref_action_ids, vocab_size)[6])  # keep ref gripper
+    return action_ids_from_norm(action, vocab_size)
+
+
 def directional_target_action(
     ee_pos: Sequence[float], distractor_pos: Sequence[float]
 ) -> tuple[float, ...]:

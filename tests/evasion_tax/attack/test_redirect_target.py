@@ -14,9 +14,11 @@ import pytest
 from evasion_tax.attack.redirect_target import (
     _BIN_CENTERS,
     action_ids_from_norm,
+    amplify_to_directional,
     anchor_action_space,
     anchor_spec_for,
     directional_target_action,
+    norm_from_action_ids,
     redirect_spec_for,
     target_action_ids_for,
 )
@@ -70,6 +72,35 @@ def test_directional_target_points_toward_distractor_at_max_magnitude():
     assert action[3:] == (0.0, 0.0, 0.0, 0.0)  # rotation + gripper neutral
     assert abs(action[1]) == pytest.approx(float(_BIN_CENTERS[-1]), abs=1e-9)  # max magnitude
     assert abs(action[0]) < abs(action[1])  # non-dominant axis smaller (direction preserved)
+
+
+def test_norm_from_action_ids_inverts_action_ids_from_norm():
+    action = [0.1, -0.2, 0.0, 0.0, 0.0, 0.0, 0.3]
+    back = norm_from_action_ids(action_ids_from_norm(action, _VOCAB), _VOCAB)
+    assert np.allclose(back, action, atol=2.0 / 255)
+
+
+def test_amplify_to_directional_preserves_direction_maxes_dominant():
+    ref = action_ids_from_norm([0.1, -0.2, 0.0, 0.0, 0.0, 0.0, 0.3], _VOCAB)
+    out = norm_from_action_ids(amplify_to_directional(ref, _VOCAB, magnitude=1.0), _VOCAB)
+    assert out[0] > 0 and out[1] < 0  # signs (policy direction) preserved
+    assert abs(out[1]) == pytest.approx(float(_BIN_CENTERS[-1]), abs=2.0 / 255)  # dominant maxed
+    assert abs(out[0]) < abs(out[1])  # ratio (0.1 < 0.2) preserved
+    assert abs(out[3]) < 2.0 / 255 and abs(out[4]) < 2.0 / 255  # rotation zeroed
+
+
+def test_amplify_to_directional_magnitude_scales_dominant():
+    ref = action_ids_from_norm([0.1, -0.2, 0.0, 0.0, 0.0, 0.0, 0.0], _VOCAB)
+    half = norm_from_action_ids(amplify_to_directional(ref, _VOCAB, magnitude=0.5), _VOCAB)
+    assert abs(half[1]) == pytest.approx(0.5 * float(_BIN_CENTERS[-1]), abs=2.0 / 255)
+
+
+def test_amplify_to_directional_rejects_bad_magnitude_and_zero_translation():
+    ref = action_ids_from_norm([0.1, -0.2, 0.0, 0.0, 0.0, 0.0, 0.0], _VOCAB)
+    with pytest.raises(ValueError):
+        amplify_to_directional(ref, _VOCAB, magnitude=0.0)
+    with pytest.raises(ValueError):
+        amplify_to_directional(action_ids_from_norm([0.0] * ACTION_DIM, _VOCAB), _VOCAB)
 
 
 def test_directional_target_raises_when_coincident():
