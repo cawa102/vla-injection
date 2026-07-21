@@ -20,6 +20,7 @@ same space before :meth:`TargetActionSpec.reached_window`.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 import numpy as np
@@ -138,8 +139,8 @@ def anchor_spec_for(
     return RedirectSpec(target_action=target, region=region)
 
 
-def target_action_ids_for(spec: RedirectSpec, vocab_size: int) -> np.ndarray:
-    """Forced-decode action-token ids for ``spec.target_action`` (256-bin codec).
+def action_ids_from_norm(target_action: Sequence[float], vocab_size: int) -> np.ndarray:
+    """Forced-decode action-token ids for a normalized action (256-bin codec).
 
     The exact inverse of the verified ``ActionCodec`` decode: for each dim, the
     nearest bin-centre index ``idx`` maps to token id ``vocab_size - idx - 1`` (so
@@ -147,8 +148,41 @@ def target_action_ids_for(spec: RedirectSpec, vocab_size: int) -> np.ndarray:
     """
     if vocab_size <= 0:
         raise ValueError(f"vocab_size must be positive, got {vocab_size}")
-    ids = [
-        vocab_size - int(np.argmin(np.abs(_BIN_CENTERS - v))) - 1
-        for v in spec.target_action
-    ]
+    ids = [vocab_size - int(np.argmin(np.abs(_BIN_CENTERS - v))) - 1 for v in target_action]
     return np.asarray(ids, dtype=np.int64)
+
+
+def target_action_ids_for(spec: RedirectSpec, vocab_size: int) -> np.ndarray:
+    """Forced-decode action-token ids for ``spec.target_action`` (256-bin codec)."""
+    return action_ids_from_norm(spec.target_action, vocab_size)
+
+
+def directional_target_action(
+    ee_pos: Sequence[float], distractor_pos: Sequence[float]
+) -> tuple[float, ...]:
+    """Max-magnitude normalized action pointing from the EE toward the distractor.
+
+    The self-sustaining directional target for the world-frame redirect (RoboGCG's
+    mechanism, adapted to *aim*): the 3 translation dims are the unit EE->distractor world
+    direction scaled so the **dominant axis hits the edge bin** (max magnitude → the suffix
+    dominates the image and drives the arm consistently that way), with rotation + gripper
+    left neutral (bin centre nearest 0). LIBERO OSC_POSE position deltas share axes with the
+    privileged EE / object poses, so each translation dim's sign is the world-direction sign.
+
+    Unlike the semantic decode target (a specific, non-self-sustaining action that yielded
+    denial), a max-magnitude directional target is both GCG-reachable and self-sustaining.
+
+    Raises:
+        ValueError: if ``ee_pos`` and ``distractor_pos`` coincide (no direction).
+    """
+    d = np.asarray(distractor_pos, dtype=float) - np.asarray(ee_pos, dtype=float)
+    n = float(np.linalg.norm(d))
+    if n == 0.0:
+        raise ValueError("ee_pos and distractor_pos coincide; no redirect direction")
+    unit = d / n
+    edge = float(_BIN_CENTERS[-1])
+    scale = edge / float(np.max(np.abs(unit)))  # push the dominant axis to the edge bin
+    action = [0.0] * ACTION_DIM
+    for i in _REDIRECT_DIMS:  # (0, 1, 2) translation dims
+        action[i] = float(np.clip(unit[i] * scale, float(_BIN_CENTERS[0]), edge))
+    return tuple(action)

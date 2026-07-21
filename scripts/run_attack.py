@@ -53,6 +53,12 @@ _RESUME_KEYS = (
 # teacher-forces all 7 tokens; only the success predicate is subset (Task 2).
 _MATCH_POSITIONS = (0, 1, 2, 3, 4, 5)
 
+# Tier-B world-frame tiers: ASR is EE<->distractor proximity (not an action region), and
+# each resolves the pinned adversary registry (distractor object). `directional` teacher-forces
+# a self-sustaining max-magnitude action toward the distractor (RoboGCG mechanism); `semantic`
+# and `semantic_multiframe` teacher-force the policy's own wrong-object decode.
+_WORLD_TIERS = ("semantic", "semantic_multiframe", "directional")
+
 
 # --------------------------------------------------------------------------- #
 # Pure glue (unit-tested with the GPU attack call mocked)                      #
@@ -285,7 +291,12 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
     from evasion_tax.attack.gcg import GcgConfig, GcgResult, run_gcg
     from evasion_tax.attack.gcg_openvla import OpenVlaGcgTarget
     from evasion_tax.attack.multiframe_target import build_multiframe_target
-    from evasion_tax.attack.redirect_target import anchor_spec_for, target_action_ids_for
+    from evasion_tax.attack.redirect_target import (
+        action_ids_from_norm,
+        anchor_spec_for,
+        directional_target_action,
+        target_action_ids_for,
+    )
     from evasion_tax.attack.semantic_registry import adversary_spec_for
     from evasion_tax.attack.semantic_target import build_semantic_target
     from evasion_tax.attack.trajectory_demo import load_trajectory_demo
@@ -356,11 +367,11 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
 
     run_dir, first = prepare_run_dir(args.results_root, args.run_name)
     schema_sha256 = hashlib.sha256(Path(args.schema_from).read_bytes()).hexdigest()
-    _tier_is_semantic = args.target_tier in ("semantic", "semantic_multiframe")
-    asr_frame = "world" if _tier_is_semantic else "action"
+    _tier_is_world = args.target_tier in _WORLD_TIERS
+    asr_frame = "world" if _tier_is_world else "action"
     registry_path = registry_sha256 = None
     trajectory_artifact = trajectory_sha256 = None
-    if _tier_is_semantic:  # both Tier-B tiers share the pinned adversary registry
+    if _tier_is_world:  # all Tier-B world-frame tiers share the pinned adversary registry
         registry_path = str(Path(args.semantic_registry) / f"{config.env.suite}.json")
         registry_sha256 = hashlib.sha256(Path(registry_path).read_bytes()).hexdigest()
     if args.target_tier == "semantic_multiframe":
@@ -412,15 +423,17 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
             # and validate the distractor is present in the POST-settle scene (Codex R1):
             # fail fast before the multi-hour search if the registry names a missing object.
             adv = None
-            if args.target_tier in ("semantic", "semantic_multiframe"):
+            settle_state = None
+            if args.target_tier in _WORLD_TIERS:
                 adv = adversary_spec_for(
                     config.env.suite, task_s, config_dir=args.semantic_registry
                 )
-                settle_poses = adapter.to_privileged_state(start_obs).object_poses
-                if adv.distractor_object not in settle_poses:
+                settle_state = adapter.to_privileged_state(start_obs)
+                if adv.distractor_object not in settle_state.object_poses:
                     raise SystemExit(
                         f"[{STAGE}] distractor {adv.distractor_object!r} absent from "
-                        f"object_poses after reset for {uid} (present: {sorted(settle_poses)})"
+                        f"object_poses after reset for {uid} "
+                        f"(present: {sorted(settle_state.object_poses)})"
                     )
 
             # Build the tier-appropriate GCG target. [VERIFY on box]
@@ -444,6 +457,19 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
                 target = OpenVlaGcgTarget(
                     model, processor, image=start_image, instruction=str(task_description),
                     suffix_len=args.suffix_len, target_action_ids=sem.target_action_ids,
+                    device=device, eval_batch=args.eval_batch, match_positions=_MATCH_POSITIONS,
+                )
+            elif args.target_tier == "directional":
+                # Self-sustaining max-magnitude action toward the distractor, aimed by the
+                # post-settle world geometry (RoboGCG's mechanism) — GCG-reachable and
+                # dominant, unlike the non-self-sustaining semantic decode that yielded denial.
+                tgt_action = directional_target_action(
+                    settle_state.ee_pos, settle_state.object_poses[adv.distractor_object]
+                )
+                target = OpenVlaGcgTarget(
+                    model, processor, image=start_image, instruction=str(task_description),
+                    suffix_len=args.suffix_len,
+                    target_action_ids=action_ids_from_norm(tgt_action, vocab_size),
                     device=device, eval_batch=args.eval_batch, match_positions=_MATCH_POSITIONS,
                 )
             else:
@@ -531,7 +557,7 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
                 "target_tier": args.target_tier, "asr_frame": asr_frame,
                 "reached_single_frame": result.reached,  # single-frame reach (dims 0..5)
             }
-            if args.target_tier in ("semantic", "semantic_multiframe"):
+            if args.target_tier in _WORLD_TIERS:
                 # Headline = world-frame approach ASR; a P2-ablated L2 accompanies it so
                 # the Tier-B detector result isn't tautological (Tier-B independence guard).
                 approach = rollout_asr_world(
@@ -604,10 +630,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--exclusive-gpu", action="store_true", help="record an exclusive window")
     parser.add_argument("--resume", action="store_true", help="skip units already on disk")
     parser.add_argument(
-        "--target-tier", choices=["anchor", "semantic", "semantic_multiframe"], default="anchor",
-        help="attack target family: anchor (Tier A, action-space ASR), semantic (Tier B, "
-             "single-frame world-frame approach ASR), or semantic_multiframe (Tier B, "
-             "multi-frame trajectory target teacher-forced against a captured approach)",
+        "--target-tier",
+        choices=["anchor", "semantic", "semantic_multiframe", "directional"], default="anchor",
+        help="attack target family: anchor (Tier A, action-space ASR); semantic (Tier B, "
+             "single-frame world-frame approach ASR); semantic_multiframe (Tier B, multi-frame "
+             "trajectory target); or directional (Tier B, self-sustaining max-magnitude action "
+             "toward the distractor, world-frame approach ASR)",
     )
     parser.add_argument(
         "--semantic-registry", default="configs/semantic_targets",

@@ -13,8 +13,10 @@ import pytest
 
 from evasion_tax.attack.redirect_target import (
     _BIN_CENTERS,
+    action_ids_from_norm,
     anchor_action_space,
     anchor_spec_for,
+    directional_target_action,
     redirect_spec_for,
     target_action_ids_for,
 )
@@ -59,6 +61,27 @@ def test_target_action_lies_inside_region():
     for lo, c, hi in zip(spec.region.low, constrained, spec.region.high, strict=True):
         assert lo <= c <= hi
         assert hi > lo
+
+
+def test_directional_target_points_toward_distractor_at_max_magnitude():
+    # distractor at +x, -y from the EE => action +x, -y; dominant axis (y) at the edge bin.
+    action = directional_target_action(ee_pos=(0.0, 0.0, 0.0), distractor_pos=(0.3, -0.4, 0.0))
+    assert action[0] > 0 and action[1] < 0 and action[2] == 0.0
+    assert action[3:] == (0.0, 0.0, 0.0, 0.0)  # rotation + gripper neutral
+    assert abs(action[1]) == pytest.approx(float(_BIN_CENTERS[-1]), abs=1e-9)  # max magnitude
+    assert abs(action[0]) < abs(action[1])  # non-dominant axis smaller (direction preserved)
+
+
+def test_directional_target_raises_when_coincident():
+    with pytest.raises(ValueError):
+        directional_target_action(ee_pos=(1.0, 1.0, 1.0), distractor_pos=(1.0, 1.0, 1.0))
+
+
+def test_action_ids_from_norm_matches_target_action_ids_for():
+    spec = redirect_spec_for(3, persistence_steps=3)
+    assert np.array_equal(
+        action_ids_from_norm(spec.target_action, _VOCAB), target_action_ids_for(spec, _VOCAB)
+    )
 
 
 def test_target_action_ids_shape_and_range():
