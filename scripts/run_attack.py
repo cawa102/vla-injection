@@ -144,6 +144,7 @@ def attack_unit_record(
     adv_instruction: str | None = None,
     n_frames: int | None = None,
     frame_indices: Sequence[int] = (),
+    min_ee_distractor: float | None = None,
 ) -> dict:
     """The per-unit record (both success notions + folded cost) — m1_gate's schema.
 
@@ -178,6 +179,7 @@ def attack_unit_record(
         "adv_instruction": adv_instruction,
         "n_frames": n_frames,
         "frame_indices": [int(x) for x in frame_indices],
+        "min_ee_distractor": min_ee_distractor,
     }
 
 
@@ -233,6 +235,7 @@ def run_attack_loop(
                 adv_instruction=out.get("adv_instruction"),
                 n_frames=out.get("n_frames"),
                 frame_indices=out.get("frame_indices", ()),
+                min_ee_distractor=out.get("min_ee_distractor"),
             )
             # Quarantine the adversarial suffix BEFORE recording (D6-6; never in results/).
             (quarantine_dir / f"{_safe(uid)}.txt").write_text(out["suffix_text"])
@@ -617,6 +620,7 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
                     "metric_a_p2_ablated_per_step": [s.value for s in p2_ablated],
                     "distractor_object": adv.distractor_object,
                     "adv_instruction": adv.adv_instruction,
+                    "min_ee_distractor": _min_d,
                 }
                 if trajectory is not None:  # semantic_multiframe demonstration provenance
                     record["n_frames"] = target.n_frames
