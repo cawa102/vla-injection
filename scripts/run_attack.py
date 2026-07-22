@@ -26,6 +26,7 @@ import hashlib
 import json
 import sys
 from collections.abc import Callable, Mapping, Sequence
+from dataclasses import replace
 from pathlib import Path
 
 import _bootstrap  # noqa: F401  (import side effect: puts src/ on sys.path)
@@ -57,7 +58,9 @@ _MATCH_POSITIONS = (0, 1, 2, 3, 4, 5)
 # each resolves the pinned adversary registry (distractor object). `directional` teacher-forces
 # a self-sustaining max-magnitude action toward the distractor (RoboGCG mechanism); `semantic`
 # and `semantic_multiframe` teacher-force the policy's own wrong-object decode.
-_WORLD_TIERS = ("semantic", "semantic_multiframe", "directional")
+_WORLD_TIERS = ("semantic", "semantic_multiframe", "directional", "directional_multiframe")
+# Tiers that teacher-force one suffix against a K-frame demonstration trajectory.
+_MULTIFRAME_TIERS = ("semantic_multiframe", "directional_multiframe")
 
 
 # --------------------------------------------------------------------------- #
@@ -375,10 +378,10 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
     if _tier_is_world:  # all Tier-B world-frame tiers share the pinned adversary registry
         registry_path = str(Path(args.semantic_registry) / f"{config.env.suite}.json")
         registry_sha256 = hashlib.sha256(Path(registry_path).read_bytes()).hexdigest()
-    if args.target_tier == "semantic_multiframe":
+    if args.target_tier in _MULTIFRAME_TIERS:
         if not args.trajectory_artifact:
             raise SystemExit(
-                f"[{STAGE}] --trajectory-artifact is required for target-tier semantic_multiframe"
+                f"[{STAGE}] --trajectory-artifact is required for target-tier {args.target_tier}"
             )
         trajectory_artifact = str(args.trajectory_artifact)
         trajectory_sha256 = hashlib.sha256(Path(trajectory_artifact).read_bytes()).hexdigest()
@@ -443,6 +446,24 @@ def _run(args, config) -> int:  # pragma: no cover - GPU only
                 # Multi-frame target teacher-forced against the captured approach (Task 3);
                 # the frozen suffix must sustain the redirect across the trajectory frames.
                 trajectory = load_trajectory_demo(args.trajectory_artifact)
+                target = build_multiframe_target(
+                    model, processor, trajectory=trajectory,
+                    instruction=str(task_description), suffix_len=args.suffix_len,
+                    device=device, action_vocab_size=vocab_size, codec=codec,
+                    eval_batch=args.eval_batch, match_positions=_MATCH_POSITIONS,
+                    reach_fraction=args.reach_fraction,
+                )
+            elif args.target_tier == "directional_multiframe":
+                # Multi-frame DIRECTIONAL target: amplify each captured frame's a*_t to the
+                # sweet-spot magnitude (self-sustaining direction) and teacher-force ONE suffix
+                # against all K amplified frames — a directional drive that generalises across
+                # the approach trajectory (vs the single-frame directional's 0.0615 m near-miss).
+                traj0 = load_trajectory_demo(args.trajectory_artifact)
+                trajectory = replace(traj0, frames=tuple(
+                    replace(f, target_action_ids=amplify_to_directional(
+                        f.target_action_ids, vocab_size, magnitude=args.directional_magnitude))
+                    for f in traj0.frames
+                ))
                 target = build_multiframe_target(
                     model, processor, trajectory=trajectory,
                     instruction=str(task_description), suffix_len=args.suffix_len,
@@ -644,11 +665,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--resume", action="store_true", help="skip units already on disk")
     parser.add_argument(
         "--target-tier",
-        choices=["anchor", "semantic", "semantic_multiframe", "directional"], default="anchor",
+        choices=["anchor", "semantic", "semantic_multiframe", "directional",
+                 "directional_multiframe"], default="anchor",
         help="attack target family: anchor (Tier A, action-space ASR); semantic (Tier B, "
              "single-frame world-frame approach ASR); semantic_multiframe (Tier B, multi-frame "
-             "trajectory target); or directional (Tier B, self-sustaining max-magnitude action "
-             "toward the distractor, world-frame approach ASR)",
+             "trajectory decode target); directional (Tier B, self-sustaining max-magnitude "
+             "action toward the distractor); or directional_multiframe (Tier B, amplified "
+             "directional target teacher-forced across the K captured approach frames)",
     )
     parser.add_argument(
         "--semantic-registry", default="configs/semantic_targets",
