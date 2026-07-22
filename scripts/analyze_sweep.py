@@ -87,7 +87,8 @@ def main() -> None:
     b_calib = _scores(benign, lambda r: r.get("is_calibration"))
     b_test = _scores(benign, lambda r: not r.get("is_calibration"))
     a_scores = _scores(att, lambda r: True)
-    det = {"n_benign_calib": len(b_calib), "n_benign_test": len(b_test), "n_attacked": len(a_scores)}
+    det = {"n_benign_calib": len(b_calib), "n_benign_test": len(b_test),
+           "n_attacked": len(a_scores)}
     if b_test and a_scores:
         _, _, auc_hi = roc_auc(b_test, a_scores)
         det["auc_fire_high"] = auc_hi
