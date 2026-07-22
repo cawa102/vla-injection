@@ -192,6 +192,20 @@ def test_run_gcg_converges_to_secret_and_sets_reached():
     assert result.n_steps_run <= cfg.n_steps  # stopped as soon as the secret was found
 
 
+def test_run_gcg_warm_start_uses_init_suffix():
+    # Warm-start AT the secret => initial loss 0, reached before any step (online re-opt case).
+    fn = _hamming_fn()
+    cfg = GcgConfig(suffix_len=4, n_steps=5, top_k=5, search_width=8, seed=0)
+    secret = np.asarray(_SECRET)
+    result = run_gcg(
+        fn, cfg, init_suffix=secret, reached_fn=lambda s: bool((s == secret).all())
+    )
+    assert result.loss_history[0] == 0.0
+    assert result.best_loss == 0.0
+    assert result.reached is True
+    assert result.n_steps_run == 0
+
+
 def test_run_gcg_reached_is_false_without_reached_fn():
     cfg = GcgConfig(suffix_len=4, n_steps=200, top_k=3, search_width=32, seed=1)
     result = run_gcg(_hamming_fn(), cfg)

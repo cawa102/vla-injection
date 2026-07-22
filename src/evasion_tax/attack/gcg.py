@@ -185,6 +185,7 @@ def run_gcg(
     *,
     reached_fn: Callable[[np.ndarray], bool] | None = None,
     on_step: OnStep | None = None,
+    init_suffix: np.ndarray | None = None,
 ) -> GcgResult:
     """Run the GCG suffix search against the ``fn`` seam under ``cfg``.
 
@@ -203,6 +204,9 @@ def run_gcg(
             step with ``(step, best_suffix_ids_copy, best_loss)`` — including the
             early-stop step. Exception-isolated (a failure is logged to stderr and
             the search continues); ``None`` leaves behaviour identical.
+        init_suffix: Optional ``[suffix_len]`` initial suffix (warm start). ``None``
+            uses ``fn.init_suffix_ids()``. An online attacker warm-starts each
+            re-optimisation from the previous step's suffix.
 
     Returns:
         A :class:`GcgResult` with the best suffix, its loss, and the trajectory.
@@ -214,7 +218,9 @@ def run_gcg(
         raise ValueError(f"top_k ({cfg.top_k}) must be <= vocab_size ({fn.vocab_size})")
 
     rng = np.random.default_rng(cfg.seed)
-    suffix = np.asarray(fn.init_suffix_ids())
+    # Warm start: an adaptive/online attacker re-optimises from the previous step's suffix
+    # (the scene changed only slightly), so a few steps suffice; None = the seam's init.
+    suffix = np.asarray(fn.init_suffix_ids() if init_suffix is None else init_suffix)
     best_loss = float(fn.loss_of(suffix[None, :])[0])
     history = [best_loss]
     reached = bool(reached_fn(suffix)) if reached_fn is not None else False
