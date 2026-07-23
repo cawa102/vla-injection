@@ -9,10 +9,13 @@
 On **OpenVLA-7B (bf16) / LIBERO_Object** (benign task: *pick up the alphabet soup*; adversary
 target: the **salad-dressing** distractor), a frozen-suffix RoboGCG-style **instruction-injection**
 attack can drive **single-frame action control** (the suffix reaches the target action ~100 % of
-the time) but **cannot** produce a **closed-loop wrong-object redirect**: across a **powered N=50
-seed sweep**, `approach_asr = 0/50` (95 % CI **[0, 0.071]**), the attack is **denial** 92 % of the
-time, and the end-effector **never** enters the 0.05 m redirect region (closest 0.056 m; median
-0.200 m). This is a clean, statistically-backed demonstration of the **Embodiment Evasion Tax**:
+the time) but **cannot** produce a **closed-loop wrong-object redirect**: across **two powered seed sweeps and two
+attack families** — semantic decode (N=50) and directional (N=10) — `approach_asr = **0/60**`
+(semantic 0/50, 95 % CI **[0, 0.071]**; directional 0/10), the attack is **denial** (92 % semantic,
+100 % directional), and the end-effector **never** enters the 0.05 m redirect region (closest
+0.056 m overall; medians ~0.20 m). The single-scenario 0.0615 m "near-miss" does **not generalise**
+across seeds (directional best-of-10 = 0.086 m). This is a clean, statistically-backed
+demonstration of the **Embodiment Evasion Tax**:
 the closed-loop / embodied setting makes a precise wrong-object redirect via the instruction
 channel prohibitively costly, even though input-level control is trivial. Separately, the current
 **metric-A goal-action detector**, at the placeholder 0.05/0.10 m schema radii, **saturates on
@@ -64,11 +67,26 @@ GCG cost: median steps-to-(single-frame)-reach = 7; ~232 s/target realistic (A50
 vs. the 0.05 / 0.086 / 0.042 m references — no mass below 0.05 m); `fig2_reach_vs_approach_semantic.png`
 (100 % single-frame reach vs. 0 % closed-loop approach — the embodiment gap).
 
-## 3. Attack: directional sweep (N=10) — IN PROGRESS
+## 3. Attack: directional sweep (N=10) — CONFIRMS across a second attack family
 
-`results/m1-object-directional-sweep/` (mag 0.5, the near-miss config), auto-chained after the
-semantic sweep. Second attack family, to show the finding is robust across attacker types.
-*[fill in when complete]*
+`results/m1-object-directional-sweep/` (policy-derived directional, mag 0.5 — the N=1 "near-miss"
+config), auto-chained after the semantic sweep.
+
+| metric | value | 95 % CI |
+|---|---|---|
+| `approach_asr` | **0/10 = 0.0** | [0.000, 0.278] |
+| `reached_single_frame` (exact argmax) | 0/10 | [0.000, 0.278] |
+| `is_denial` | 10/10 = 1.0 | [0.722, 1.000] |
+| `min_ee_distractor` crossed 0.05 m | **0/10** | — |
+
+`min_ee_distractor` (m): mean 0.193, median 0.169, min **0.086**, max 0.298.
+
+**Key cross-check — the N=1 near-miss does NOT generalise.** The single-scenario case study (§1 #5,
+seed 42) produced a 0.0615 m near-miss, but across **10 seeds** the directional attack's *best*
+closest approach is only **0.086 m** (≈ benign level), and `approach_asr = 0/10`. This confirms the
+0.0615 m near-miss was a **non-robust, single-seed partial-reproduction artifact**, not a repeatable
+capability — strengthening the negative-redirect claim. Two attack families (semantic decode,
+directional) now agree: **0/60 closed-loop redirects.**
 
 ## 4. Detector: benign-vs-attacked separation (L2 goal-action / metric-A)
 

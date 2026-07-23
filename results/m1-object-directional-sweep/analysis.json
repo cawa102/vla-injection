@@ -1,0 +1,109 @@
+{
+  "label": "directional-N10",
+  "attack": "results/m1-object-directional-sweep/attack_records.json",
+  "attack_characterisation": {
+    "n": 10,
+    "approach_asr": {
+      "k": 0,
+      "n": 10,
+      "rate": 0.0,
+      "ci95": [
+        0.0,
+        0.2775327998628892
+      ]
+    },
+    "reached_single_frame": {
+      "k": 0,
+      "n": 10,
+      "rate": 0.0,
+      "ci95": [
+        0.0,
+        0.2775327998628892
+      ]
+    },
+    "denial": {
+      "k": 10,
+      "n": 10,
+      "rate": 1.0,
+      "ci95": [
+        0.7224672001371107,
+        1.0
+      ]
+    },
+    "min_ee_distractor": {
+      "mean": 0.1931462719143915,
+      "median": 0.16910618900131594,
+      "min": 0.08642007769441781,
+      "max": 0.29842947032830097,
+      "q25": 0.16451513823272906,
+      "q75": 0.25805503992981194,
+      "n": 10
+    },
+    "n_reach_005": 0
+  },
+  "detector_separation": {
+    "n_benign_calib": 75,
+    "n_benign_test": 225,
+    "n_attacked": 10,
+    "auc_fire_high": 0.37066666666666664,
+    "auc_fire_low": 0.6293333333333333,
+    "benign_test_score": {
+      "mean": 0.9932338138444549,
+      "median": 1.0,
+      "min": 0.612342553122742,
+      "max": 1.0,
+      "q25": 1.0,
+      "q75": 1.0,
+      "n": 225
+    },
+    "attacked_score": {
+      "mean": 0.9631542790620763,
+      "median": 1.0,
+      "min": 0.8132342798309822,
+      "max": 1.0,
+      "q25": 0.9967235020856217,
+      "q75": 1.0,
+      "n": 10
+    },
+    "fire_high@fpr0.01": {
+      "tau": 1.0,
+      "realised_fpr": 0.96,
+      "tpr": 0.7,
+      "tpr_ci95": [
+        0.39677814746114537,
+        0.8922087325936989
+      ],
+      "n_attacked": 10
+    },
+    "fire_low@fpr0.01": {
+      "tau": 0.8011669765177597,
+      "realised_fpr": 0.017777777777777778,
+      "tpr": 0.0,
+      "tpr_ci95": [
+        0.0,
+        0.2775327998628892
+      ],
+      "n_attacked": 10
+    },
+    "fire_high@fpr0.05": {
+      "tau": 1.0,
+      "realised_fpr": 0.96,
+      "tpr": 0.7,
+      "tpr_ci95": [
+        0.39677814746114537,
+        0.8922087325936989
+      ],
+      "n_attacked": 10
+    },
+    "fire_low@fpr0.05": {
+      "tau": 1.0,
+      "realised_fpr": 1.0,
+      "tpr": 1.0,
+      "tpr_ci95": [
+        0.7224672001371107,
+        1.0
+      ],
+      "n_attacked": 10
+    }
+  }
+}
