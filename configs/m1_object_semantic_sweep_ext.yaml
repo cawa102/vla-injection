@@ -1,0 +1,16 @@
+# M1 Tier-B SEMANTIC sweep EXTENSION — 25 more seeds (92-116) to push the redirect-rate CI < 5%.
+# Combine attack_records with results/m1-object-semantic-sweep for the N=75 analysis.
+seed: 42
+model: {name: openvla-7b, unnorm_key: libero_object, checkpoint: openvla/openvla-7b-finetuned-libero-object, quantization: bf16}
+env: {suite: libero_object, tasks: [task_0], max_steps: 280}
+attack: {name: robogcg, targets_per_task: 1, persistence_steps: 5}
+metric: {k: 5}
+detector: {fpr_targets: [0.01, 0.05], primary_fpr: 0.05}
+eval:
+  matrix: [clean_ceiling, coarse_goal]
+  splits:
+    calib:
+      tasks: [task_0]
+      scenes: [scene_0]
+      seeds: [92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116]
+    test: {tasks: [task_1], scenes: [scene_1], seeds: [43]}
