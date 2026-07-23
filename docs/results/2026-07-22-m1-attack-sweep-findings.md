@@ -10,10 +10,10 @@ On **OpenVLA-7B (bf16) / LIBERO_Object** (benign task: *pick up the alphabet sou
 target: the **salad-dressing** distractor), a frozen-suffix RoboGCG-style **instruction-injection**
 attack can drive **single-frame action control** (the suffix reaches the target action ~100 % of
 the time) but **cannot** produce a **closed-loop wrong-object redirect**: across **two powered seed sweeps and two
-attack families** — semantic decode (N=50) and directional (N=10) — `approach_asr = **0/60**`
-(semantic 0/50, 95 % CI **[0, 0.071]**; directional 0/10), the attack is **denial** (92 % semantic,
-100 % directional), and the end-effector **never** enters the 0.05 m redirect region (closest
-0.056 m overall; medians ~0.20 m). The single-scenario 0.0615 m "near-miss" does **not generalise**
+attack families** — semantic decode (N=75) and directional (N=10) — `approach_asr = **0/85**`
+(semantic **0/75, 95 % CI [0, 0.049]** — sub-5 %; directional 0/10), the attack is **denial** (87 %
+semantic, 100 % directional), and the end-effector **never** enters the 0.05 m redirect region
+(closest 0.056 m overall; medians ~0.19 m). The single-scenario 0.0615 m "near-miss" does **not generalise**
 across seeds (directional best-of-10 = 0.086 m). This is a clean, statistically-backed
 demonstration of the **Embodiment Evasion Tax**:
 the closed-loop / embodied setting makes a precise wrong-object redirect via the instruction
@@ -48,20 +48,24 @@ optimised further (faithful reproduction of any directional target → denial). 
 **mechanism** property (instruction channel vs. embodied closed loop), not a loss/capacity or
 frozen-suffix artifact.
 
-## 2. Attack: powered measurement — semantic sweep (N=50 seeds)
+## 2. Attack: powered measurement — semantic sweep (N=75 seeds)
 
-`results/m1-object-semantic-sweep/` (config `configs/m1_object_semantic_sweep.yaml`, seeds 42–91,
-frozen re-pinned SchemaA via `--schema-from`, DM-3 intact). Committed single-frame Tier-B attack.
+`results/m1-object-semantic-sweep/` (seeds 42–91) + `results/m1-object-semantic-sweep-ext/`
+(seeds 92–116) = **N=75**; config `configs/m1_object_semantic_sweep{,_ext}.yaml`, frozen re-pinned
+SchemaA via `--schema-from`, DM-3 intact. Committed single-frame Tier-B attack. Combined N=75
+analysis: `results/m1-object-semantic-sweep/analysis_n75.json`.
 
 | metric | value | 95 % CI (Wilson) |
 |---|---|---|
-| `approach_asr` (closed-loop redirect) | **0/50 = 0.0** | **[0.000, 0.071]** |
-| `reached_single_frame` (single-frame control) | 50/50 = 1.0 | [0.929, 1.000] |
-| `is_denial` | 46/50 = 0.92 | [0.812, 0.968] |
-| `min_ee_distractor` crossed 0.05 m | **0/50** | — |
+| `approach_asr` (closed-loop redirect) | **0/75 = 0.0** | **[0.000, 0.049]** ← sub-5 % |
+| `reached_single_frame` (single-frame control) | 74/75 = 0.987 | [0.928, 0.998] |
+| `is_denial` | 65/75 = 0.867 | [0.772, 0.926] |
+| `min_ee_distractor` crossed 0.05 m | **0/75** | — |
 
-`min_ee_distractor` (m): mean 0.210, median 0.200, min **0.056**, max 0.301, IQR [0.146, 0.288].
-GCG cost: median steps-to-(single-frame)-reach = 7; ~232 s/target realistic (A5000).
+`min_ee_distractor` (m): mean 0.206, median 0.188, min **0.056**, max 0.301.
+GCG cost: median steps-to-(single-frame)-reach = 7; ~232 s/target realistic (A5000). **Headline:
+the attack achieves single-frame control ~99 % of the time yet a closed-loop redirect < 4.9 % of the
+time (95 % CI) — 0/75 observed.**
 
 **Figures** (`results/figures/`): `fig1_min_ee_hist_semantic.png` (closest-approach distribution
 vs. the 0.05 / 0.086 / 0.042 m references — no mass below 0.05 m); `fig2_reach_vs_approach_semantic.png`
