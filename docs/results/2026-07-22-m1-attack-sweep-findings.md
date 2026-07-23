@@ -101,11 +101,21 @@ attacked; no benign-vs-attacked separation at the coarse operator-goal reference
   (50 % of steps > 0.9) **>** attacked-denial 0.746 **>** benign-**fail** 0.554. The P1/P2/P3
   "inconsistency" primitives fire on engagement/grasp, so the score tracks **achievement**, not
   attack-vs-benign. ROC-AUC (fire-high) = 0.251 (i.e. attacked scores *lower* than benign).
-- **Conclusion:** at the placeholder 0.05/0.10 m radii the metric-A detector is **not usable** on
-  this scenario (benign saturates). The residual signal (AUC 0.749 in the fire-low direction) is
-  weak and its operating points are degenerate. **The detector needs recalibration** (schema radii
-  and/or primitive definitions) — a research decision, flagged not improvised. Figure:
-  `fig3_detector_scores_semantic.png`.
+- **Aggregation robustness (N=50).** Tested `max`, `mean`, `q75`, `frac(steps>0.8)`. `max` saturates
+  (held-out FPR 0.96). The others are well-calibrated (FPR ~5–8 %) but **all give AUC < 0.5** — the
+  denial attack scores *lower* on metric-A than benign (e.g. `mean`: benign 0.711 vs attacked 0.658,
+  AUC 0.366; TPR@5%FPR = 0.02). So **no aggregation gives useful positive detection.**
+- **Why (detector-threat mismatch).** The "inconsistency" primitives (P1 transit-misalignment, P3
+  grasp, P2 distractor-engagement) fire on **activity / goal-engagement**, and a disrupted/stalled
+  **denial** arm is *less* active than a normal goal-directed benign rollout → it looks *less*
+  anomalous, not more. The detector is built to catch **redirects** (high P2 distractor-engagement);
+  the achievable attack is **denial** (availability), so the detector is mismatched to the threat
+  the embodiment tax actually permits.
+- **Conclusion:** on this scenario the metric-A detector, at the placeholder 0.05/0.10 m radii, does
+  **not** usefully separate benign from the (denial) attack under any aggregation. This is an honest
+  L2 limitation; a usable FP-budgeted detector would need **recalibration** (schema radii + primitive
+  definitions) and/or a detector aimed at **denial/task-deviation**, not just redirect — a research
+  decision, flagged not improvised. Figure: `fig3_detector_scores_semantic.png`.
 
 ## 5. What DID work (for completeness)
 
